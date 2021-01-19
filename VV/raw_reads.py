@@ -1,5 +1,6 @@
 """ V-V for raw reads.
 """
+from typing import Tuple
 import hashlib
 import statistics
 import glob
@@ -27,7 +28,7 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     log.debug(f"Processing Paired End: {paired_end}")
 
     # load files from input_path
-    files = glob.glob(f"{input_path}/*fastq.gz")
+    files = glob.glob(os.path.join(input_path, "Fastq", "*fastq.gz"))
     log.info(f"{len(files)} Raw Read Files, example: {files[0]}")
     log.debug(files)
 
@@ -75,7 +76,7 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
             log.error(f"Expected {expected_count} html files for {sample}, found {html_count}")
         if zip_count != expected_count:
             log.error(f"Expected {expected_count} zip  files for {sample}, found {zip_count}")
-
+    log.info(f"Finished checking expected FastQC files counts")
 
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:

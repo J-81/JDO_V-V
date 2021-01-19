@@ -3,9 +3,22 @@
 
 """
 import os
+import sys
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                    level=logging.DEBUG)
+# TODO: replace with proper argpase
+print(sys.argv)
+if len(sys.argv) == 2:
+    if sys.argv[1] == "INFO":
+        logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                            level=logging.INFO)
+    elif sys.argv[1] == "DEBUG":
+        logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                            level=logging.DEBUG)
+else:
+    print("Using INFO logging level by default")
+    logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                        level=logging.INFO)
+
 log = logging.getLogger(__name__)
 
 from VV import raw_reads
@@ -21,7 +34,7 @@ def main():
     """ Calls raw and processed data V-V functions
     """
     log.info("Starting Raw Data V-V")
-    raw_path = os.path.join(DATA_PATH, "00-RawData", "Fastq")
+    raw_path = os.path.join(DATA_PATH, "00-RawData")
     log.debug(f"raw_path: {raw_path}")
     raw_results = raw_reads.validate_verify(input_path=raw_path,
                                             paired_end=PAIRED_END)
