@@ -22,8 +22,16 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     <SAMPLE NAME>_R1_raw.fastq.gz
     and <SAMPLE NAME> never includes "_R1_raw.fastq.gz"
 
+    Performs the following checks:
+    1. File name enumeration
+    2. File Size stats
+    3. Sample name extraction
+    4. md5sum check (if expected md5sums are supplied)
+    5. FastQC file count check
+
     :param input_path: path where the raw read files are location
     :param paired_end: True for paired end, False for single reads
+    :param md5sums: dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1
     """
     log.debug(f"Processing Paired End: {paired_end}")
 
