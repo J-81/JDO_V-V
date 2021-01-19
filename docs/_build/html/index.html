@@ -151,8 +151,9 @@
 <p>V-V for raw reads.</p>
 <dl class="py function">
 <dt id="VV.raw_reads.validate_verify">
-<code class="sig-prename descclassname">VV.raw_reads.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.raw_reads.validate_verify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs validation and verification for input of RNASeq datasets.</p>
+<code class="sig-prename descclassname">VV.raw_reads.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em>, <em class="sig-param"><span class="n">md5sums</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.raw_reads.validate_verify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs validation and verification for input of RNASeq datasets.
+Additionally checks for FastQC file existence.</p>
 <p>This assumes the following file format:</p>
 <div class="line-block">
 <div class="line"><code class="docutils literal notranslate"><span class="pre">Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R2_raw.fastq.gz</span></code></div>
@@ -161,11 +162,18 @@
 <p>This also assumes that regardless of paired or single mode, there exists a file named:</p>
 <p>&lt;SAMPLE NAME&gt;_R1_raw.fastq.gz
 and &lt;SAMPLE NAME&gt; never includes “_R1_raw.fastq.gz”</p>
+<p>Performs the following checks:
+1. File name enumeration
+2. File Size stats
+3. Sample name extraction
+4. md5sum check (if expected md5sums are supplied)
+5. FastQC file count check</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path where the raw read files are location</p></li>
 <li><p><strong>paired_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True for paired end, False for single reads</p></li>
+<li><p><strong>md5sums</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>) – dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1</p></li>
 </ul>
 </dd>
 </dl>
