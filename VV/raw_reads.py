@@ -1,12 +1,13 @@
 """ V-V for raw reads.
 """
+import hashlib
 import statistics
 import glob
 import os
 import logging
 log = logging.getLogger(__name__)
 
-def validate_verify(input_path: str, paired_end: bool):
+def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     """Performs validation and verification for input of RNASeq datasets.
     Additionally checks for FastQC file existence.
 
@@ -43,6 +44,22 @@ def validate_verify(input_path: str, paired_end: bool):
     log.info(f"{len(sample_names)} Samples, example: {sample_names[0]}")
     log.debug(f"Samples: {sample_names}")
 
+    # calculate md5sum of files and check against known md5sums
+    if md5sums:
+        log.info(f"Checking md5sum against supplied values")
+        for file in files:
+            try:
+                expected = md5sum[os.path.basename(file)]
+            except KeyError:
+                log.error(f"expected md5sum not supplied for {os.path.basename(file)}, skipping")
+                continue
+            match = _md5_check(file, expected_md5=expected)
+            if match:
+                log.debug(f"md5sum for {os.path.basename(file)} matches")
+            elif not match:
+                log.error(f"MISMATCH: md5sum does not match expected for {os.path.basename(file)}")
+    else:
+        log.warning(f"No expected md5sums supplied, cannot verify raw read files")
 
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
@@ -74,3 +91,11 @@ def _bytes_to_gb(bytes: int):
     :param bytes: bytes to convert
     """
     return bytes/float(1<<30)
+
+def _md5_check(file: str, expected_md5: str) -> bool:
+    """ Checks md5 hex digest of the file against an expected md5 hex digest
+
+    :param file: compressed raw read file
+    :param expected_md5: expected md5 hex digest, supplied by GeneLab
+    """
+    return expected_md5 == hashlib.md5(open(file,'rb').read()).hexdigest()
