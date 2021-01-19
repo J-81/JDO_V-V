@@ -61,6 +61,22 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     else:
         log.warning(f"No expected md5sums supplied, cannot verify raw read files")
 
+    # count fastqc files
+    if paired_end:
+        expected_count = 2
+    else:
+        expected_count = 1
+
+    log.info(f"Checking expected FastQC files counts")
+    for sample in sample_names:
+        html_count, zip_count = _count_fastqc_files_by_sample(sample,
+                                                              path=f"{input_path}/FastQC_Reports")
+        if html_count != expected_count:
+            log.error(f"Expected {expected_count} html files for {sample}, found {html_count}")
+        if zip_count != expected_count:
+            log.error(f"Expected {expected_count} zip  files for {sample}, found {zip_count}")
+
+
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
     """ Parses file names from raw read files
@@ -99,3 +115,17 @@ def _md5_check(file: str, expected_md5: str) -> bool:
     :param expected_md5: expected md5 hex digest, supplied by GeneLab
     """
     return expected_md5 == hashlib.md5(open(file,'rb').read()).hexdigest()
+
+def _count_fastqc_files_by_sample(sample: str, path: str) -> Tuple[int, int]:
+    """ Counts the fastqc output files for a given sample
+
+    Args:
+        sample: unique sample name
+        path: directory to search for fastqc files
+
+    Returns:
+        (html_count, zip_count)
+    """
+    html_count = len(glob.glob(os.path.join(path, f"{sample}*.html")))
+    zip_count = len(glob.glob(os.path.join(path, f"{sample}*.zip")))
+    return (html_count, zip_count)
