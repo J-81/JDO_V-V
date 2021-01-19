@@ -5,6 +5,10 @@
 V-V Scripts for RNASeq raw and processed data processed through the RNASeq consensus
 pipeline.
 
+This project will seek to implement two kinds of V-V.  First, one that can be performed
+on a standard file directory after processing.  Second, functions that are run as part of
+the Nextflow implementation of the RNASeq consensus pipeline.
+
 ### How do I get set up? ###
 
 * Summary of set up
