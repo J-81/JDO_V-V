@@ -1,6 +1,4 @@
 """ V-V for raw reads.
-
-# TODO: add support for paired and single end inputs
 """
 import statistics
 import glob
@@ -8,12 +6,22 @@ import os
 import logging
 log = logging.getLogger(__name__)
 
-def VV(input_path: str, paired_end: bool):
-    """ Performs validation and verification for input of RNASeq datasets
+def validate_verify(input_path: str, paired_end: bool):
+    """Performs validation and verification for input of RNASeq datasets.
+    Additionally checks for FastQC file existence.
 
-    Args:
-        input_path: path where the raw read files are location
-        paried_end: True for paired end, False for single reads
+    This assumes the following file format:
+
+    |  ``Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R2_raw.fastq.gz``
+    |  ``<SAMPLE NAME-----------------><READ->.fastq.gz``
+
+    This also assumes that regardless of paired or single mode, there exists a file named:
+
+    <SAMPLE NAME>_R1_raw.fastq.gz
+    and <SAMPLE NAME> never includes "_R1_raw.fastq.gz"
+
+    :param input_path: path where the raw read files are location
+    :param paired_end: True for paired end, False for single reads
     """
     log.debug(f"Processing Paired End: {paired_end}")
 
@@ -40,19 +48,8 @@ def VV(input_path: str, paired_end: bool):
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
     """ Parses file names from raw read files
 
-    This assumes the following file format:
-        Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R2_raw.fastq.gz
-        [SAMPLE NAME*****************][READ*].fastq.gz
-
-    This also assumes that regardless of paired or single mode, there exists a
-        file named: <SAMPLE NAME>_R1_raw.fastq.gz
-        and <SAMPLE NAME> never includes "_R1_raw.fastq.gz"
-
-    Args:
-        files: compressed raw read files
-        paired_end: flag indicating whether the data is paired ended or single
-
-    Returns:
+    :param files: compressed raw read files
+    :param paired_end: flag indicating whether the data is paired ended or single
 
     """
     # extract basename from full paths
@@ -67,15 +64,13 @@ def _parse_samples(files: [str], paired_end: bool) -> [str]:
 def _size_check(files: [str]) -> dict:
     """ Gets file size for input files.
 
-    Args:
-        files: compressed raw read files
-
-    Returns:
-        Dict: file:float(filesize in bytes)
+    :param files: compressed raw read files
     """
     return {f:_bytes_to_gb(os.path.getsize(f)) for f in files}
 
 def _bytes_to_gb(bytes: int):
     """ utility function, converts bytes to gb
+
+    :param bytes: bytes to convert
     """
     return bytes/float(1<<30)

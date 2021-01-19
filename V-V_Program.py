@@ -23,8 +23,8 @@ def main():
     log.info("Starting Raw Data V-V")
     raw_path = os.path.join(DATA_PATH, "00-RawData", "Fastq")
     log.debug(f"raw_path: {raw_path}")
-    raw_results = raw_reads.VV(input_path=raw_path,
-                               paired_end=PAIRED_END)
+    raw_results = raw_reads.validate_verify(input_path=raw_path,
+                                            paired_end=PAIRED_END)
     log.info("Finished Raw Data V-V")
 
 if __name__ == '__main__':
