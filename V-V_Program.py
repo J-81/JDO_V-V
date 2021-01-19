@@ -8,7 +8,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d
                     level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-from lib import raw_reads
+from VV import raw_reads
 
 # TODO: convert to proper configuration
 GLDS = 194
