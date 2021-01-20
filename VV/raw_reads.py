@@ -23,11 +23,12 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     and <SAMPLE NAME> never includes "_R1_raw.fastq.gz"
 
     Performs the following checks:
-    1. File name enumeration
-    2. File Size stats
-    3. Sample name extraction
-    4. md5sum check (if expected md5sums are supplied)
-    5. FastQC file count check
+    #. File name enumeration
+    #. Sample name extraction
+    #. Checks for appropriate number of raw read files (2x samples for Paired, 1x samples for Single)
+    #. md5sum check (if expected md5sums are supplied)
+    #. FastQC file count check
+    #. File Size stats
 
     :param input_path: path where the raw read files are location
     :param paired_end: True for paired end, False for single reads
@@ -52,6 +53,21 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     sample_names = _parse_samples(files, paired_end)
     log.info(f"{len(sample_names)} Samples, example: {sample_names[0]}")
     log.debug(f"Samples: {sample_names}")
+
+    #  check if number of raw files is appropriate
+    check_name = "Raw Read File Number Check"
+    for sample in sample_names:
+        R1_count, R2_count = _file_counts_check(files, sample)
+        if (paired_end and R1_count == 1 and R2_count == 1):
+            log.info(f"PASS: {check_name}:"
+                     f"Found both forward and reverse read files for {sample}")
+        elif (not paired_end and R1_count == 1 and R2_count == 0):
+            log.info(f"PASS: {check_name}:"
+                     f"Found R1 read file for {sample}")
+        else:
+            log.error(f"FAIL: {check_name}:"
+                      f"Incorrect number of files, R1:{R1_count}, R2:{R2_count} for {sample}")
+
 
     # calculate md5sum of files and check against known md5sums
     if md5sums:
@@ -85,6 +101,31 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
         if zip_count != expected_count:
             log.error(f"Expected {expected_count} zip  files for {sample}, found {zip_count}")
     log.info(f"Finished checking expected FastQC files counts")
+
+def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
+    """ Returns the number of R1 and R2 files found for each sample
+
+    Note: the replace ensures the 'R1' and 'R2' substrings from the sample name
+    are not detected for counting Forward and Reverse read files.
+
+    :param files: compressed raw read files
+    :param sample: sample name
+    """
+    filenames = [os.path.basename(file) for file in files]
+    R1_count = 0
+    R2_count = 0
+    for filename in filenames:
+        cleaned_filename = filename.replace(sample, "")
+        # skip filenames that do not contain sample
+        if sample not in filename:
+            continue
+        elif "R1" in cleaned_filename:
+            R1_count += 1
+        elif "R2" in cleaned_filename:
+            R2_count += 1
+        else:
+            log.warning(f"ANOMOLY: Unexpected filename format for {filename}")
+    return (R1_count, R2_count)
 
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
