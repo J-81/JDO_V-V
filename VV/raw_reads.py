@@ -1,5 +1,6 @@
 """ V-V for raw reads.
 """
+from collections import namedtuple
 from typing import Tuple
 import hashlib
 import statistics
@@ -8,6 +9,10 @@ import os
 import gzip
 import logging
 log = logging.getLogger(__name__)
+
+# information extracted from raw reads V-V
+# used to check against other sources of information including ISA file.
+rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
 
 def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     """Performs validation and verification for input of RNASeq datasets.
@@ -27,7 +32,7 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     #. File name enumeration
     #. Sample name extraction
     #. Checks for appropriate number of raw read files (2x samples for Paired, 1x samples for Single)
-    #. Check every identifier lines appear every four lines as expect TODO: parse identifier lines for UMI 
+    #. Check every identifier lines appear every four lines as expect TODO: parse identifier lines for UMI
     #. md5sum check (if expected md5sums are supplied)
     #. FastQC file count check
     #. File Size stats
@@ -72,9 +77,8 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
 
     # check lines of files
     for file in files:
-        print(file)
         _check_fastq_content(file)
-        break
+
 
     # calculate md5sum of files and check against known md5sums
     if md5sums:
@@ -108,6 +112,8 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
         if zip_count != expected_count:
             log.error(f"Expected {expected_count} zip  files for {sample}, found {zip_count}")
     log.info(f"Finished checking expected FastQC files counts")
+
+    return rawReadsInfo(sample_names = set(sample_names))
 
 def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
     """ Returns the number of R1 and R2 files found for each sample
