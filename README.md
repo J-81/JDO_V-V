@@ -13,6 +13,9 @@ the Nextflow implementation of the RNASeq consensus pipeline.
 
 * Summary of set up
 
+Additional dependencies (not currently available using Anaconda):
+- https://github.com/ISA-tools (Note: this was installed via pip, not additional action should be needed on oberyn)
+
 Activate conda environment (Note: this environment is on the oberyn node)
 > conda activate rnaseq_v1.0
 
