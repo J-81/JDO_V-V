@@ -5,6 +5,7 @@ import hashlib
 import statistics
 import glob
 import os
+import gzip
 import logging
 log = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     #. File name enumeration
     #. Sample name extraction
     #. Checks for appropriate number of raw read files (2x samples for Paired, 1x samples for Single)
+    #. Check every identifier lines appear every four lines as expect TODO: parse identifier lines for UMI 
     #. md5sum check (if expected md5sums are supplied)
     #. FastQC file count check
     #. File Size stats
@@ -68,6 +70,11 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
             log.error(f"FAIL: {check_name}:"
                       f"Incorrect number of files, R1:{R1_count}, R2:{R2_count} for {sample}")
 
+    # check lines of files
+    for file in files:
+        print(file)
+        _check_fastq_content(file)
+        break
 
     # calculate md5sum of files and check against known md5sums
     if md5sums:
@@ -127,13 +134,46 @@ def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
             log.warning(f"ANOMOLY: Unexpected filename format for {filename}")
     return (R1_count, R2_count)
 
+def _check_fastq_content(file: str) -> int:
+    """ Checks fastq lines for expected header content
+
+    Note: Example of header from GLDS-194
+
+    |  ``@J00113:376:HMJMYBBXX:3:1101:26666:1244 1:N:0:NCGCTCGA\n``
+
+    This also assumes the fastq file does NOT split sequence or quality lines
+    for any read
+
+    :param file: compressed fastq file to check
+    """
+    #SKIP_INTERVAL = 2
+
+    checkname = "FastQ Lines Check"
+    expected_length = None
+    with gzip.open(file, "rb") as f:
+        for i, line in enumerate(f):
+            # only check every fifth line to save time checking
+            #if i % SKIP_INTERVAL != 0:
+            #    continue
+
+            line = line.decode()
+            # every fourth line should be an identifier
+            expected_identifier_line = (i % 4 == 0)
+            # check if line is actually an identifier line
+            if (expected_identifier_line and line[0] != "@"):
+                log.error(f"FAIL: {checkname}: "
+                          f"Line {i} of {file} was not an identifier line as expected "
+                          f"LINE {i}: {line}")
+            # update every 20,000,000 reads
+            if i % 20000000 == 0:
+                log.debug(f"Checked {i} lines for {file}")
+    return
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
     """ Parses file names from raw read files
 
     :param files: compressed raw read files
     :param paired_end: flag indicating whether the data is paired ended or single
-
     """
     # extract basename from full paths
     fnames = [os.path.basename(f) for f in files]
