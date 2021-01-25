@@ -8,12 +8,14 @@ import logging
 # TODO: replace with proper argpase
 print(sys.argv)
 if len(sys.argv) == 2:
-    if sys.argv[1] == "INFO":
+    if sys.argv[1] in ["INFO","DEBUG","WARNING"]:
+        log_levels = {"INFO":20,"DEBUG":10,"WARNING":30}
         logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                            level=logging.INFO)
-    elif sys.argv[1] == "DEBUG":
-        logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                            level=logging.DEBUG)
+                            level=log_levels[sys.argv[1]])
+    else:
+        print("Logging level must be one of the following: <INFO,DEBUG,WARNING>")
+        sys.exit()
+
 else:
     print("Using INFO logging level by default")
     logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
@@ -21,7 +23,7 @@ else:
 
 log = logging.getLogger(__name__)
 
-from VV import raw_reads, parse_isa
+from VV import raw_reads, parse_isa, fastqc
 
 # TODO: convert to proper configuration
 GLDS = 194
@@ -54,8 +56,18 @@ def main():
     raw_path = os.path.join(DATA_PATH, "00-RawData")
     log.debug(f"raw_path: {raw_path}")
     raw_results = raw_reads.validate_verify(input_path=raw_path,
-                                            paired_end=PAIRED_END)
+                                            paired_end=PAIRED_END,
+                                            check_lines=False)
     log.info("Finished Raw Data V-V")
+
+    log.info("Starting Check Raw FastQC and MultiQC files")
+    fastqc_path = os.path.join(DATA_PATH, "00-RawData", "FastQC_Reports")
+    log.debug(f"fastQC_path: {fastqc_path}")
+    fastqc.validate_verify(samples=isa_raw_sample_names,
+                           input_path=fastqc_path,
+                           paired_end=PAIRED_END,
+                           expected_suffix="_raw_fastqc")
+    log.info("Finished Check Raw FastQC and MultiQC files")
 
     log.debug(f"Results from Raw VV: {raw_results}")
 

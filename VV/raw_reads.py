@@ -14,7 +14,11 @@ log = logging.getLogger(__name__)
 # used to check against other sources of information including ISA file.
 rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
 
-def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
+def validate_verify(input_path: str,
+                    paired_end: bool,
+                    check_lines: bool,
+                    md5sums: dict = {},
+                    ):
     """Performs validation and verification for input of RNASeq datasets.
     Additionally checks for FastQC file existence.
 
@@ -40,6 +44,7 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
     :param input_path: path where the raw read files are location
     :param paired_end: True for paired end, False for single reads
     :param md5sums: dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1
+    :param check_lines: checks identifier lines if True, takes around 10 min per file with GLDS-194
     """
     log.debug(f"Processing Paired End: {paired_end}")
 
@@ -76,8 +81,11 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
                       f"Incorrect number of files, R1:{R1_count}, R2:{R2_count} for {sample}")
 
     # check lines of files
-    for file in files:
-        _check_fastq_content(file)
+    if check_lines:
+        for file in files:
+            _check_fastq_content(file)
+    else:
+        log.warning(f"WARNING: Line checking disabled.  Make sure this was intentional!")
 
 
     # calculate md5sum of files and check against known md5sums
@@ -96,22 +104,6 @@ def validate_verify(input_path: str, paired_end: bool, md5sums: dict = {}):
                 log.error(f"MISMATCH: md5sum does not match expected for {os.path.basename(file)}")
     else:
         log.warning(f"No expected md5sums supplied, cannot verify raw read files")
-
-    # count fastqc files
-    if paired_end:
-        expected_count = 2
-    else:
-        expected_count = 1
-
-    log.info(f"Checking expected FastQC files counts")
-    for sample in sample_names:
-        html_count, zip_count = _count_fastqc_files_by_sample(sample,
-                                                              path=f"{input_path}/FastQC_Reports")
-        if html_count != expected_count:
-            log.error(f"Expected {expected_count} html files for {sample}, found {html_count}")
-        if zip_count != expected_count:
-            log.error(f"Expected {expected_count} zip  files for {sample}, found {zip_count}")
-    log.info(f"Finished checking expected FastQC files counts")
 
     return rawReadsInfo(sample_names = set(sample_names))
 
@@ -211,17 +203,3 @@ def _md5_check(file: str, expected_md5: str) -> bool:
     :param expected_md5: expected md5 hex digest, supplied by GeneLab
     """
     return expected_md5 == hashlib.md5(open(file,'rb').read()).hexdigest()
-
-def _count_fastqc_files_by_sample(sample: str, path: str) -> Tuple[int, int]:
-    """ Counts the fastqc output files for a given sample
-
-    Args:
-        sample: unique sample name
-        path: directory to search for fastqc files
-
-    Returns:
-        (html_count, zip_count)
-    """
-    html_count = len(glob.glob(os.path.join(path, f"{sample}*.html")))
-    zip_count = len(glob.glob(os.path.join(path, f"{sample}*.zip")))
-    return (html_count, zip_count)
