@@ -23,7 +23,7 @@ else:
 
 log = logging.getLogger(__name__)
 
-from VV import raw_reads, parse_isa, fastqc
+from VV import raw_reads, parse_isa, fastqc, multiqc
 
 # TODO: convert to proper configuration
 GLDS = 194
@@ -34,6 +34,9 @@ PARENT_PATH = "/data2/JO_Internship_2021/V-V_scripts"
 
 DATA_PATH = os.path.join(PARENT_PATH, f"GLDS-{GLDS}")
 PAIRED_END = True
+
+### Raw Read Parameters
+AVG_SEQUENCE_LENGTH_TOLERANCE = 0.1
 
 def main():
     """ Calls raw and processed data V-V functions
@@ -67,6 +70,15 @@ def main():
                            input_path=fastqc_path,
                            paired_end=PAIRED_END,
                            expected_suffix="_raw_fastqc")
+
+    multiqc_path = os.path.join(DATA_PATH,
+                                "00-RawData",
+                                "FastQC_Reports",
+                                "raw_multiqc_report",
+                                "raw_multiqc_data.zip")
+    multiqc.validate_verify(multiQC_zip_path=multiqc_path,
+                            paired_end=PAIRED_END,
+                            sequence_length_tolerance=AVG_SEQUENCE_LENGTH_TOLERANCE)
     log.info("Finished Check Raw FastQC and MultiQC files")
 
     log.debug(f"Results from Raw VV: {raw_results}")
