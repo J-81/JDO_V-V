@@ -1,6 +1,14 @@
 """ Validation and Verification Program For RNASeq Consenus Pipeline
 
-
+Terminology:
+- SampleWise: Describes metric based on entire sample
+- ReadsWise: Describes metrics based on a read file (forward and reverse reads
+    for the same samples are distinct entities in when this term is used)
+- DatasetWise: Describes metric based on all samples in set
+- PASS: Indicates the data has passed a V&V condition
+- FAIL: Indicates the data has failed a V&V condition and will need further manually assessment
+- WARN: Indicates the data has an anomoly.  In aggregate, this may indicate
+    further manual assessment but by taken itself should not require such measures 
 """
 import os
 import sys
