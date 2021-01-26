@@ -6,13 +6,21 @@
 Welcome to JDO_V-V's documentation!
 ===================================
 
+.. automodule:: VV.fastqc
+    :members:
+
+.. automodule:: VV.multiqc
+    :members:
+
+.. automodule:: VV.parse_isa
+    :members:
+
 .. automodule:: VV.raw_reads
     :members:
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 
 
 Indices and tables
