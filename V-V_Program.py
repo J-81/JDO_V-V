@@ -8,90 +8,102 @@ Terminology:
 - PASS: Indicates the data has passed a V&V condition
 - FAIL: Indicates the data has failed a V&V condition and will need further manually assessment
 - WARN: Indicates the data has an anomoly.  In aggregate, this may indicate
-    further manual assessment but by taken itself should not require such measures 
+    further manual assessment but by taken itself should not require such measures
 """
+##############################################################
+# Imports
+##############################################################
+
 import os
 import sys
+import configparser
+import argparse
 import logging
-# TODO: replace with proper argpase
-print(sys.argv)
-if len(sys.argv) == 2:
-    if sys.argv[1] in ["INFO","DEBUG","WARNING"]:
-        log_levels = {"INFO":20,"DEBUG":10,"WARNING":30}
-        logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                            level=log_levels[sys.argv[1]])
-    else:
-        print("Logging level must be one of the following: <INFO,DEBUG,WARNING>")
-        sys.exit()
 
-else:
-    print("Using INFO logging level by default")
-    logging.basicConfig(format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                        level=logging.INFO)
-
-log = logging.getLogger(__name__)
 
 from VV import raw_reads, parse_isa, fastqc, multiqc
+# ISA TOOLS Causes an issue with logging level
 
-# TODO: convert to proper configuration
-GLDS = 194
-# oberyn
-PARENT_PATH = "/data2/JO_Internship_2021/V-V_scripts"
-# local
-# PARENT_PATH = "/home/joribello/Documents/OneDrive/NASA/Fall2020/project/V-V_scripts"
 
-DATA_PATH = os.path.join(PARENT_PATH, f"GLDS-{GLDS}")
-PAIRED_END = True
+##############################################################
+# Utility Functions To Handle Logging, Config and CLI Arguments
+##############################################################
 
-### Raw Read Parameters
-AVG_SEQUENCE_LENGTH_TOLERANCE = 0.1
-
-def main():
-    """ Calls raw and processed data V-V functions
+def _parse_args():
+    """ Parse command line args.
     """
+    parser = argparse.ArgumentParser(description='Perform Automated V&V on '
+                                                 'raw and processed RNASeq Data.')
+    parser.add_argument('--config', metavar='c', nargs='+', required=True,
+                        help='INI format configuration file')
 
-    log.info("Parsing ISA and Extracting Sample Names")
-    isa_zip_path = os.path.join(DATA_PATH,
-                                "Metadata",
-                                f"GLDS-{GLDS}_metadata_GLDS-{GLDS}-ISA.zip")
-    samples_dict = parse_isa.get_sample_names(isa_zip_path)
+    args = parser.parse_args()
+    print(args)
+    return args
+
+
+args = _parse_args()
+config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+config.read(args.config)
+
+# Set up logging
+if config['Logging']["LoggingConsole"] in ["INFO","DEBUG","WARNING","ERROR","CRITICAL"]:
+    log_levels = {"INFO":20,"DEBUG":10,"WARNING":30, "ERROR":40, "CRITICAL":50}
+    logging_level = log_levels[config['Logging']['LoggingConsole']]
+else:
+    print("Logging level must be one of the following: <DEBUG,INFO,WARNING,ERROR,CRITICAL>")
+    sys.exit()
+# Fixes ISA logging but needs a much better fix
+log = logging.getLogger("VV")
+log.setLevel(logging_level)
+
+
+##############################################################
+# Main Function To Call Each V&V Function
+##############################################################
+
+def main(config: dict()):
+    """ Calls raw and processed data V-V functions
+
+    :param config: configuration object
+    """
+    #log.debug("Parsing ISA and Extracting Sample Names")
+    samples_dict = parse_isa.get_sample_names(config["Paths"].get("ISAZip"))
     isa_raw_sample_names = set([sample
-                            for study in samples_dict.values()
-                            for assay_samples in study.values()
-                            for sample in assay_samples])
-    log.debug(f"Full Sample Name Dict: {samples_dict}")
-    log.info(f"{len(isa_raw_sample_names)} "
-             f"Total Unique Samples Found: {isa_raw_sample_names}")
+                                for study in samples_dict.values()
+                                for assay_samples in study.values()
+                                for sample in assay_samples])
+    #log.debug(f"Full Sample Name Dict: {samples_dict}")
+    #log.info(f"{len(isa_raw_sample_names)} "
+    #         f"Total Unique Samples Found: {isa_raw_sample_names}")
 
-    log.info("Starting Raw Data V-V")
-    raw_path = os.path.join(DATA_PATH, "00-RawData")
-    log.debug(f"raw_path: {raw_path}")
-    raw_results = raw_reads.validate_verify(input_path=raw_path,
-                                            paired_end=PAIRED_END,
-                                            check_lines=False)
-    log.info("Finished Raw Data V-V")
+    #log.info("Starting Raw Data V-V")
+    #raw_path = os.path.join(DATA_PATH, "00-RawData")
+    #log.debug(f"raw_path: {raw_path}")
+    raw_results = raw_reads.validate_verify(
+                    input_path=config["Paths"].get("RawReadDir"),
+                    paired_end=config["GLDS"].getboolean("PairedEnd"),
+                    check_lines=config["Options"].getboolean("CheckFastQLines"))
+    #log.info("Finished Raw Data V-V")
 
-    log.info("Starting Check Raw FastQC and MultiQC files")
-    fastqc_path = os.path.join(DATA_PATH, "00-RawData", "FastQC_Reports")
-    log.debug(f"fastQC_path: {fastqc_path}")
-    fastqc.validate_verify(samples=isa_raw_sample_names,
-                           input_path=fastqc_path,
-                           paired_end=PAIRED_END,
-                           expected_suffix="_raw_fastqc")
+    #log.info("Starting Check Raw FastQC and MultiQC files")
+    #fastqc_path = os.path.join(DATA_PATH, "00-RawData", "FastQC_Reports")
+    #log.debug(f"fastQC_path: {fastqc_path}")
+    fastqc.validate_verify(
+        samples=isa_raw_sample_names,
+        input_path=config["Paths"].get("RawFastQCDir"),
+        paired_end=config["GLDS"].getboolean("PairedEnd"),
+        expected_suffix=config["Naming"].get("FastQCSuffix"))
 
-    multiqc_path = os.path.join(DATA_PATH,
-                                "00-RawData",
-                                "FastQC_Reports",
-                                "raw_multiqc_report",
-                                "raw_multiqc_data.zip")
-    multiqc.validate_verify(multiQC_zip_path=multiqc_path,
-                            paired_end=PAIRED_END,
-                            sequence_length_tolerance=AVG_SEQUENCE_LENGTH_TOLERANCE)
-    log.info("Finished Check Raw FastQC and MultiQC files")
+    multiqc.validate_verify(
+        multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
+        paired_end=config["GLDS"].getboolean("PairedEnd"),
+        sequence_length_tolerance=config["Options"].getfloat("SequenceLengthVariationTolerance"))
+    #log.info("Finished Check Raw FastQC and MultiQC files")
 
-    log.debug(f"Results from Raw VV: {raw_results}")
+    #log.debug(f"Results from Raw VV: {raw_results}")
 
-    log.info(f"Checking if sample names from raw reads folder match ISA file")
+    #log.info(f"Checking if sample names from raw reads folder match ISA file")
     sample_names_match = raw_results.sample_names == isa_raw_sample_names
     checkname = "ISA sample names should match raw reads folder"
     if sample_names_match:
@@ -103,4 +115,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(config)
