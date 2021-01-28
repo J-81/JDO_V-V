@@ -82,7 +82,7 @@ def main(config: dict()):
     raw_results = raw_reads.validate_verify(
                     input_path=config["Paths"].get("RawReadDir"),
                     paired_end=config["GLDS"].getboolean("PairedEnd"),
-                    check_lines=config["Options"].getboolean("CheckFastQLines"))
+                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"))
     #log.info("Finished Raw Data V-V")
 
     #log.info("Starting Check Raw FastQC and MultiQC files")

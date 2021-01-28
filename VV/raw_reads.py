@@ -16,7 +16,7 @@ rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
 
 def validate_verify(input_path: str,
                     paired_end: bool,
-                    check_lines: bool,
+                    count_lines_to_check: int,
                     md5sums: dict = {},
                     ):
     """Performs validation and verification for input of RNASeq datasets.
@@ -44,7 +44,7 @@ def validate_verify(input_path: str,
     :param input_path: path where the raw read files are location
     :param paired_end: True for paired end, False for single reads
     :param md5sums: dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1
-    :param check_lines: checks identifier lines if True, takes around 10 min per file with GLDS-194
+    :param count_lines_to_check: number of lines to check, takes around 10 min per file with GLDS-194 for 100% check.  Special values: -1 indicates to check all lines, 0 disables line checking completely
     """
     log.debug(f"Processing Paired End: {paired_end}")
 
@@ -81,9 +81,9 @@ def validate_verify(input_path: str,
                       f"Incorrect number of files, R1:{R1_count}, R2:{R2_count} for {sample}")
 
     # check lines of files
-    if check_lines:
+    if count_lines_to_check:
         for file in files:
-            _check_fastq_content(file)
+            _check_fastq_content(file, count_lines_to_check=count_lines_to_check)
     else:
         log.warning(f"WARNING: Line checking disabled.  Make sure this was intentional!")
 
@@ -132,7 +132,7 @@ def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
             log.warning(f"ANOMOLY: Unexpected filename format for {filename}")
     return (R1_count, R2_count)
 
-def _check_fastq_content(file: str) -> int:
+def _check_fastq_content(file: str, count_lines_to_check: int) -> int:
     """ Checks fastq lines for expected header content
 
     Note: Example of header from GLDS-194
@@ -143,16 +143,19 @@ def _check_fastq_content(file: str) -> int:
     for any read
 
     :param file: compressed fastq file to check
+    :param count_lines_to_check: number of lines to check. Special value: -1 means no limit, check all lines.
     """
-    #SKIP_INTERVAL = 2
+    if count_lines_to_check == -1:
+        count_lines_to_check = float("inf")
 
     checkname = "FastQ Lines Check"
     expected_length = None
     with gzip.open(file, "rb") as f:
         for i, line in enumerate(f):
             # only check every fifth line to save time checking
-            #if i % SKIP_INTERVAL != 0:
-            #    continue
+            if i+1 == count_lines_to_check:
+                log.debug(f"Reached {count_lines_to_check} lines, ending line check")
+                return
 
             line = line.decode()
             # every fourth line should be an identifier
@@ -165,6 +168,7 @@ def _check_fastq_content(file: str) -> int:
             # update every 20,000,000 reads
             if i % 20000000 == 0:
                 log.debug(f"Checked {i} lines for {file}")
+    log.info(f"Reached end of read file at {i+1} lines, ending line check")
     return
 
 def _parse_samples(files: [str], paired_end: bool) -> [str]:
