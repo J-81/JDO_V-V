@@ -78,7 +78,6 @@ def main(config: dict()):
     #         f"Total Unique Samples Found: {isa_raw_sample_names}")
 
     #log.info("Starting Raw Data V-V")
-    #raw_path = os.path.join(DATA_PATH, "00-RawData")
     #log.debug(f"raw_path: {raw_path}")
     raw_results = raw_reads.validate_verify(
                     input_path=config["Paths"].get("RawReadDir"),
@@ -87,7 +86,6 @@ def main(config: dict()):
     #log.info("Finished Raw Data V-V")
 
     #log.info("Starting Check Raw FastQC and MultiQC files")
-    #fastqc_path = os.path.join(DATA_PATH, "00-RawData", "FastQC_Reports")
     #log.debug(f"fastQC_path: {fastqc_path}")
     fastqc.validate_verify(
         samples=isa_raw_sample_names,
