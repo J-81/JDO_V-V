@@ -23,7 +23,7 @@ def validate_verify(samples: [str],
 
     checkname = "FastQC file existence check"
     for prefix in read_prefixes:
-        log.info(f"Checking {prefix} FastQC files")
+        log.debug(f"Checking {prefix} FastQC files")
         expected_html_file = os.path.join(input_path, f"{prefix}{expected_suffix}.html")
         expected_zip_file = os.path.join(input_path, f"{prefix}{expected_suffix}.html")
         html_file_exists = os.path.isfile(expected_html_file)
