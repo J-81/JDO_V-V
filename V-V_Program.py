@@ -9,6 +9,12 @@ Terminology:
 - FAIL: Indicates the data has failed a V&V condition and will need further manually assessment
 - WARN: Indicates the data has an anomoly.  In aggregate, this may indicate
     further manual assessment but by taken itself should not require such measures
+
+- Logging Level Notes
+    - Debug: start of check
+    - Info: Check passes
+    - Warning: Anomoly found, but did not failing a hard check
+    - Error: Hard Check Failed
 """
 ##############################################################
 # Imports
@@ -22,6 +28,7 @@ import logging
 
 
 from VV import raw_reads, parse_isa, fastqc, multiqc
+from VV.data import Dataset
 # ISA TOOLS Causes an issue with logging level
 
 
@@ -68,7 +75,8 @@ def main(config: dict()):
     :param config: configuration object
     """
     #log.debug("Parsing ISA and Extracting Sample Names")
-    samples_dict = parse_isa.get_sample_names(config["Paths"].get("ISAZip"))
+    samples_dict = parse_isa.get_sample_names(
+            config["Paths"].get("ISAZip"))
     isa_raw_sample_names = set([sample
                                 for study in samples_dict.values()
                                 for assay_samples in study.values()
@@ -93,10 +101,25 @@ def main(config: dict()):
         paired_end=config["GLDS"].getboolean("PairedEnd"),
         expected_suffix=config["Naming"].get("FastQCSuffix"))
 
+
+    isa = Dataset(config["Paths"].get("ISAZip"))
+    thresholds = dict()
+    thresholds['avg_sequence_length'] = config['Options'].getfloat("SequenceLengthVariationTolerance")
+    thresholds['percent_gc'] = config['Options'].getfloat("PercentGCVariationTolerance")
+    thresholds['total_sequences'] = config['Options'].getfloat("TotalSequencesVariationTolerance")
+    thresholds['percent_duplicates'] = config['Options'].getfloat("PercentDuplicatesVariationTolerance")
+
+    mqc = multiqc.MultiQC(
+            multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
+            samples=isa.assays['transcription profiling by RNASeq'].samples,
+            paired_end=config["GLDS"].getboolean("PairedEnd"),
+            outlier_thresholds=thresholds)
+    '''
     multiqc.validate_verify(
         multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
         paired_end=config["GLDS"].getboolean("PairedEnd"),
         sequence_length_tolerance=config["Options"].getfloat("SequenceLengthVariationTolerance"))
+    '''
     #log.info("Finished Check Raw FastQC and MultiQC files")
 
     #log.debug(f"Results from Raw VV: {raw_results}")
@@ -110,6 +133,7 @@ def main(config: dict()):
         log.error(f"FAIL: {checkname}: "
                   f"ISA: {isa_raw_sample_names}"
                   f"RawReads Folder: {raw_results.sample_names}")
+
 
 
 if __name__ == '__main__':
