@@ -23,6 +23,8 @@ class StarAlignments():
         self.final = self._parse_log_final()
         self._validate_alignment_files()
         self._check_outliers()
+        log.debug(f"Validating additional files for Star")
+        self._validate_additional_files()
 
     def _check_outliers(self):
         # TODO: add thresholds as configurables
@@ -125,6 +127,76 @@ class StarAlignments():
                         # add to dictionary
                         final_data[sample][metric] = data
         return final_data
+
+    def _validate_additional_files(self):
+        """ Checks for existence of the following files:
+        - <sample>_Log.out
+            - First line condition:
+                - Starts with "STAR version="
+            - Last line conditin:
+                - ALL DONE!
+        - <sample>_SJ.out.tab
+            - Condition for every 100 lines
+                - 9 tokens per line upon split (correct number of columns)
+        - <sample>_Log.progress.out
+            First line condition:
+                - is the following:
+                - Time    Speed        Read     Read   Mapped   Mapped   Mapped   Mapped Unmapped Unmapped Unmapped Unmapped
+            - Last line condition:
+                - ALL DONE!
+        """
+        for sample in self.samples:
+            # Log.out check
+            log_out_file = os.path.join(self.dir_path,
+                                    sample,
+                                    f"{sample}_Log.out")
+            expected = "STAR version="
+
+            with open(log_out_file, "r") as f:
+                lines = f.readlines()
+            error = None
+            if not lines[0].strip().startswith(expected):
+                error = (f"First line does not "
+                         f"start with {expected}")
+
+            expected = "ALL DONE!"
+            if lines[-1].strip() != expected:
+                error = (f"Last line does not "
+                         f"equal {expected}")
+            if error:
+                log.error(f"FAIL: {log_out_file} has issue: {error}")
+
+             # SJ.out.tab check
+            sj_out_file = os.path.join(self.dir_path,
+                                    sample,
+                                    f"{sample}_SJ.out.tab")
+
+            with open(sj_out_file, "r") as f:
+                for i, line in enumerate(f.readlines()):
+                    if i % 100 == 0:
+                        tokens = line.split()
+                        if len(tokens)  != 9:
+                            log.error(f"FAIL: {sj_out_file} line {i} does not look correct: {line}")
+
+            # _Log.progress.out check
+            log_progress_out_file = os.path.join(self.dir_path,
+                                    sample,
+                                    f"{sample}_Log.progress.out")
+            expected = "Time    Speed        Read     Read   Mapped   Mapped   Mapped   Mapped Unmapped Unmapped Unmapped Unmapped"
+
+            with open(log_progress_out_file, "r") as f:
+                lines = f.readlines()
+            error = None
+            if not lines[0].strip().startswith(expected):
+                error = (f"First line does not "
+                         f"start with {expected}")
+
+            expected = "ALL DONE!"
+            if lines[-1].strip() != expected:
+                error = (f"Last line does not "
+                         f"equal {expected}")
+            if error:
+                log.error(f"FAIL: {log_progress_out_file} has issue: {error}")
 
     def _validate_alignment_files(self):
         """ Checks for existence of expected alignment files.
