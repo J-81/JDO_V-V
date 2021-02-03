@@ -40,8 +40,10 @@ def sampleWise_outlier_check(samples: dict, outlier_stdev: float) -> [str]:
     _min_value = _median - _stdev*outlier_stdev
 
     for sample, value in samples.items():
-        if _max_value > value > _min_value:
-            outliers.append(sample)
+        if _max_value >= value >= _min_value:
+            continue
+        else:
+            outliers.append((read, value))
 
     return outliers
 
@@ -108,6 +110,13 @@ def extract_samplename(name: str) -> Tuple[str, str, str, str]:
             else:
                 sample += token
     return (sample,read,suffix,extension)
+
+def bytes_to_gb(bytes: int) -> float:
+    """ utility function, converts bytes to gb
+
+    :param bytes: bytes to convert
+    """
+    return bytes/float(1<<30)
 
 # Test
 if __name__ == "__main__":
