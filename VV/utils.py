@@ -18,12 +18,21 @@ def samplename_to_filenames(sample: str, paired_end: str) -> [str]:
     else:
         return [forward_read_filename, reverse_read_filename]
 
+# TODO: refactor this and next function
 def max_median_mean(values: [float]) -> Tuple[float, float, float]:
     """ Return max median and mean for a set of values
 
     :param values: Values to retrieve stats for
     """
     return max(values), median(values), min(values)
+
+def max_median_mean_stdev(values: [float]) -> Tuple[float, float, float]:
+    """ Return max median and mean for a set of values
+
+    :param values: Values to retrieve stats for
+    """
+    return max(values), median(values), min(values), stdev(values)
+
 
 
 def sampleWise_outlier_check(samples: dict, outlier_stdev: float) -> [str]:
@@ -43,7 +52,7 @@ def sampleWise_outlier_check(samples: dict, outlier_stdev: float) -> [str]:
         if _max_value >= value >= _min_value:
             continue
         else:
-            outliers.append((read, value))
+            outliers.append((sample, value))
 
     return outliers
 
