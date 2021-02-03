@@ -32,6 +32,7 @@ from VV import raw_reads, parse_isa, fastqc, multiqc
 from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.rsem import RsemCounts
+from VV.deseq2 import Deseq2NormalizedCounts
 # ISA TOOLS Causes an issue with logging level
 
 
@@ -173,6 +174,12 @@ def main(config: dict()):
                dir_path=config['Paths'].get("RsemParentDir"),
                outlier_stdev_threshold=config["Rsem"].getfloat('CountsVariationTolerance'))
 
+    ###########################################################################
+    # Deseq2 Normalized Counts VV
+    ###########################################################################
+    Deseq2NormalizedCounts(samples=isa.assays['transcription profiling by RNASeq'].samples,
+                            dir_path=config['Paths'].get("Deseq2ParentDir"),
+                            has_ERCC=config['Deseq2'].getboolean("HasERCC"))
 
     ###########################################################################
     # Filename Checking
