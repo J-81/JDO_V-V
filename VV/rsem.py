@@ -25,6 +25,9 @@ class RsemCounts():
         log.debug(f"Parsing isoform counts")
         self.isoform_counts, isoform_file_missing = self._parse_isoform_counts()
 
+        if len(self.isoform_counts) == 0 or len(self.gene_counts) == 0:
+            log.error(f"FAIL: Empty results found for Rsem: {self.isoform_counts}: {self.gene_counts}")
+
         log.debug(f"Checking for outliers")
         if gene_file_missing or isoform_file_missing:
             log.warning(f"Skipping outlier check, RSEM files missing")
