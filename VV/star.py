@@ -5,7 +5,7 @@ import subprocess
 import logging
 log = logging.getLogger(__name__)
 
-from VV.utils import bytes_to_gb
+from VV.utils import bytes_to_gb, sampleWise_outlier_check, max_median_mean_stdev
 
 class StarAlignments():
     """ Representation of Star Alignment output results data.
@@ -22,6 +22,37 @@ class StarAlignments():
         self.dir_path = dir_path
         self.final = self._parse_log_final()
         self._validate_alignment_files()
+        self._check_outliers()
+
+    def _check_outliers(self):
+        # TODO: add thresholds as configurables
+        # TODO: rearrange this, way too many loops/conditionals
+        threshold = 2
+        # grab all extracted metrics
+        for metric in self.final[self.samples[0]].keys():
+            log.debug(f"Checking {metric} for outliers in Star Results")
+            # repackage into {sample:value} format
+            metric_to_check = dict()
+            for sample, data in self.final.items():
+                for metric_name, value in data.items():
+                    if metric_name == metric:
+                        metric_to_check[sample] = value
+                        break
+
+            # log max median min
+            _max, _median, _min, _stdev = max_median_mean_stdev(list(metric_to_check.values()))
+            log.debug(f"{metric} stats: Max: {_max} Median: {_median} "
+                      f"Min: {_min} St.Dev: {_stdev}")
+
+            # check for outliers
+            outliers = sampleWise_outlier_check(metric_to_check,
+                                                outlier_stdev=threshold)
+            if outliers:
+                log.error(f"FAIL: {metric} Outliers detected "
+                          f"in Star Results: {outliers}")
+
+
+
 
     def __repr__(self):
         return f"Star Alignment Results: <{self.samples}>"
