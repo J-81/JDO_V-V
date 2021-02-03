@@ -17,6 +17,7 @@ rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
 def validate_verify(input_path: str,
                     paired_end: bool,
                     count_lines_to_check: int,
+                    expected_suffix: str,
                     md5sums: dict = {},
                     ):
     """Performs validation and verification for input of RNASeq datasets.
@@ -62,12 +63,12 @@ def validate_verify(input_path: str,
 
 
     # extract sample names
-    sample_names = _parse_samples(files, paired_end)
+    sample_names = _parse_samples(files, paired_end, expected_suffix)
     log.info(f"{len(sample_names)} Samples, example: {sample_names[0]}")
     log.debug(f"Samples: {sample_names}")
 
     #  check if number of raw files is appropriate
-    check_name = "Raw Read File Number Check"
+    check_name = f"{expected_suffix} Read File Number Check"
     for sample in sample_names:
         R1_count, R2_count = _file_counts_check(files, sample)
         if (paired_end and R1_count == 1 and R2_count == 1):
@@ -171,7 +172,7 @@ def _check_fastq_content(file: str, count_lines_to_check: int) -> int:
     log.info(f"Reached end of read file at {i+1} lines, ending line check")
     return
 
-def _parse_samples(files: [str], paired_end: bool) -> [str]:
+def _parse_samples(files: [str], paired_end: bool, expected_suffix: str) -> [str]:
     """ Parses file names from raw read files
 
     :param files: compressed raw read files
@@ -181,7 +182,8 @@ def _parse_samples(files: [str], paired_end: bool) -> [str]:
     fnames = [os.path.basename(f) for f in files]
 
     # extract sample names
-    unique_samples = list(set([fname.replace("_R1_raw.fastq.gz","").replace("_R2_raw.fastq.gz","")
+    unique_samples = list(set([fname.replace(f"_R1{expected_suffix}.fastq.gz","")\
+                                    .replace(f"_R2{expected_suffix}.fastq.gz","")
                                for fname in fnames]))
 
     return unique_samples

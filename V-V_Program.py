@@ -25,6 +25,7 @@ import sys
 import configparser
 import argparse
 import logging
+import datetime
 
 
 from VV import raw_reads, parse_isa, fastqc, multiqc
@@ -65,6 +66,22 @@ log = logging.getLogger("VV")
 log.setLevel(logging_level)
 
 
+run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+# set up file logging (warning)
+fh = logging.FileHandler(f"log/{run_timestamp}_issues.log")
+fh.setLevel(logging.WARNING)
+fh_formatter = logging.Formatter('%(levelname)s: %(message)s')
+fh.setFormatter(fh_formatter)
+log.addHandler(fh)
+
+# full debug log (debug level)
+fh = logging.FileHandler(f"debug/{run_timestamp}_debug.log")
+fh.setLevel(logging.DEBUG)
+fh_formatter = logging.Formatter('%(asctime)s:%(levelname)s:<%(filename)s:Line:%(lineno)s>: %(message)s')
+fh.setFormatter(fh_formatter)
+log.addHandler(fh)
+
 ##############################################################
 # Main Function To Call Each V&V Function
 ##############################################################
@@ -81,6 +98,13 @@ def main(config: dict()):
                                 for study in samples_dict.values()
                                 for assay_samples in study.values()
                                 for sample in assay_samples])
+
+    isa = Dataset(config["Paths"].get("ISAZip"))
+
+
+    ########################################################################
+    # Raw Read VV
+    ########################################################################
     #log.debug(f"Full Sample Name Dict: {samples_dict}")
     #log.info(f"{len(isa_raw_sample_names)} "
     #         f"Total Unique Samples Found: {isa_raw_sample_names}")
@@ -90,7 +114,8 @@ def main(config: dict()):
     raw_results = raw_reads.validate_verify(
                     input_path=config["Paths"].get("RawReadDir"),
                     paired_end=config["GLDS"].getboolean("PairedEnd"),
-                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"))
+                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
+                    expected_suffix=config["Naming"].get("RawReadsSuffix"))
     #log.info("Finished Raw Data V-V")
 
     #log.info("Starting Check Raw FastQC and MultiQC files")
@@ -99,40 +124,78 @@ def main(config: dict()):
         samples=isa_raw_sample_names,
         input_path=config["Paths"].get("RawFastQCDir"),
         paired_end=config["GLDS"].getboolean("PairedEnd"),
-        expected_suffix=config["Naming"].get("FastQCSuffix"))
+        expected_suffix=config["Naming"].get("RawFastQCSuffix"))
 
 
-    isa = Dataset(config["Paths"].get("ISAZip"))
     thresholds = dict()
-    thresholds['avg_sequence_length'] = config['Options'].getfloat("SequenceLengthVariationTolerance")
-    thresholds['percent_gc'] = config['Options'].getfloat("PercentGCVariationTolerance")
-    thresholds['total_sequences'] = config['Options'].getfloat("TotalSequencesVariationTolerance")
-    thresholds['percent_duplicates'] = config['Options'].getfloat("PercentDuplicatesVariationTolerance")
+    thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
+    thresholds['percent_gc'] = config['Raw'].getfloat("PercentGCVariationTolerance")
+    thresholds['total_sequences'] = config['Raw'].getfloat("TotalSequencesVariationTolerance")
+    thresholds['percent_duplicates'] = config['Raw'].getfloat("PercentDuplicatesVariationTolerance")
 
-    mqc = multiqc.MultiQC(
+    raw_mqc = multiqc.MultiQC(
             multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
             samples=isa.assays['transcription profiling by RNASeq'].samples,
             paired_end=config["GLDS"].getboolean("PairedEnd"),
             outlier_thresholds=thresholds)
-    '''
-    multiqc.validate_verify(
-        multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
+
+    ########################################################################
+    # Trimmed Read VV
+    ########################################################################
+    #log.debug(f"Full Sample Name Dict: {samples_dict}")
+    #log.info(f"{len(isa_raw_sample_names)} "
+    #         f"Total Unique Samples Found: {isa_raw_sample_names}")
+
+    #log.info("Starting Raw Data V-V")
+    #log.debug(f"raw_path: {raw_path}")
+    trimmed_results = raw_reads.validate_verify(
+                    input_path=config["Paths"].get("TrimmedReadDir"),
+                    paired_end=config["GLDS"].getboolean("PairedEnd"),
+                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
+                    expected_suffix=config["Naming"].get("TrimmedReadsSuffix"))
+    #log.info("Finished Raw Data V-V")
+
+    #log.info("Starting Check Raw FastQC and MultiQC files")
+    #log.debug(f"fastQC_path: {fastqc_path}")
+    fastqc.validate_verify(
+        samples=isa_raw_sample_names,
+        input_path=config["Paths"].get("TrimmedFastQCDir"),
         paired_end=config["GLDS"].getboolean("PairedEnd"),
-        sequence_length_tolerance=config["Options"].getfloat("SequenceLengthVariationTolerance"))
-    '''
+        expected_suffix=config["Naming"].get("TrimmedFastQCSuffix"))
+
+
+    thresholds = dict()
+    thresholds['avg_sequence_length'] = config['Trimmed'].getfloat("SequenceLengthVariationTolerance")
+    thresholds['percent_gc'] = config['Trimmed'].getfloat("PercentGCVariationTolerance")
+    thresholds['total_sequences'] = config['Trimmed'].getfloat("TotalSequencesVariationTolerance")
+    thresholds['percent_duplicates'] = config['Trimmed'].getfloat("PercentDuplicatesVariationTolerance")
+
+    trimmed_mqc = multiqc.MultiQC(
+            multiQC_zip_path=config["Paths"].get("TrimmedMultiQCZip"),
+            samples=isa.assays['transcription profiling by RNASeq'].samples,
+            paired_end=config["GLDS"].getboolean("PairedEnd"),
+            outlier_thresholds=thresholds)
+
     #log.info("Finished Check Raw FastQC and MultiQC files")
 
     #log.debug(f"Results from Raw VV: {raw_results}")
 
     #log.info(f"Checking if sample names from raw reads folder match ISA file")
-    sample_names_match = raw_results.sample_names == isa_raw_sample_names
-    checkname = "ISA sample names should match raw reads folder"
+    ###########################################################################
+    # Sample Name Check
+    ###########################################################################
+    sample_names_match = raw_results.sample_names == \
+                         set(isa.assays['transcription profiling by RNASeq'].samples) ==\
+                         trimmed_results.sample_names
+    checkname = "ISA sample names should match both raw reads"\
+                "and trimmed reads folder"
     if sample_names_match:
         log.info(f"PASS: {checkname}")
     else:
         log.error(f"FAIL: {checkname}: "
-                  f"ISA: {isa_raw_sample_names}"
-                  f"RawReads Folder: {raw_results.sample_names}")
+                  f"ISA: {isa.assays['transcription profiling by RNASeq'].samples}"
+                  f"RawReads Folder: {raw_results.sample_names} "
+                  f"TrimmedReads Folder: {trimmed_results.sample_names} ")
 
 
 
