@@ -31,6 +31,7 @@ import datetime
 from VV import raw_reads, parse_isa, fastqc, multiqc
 from VV.star import StarAlignments
 from VV.data import Dataset
+from VV.rsem import RsemCounts
 # ISA TOOLS Causes an issue with logging level
 
 
@@ -164,6 +165,13 @@ def main(config: dict()):
     ###########################################################################
     StarAlignments(samples=isa.assays['transcription profiling by RNASeq'].samples,
                    dir_path=config['Paths'].get("StarParentDir"))
+
+    ###########################################################################
+    # RSEM Counts VV
+    ###########################################################################
+    RsemCounts(samples=isa.assays['transcription profiling by RNASeq'].samples,
+               dir_path=config['Paths'].get("RsemParentDir"),
+               outlier_stdev_threshold=config["Rsem"].getfloat('CountsVariationTolerance'))
 
 
     ###########################################################################
