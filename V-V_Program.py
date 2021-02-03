@@ -29,6 +29,7 @@ import datetime
 
 
 from VV import raw_reads, parse_isa, fastqc, multiqc
+from VV.star import StarAlignments
 from VV.data import Dataset
 # ISA TOOLS Causes an issue with logging level
 
@@ -157,6 +158,13 @@ def main(config: dict()):
             samples=isa.assays['transcription profiling by RNASeq'].samples,
             paired_end=config["GLDS"].getboolean("PairedEnd"),
             outlier_thresholds=thresholds)
+
+    ###########################################################################
+    # STAR Alignment VV
+    ###########################################################################
+    StarAlignments(samples=isa.assays['transcription profiling by RNASeq'].samples,
+                   dir_path=config['Paths'].get("StarParentDir"))
+
 
     ###########################################################################
     # Filename Checking
