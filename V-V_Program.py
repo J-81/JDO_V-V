@@ -91,7 +91,9 @@ def main(config: dict()):
 
     :param config: configuration object
     """
-    #log.debug("Parsing ISA and Extracting Sample Names")
+    ########################################################################
+    # ISA File parsing
+    ########################################################################
     samples_dict = parse_isa.get_sample_names(
             config["Paths"].get("ISAZip"))
     isa_raw_sample_names = set([sample
@@ -101,25 +103,15 @@ def main(config: dict()):
 
     isa = Dataset(config["Paths"].get("ISAZip"))
 
-
     ########################################################################
     # Raw Read VV
     ########################################################################
-    #log.debug(f"Full Sample Name Dict: {samples_dict}")
-    #log.info(f"{len(isa_raw_sample_names)} "
-    #         f"Total Unique Samples Found: {isa_raw_sample_names}")
-
-    #log.info("Starting Raw Data V-V")
-    #log.debug(f"raw_path: {raw_path}")
     raw_results = raw_reads.validate_verify(
                     input_path=config["Paths"].get("RawReadDir"),
                     paired_end=config["GLDS"].getboolean("PairedEnd"),
                     count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
                     expected_suffix=config["Naming"].get("RawReadsSuffix"))
-    #log.info("Finished Raw Data V-V")
 
-    #log.info("Starting Check Raw FastQC and MultiQC files")
-    #log.debug(f"fastQC_path: {fastqc_path}")
     fastqc.validate_verify(
         samples=isa_raw_sample_names,
         input_path=config["Paths"].get("RawFastQCDir"),
@@ -142,27 +134,17 @@ def main(config: dict()):
     ########################################################################
     # Trimmed Read VV
     ########################################################################
-    #log.debug(f"Full Sample Name Dict: {samples_dict}")
-    #log.info(f"{len(isa_raw_sample_names)} "
-    #         f"Total Unique Samples Found: {isa_raw_sample_names}")
-
-    #log.info("Starting Raw Data V-V")
-    #log.debug(f"raw_path: {raw_path}")
     trimmed_results = raw_reads.validate_verify(
                     input_path=config["Paths"].get("TrimmedReadDir"),
                     paired_end=config["GLDS"].getboolean("PairedEnd"),
                     count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
                     expected_suffix=config["Naming"].get("TrimmedReadsSuffix"))
-    #log.info("Finished Raw Data V-V")
 
-    #log.info("Starting Check Raw FastQC and MultiQC files")
-    #log.debug(f"fastQC_path: {fastqc_path}")
     fastqc.validate_verify(
         samples=isa_raw_sample_names,
         input_path=config["Paths"].get("TrimmedFastQCDir"),
         paired_end=config["GLDS"].getboolean("PairedEnd"),
         expected_suffix=config["Naming"].get("TrimmedFastQCSuffix"))
-
 
     thresholds = dict()
     thresholds['avg_sequence_length'] = config['Trimmed'].getfloat("SequenceLengthVariationTolerance")
@@ -176,17 +158,13 @@ def main(config: dict()):
             paired_end=config["GLDS"].getboolean("PairedEnd"),
             outlier_thresholds=thresholds)
 
-    #log.info("Finished Check Raw FastQC and MultiQC files")
-
-    #log.debug(f"Results from Raw VV: {raw_results}")
-
-    #log.info(f"Checking if sample names from raw reads folder match ISA file")
     ###########################################################################
-    # Sample Name Check
+    # Filename Checking
     ###########################################################################
     sample_names_match = raw_results.sample_names == \
                          set(isa.assays['transcription profiling by RNASeq'].samples) ==\
                          trimmed_results.sample_names
+
     checkname = "ISA sample names should match both raw reads"\
                 "and trimmed reads folder"
     if sample_names_match:
