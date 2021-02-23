@@ -38,7 +38,7 @@ class Deseq2NormalizedCounts():
         """
         files = ["SampleTable.csv", "Unnormalized_Counts.csv", "Normalized_Counts.csv"]
         if self.has_ERCC:
-            files.extend("ERCC_Normalized_Counts.csv")
+            files.append("ERCC_Normalized_Counts.csv")
         for i, file in enumerate(files):
             check_file = os.path.join(self.dir_path, file)
             log.debug(f"Checking {check_file}")
