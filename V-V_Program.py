@@ -71,6 +71,13 @@ log.setLevel(logging_level)
 
 run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
+########################################################################
+# Log Folder Setup
+########################################################################
+os.makedirs(name = "log", exist_ok = True)
+os.makedirs(name = "debug", exist_ok = True)
+
+
 # set up file logging (warning)
 fh = logging.FileHandler(f"log/{run_timestamp}_issues.log")
 fh.setLevel(logging.WARNING)
