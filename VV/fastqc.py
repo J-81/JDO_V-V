@@ -5,6 +5,8 @@ import os
 import logging
 log = logging.getLogger(__name__)
 
+from VV.flagging import Flagger
+
 def validate_verify(samples: [str],
                     input_path: str,
                     paired_end: bool,
@@ -29,9 +31,7 @@ def validate_verify(samples: [str],
         html_file_exists = os.path.isfile(expected_html_file)
         zip_file_exists = os.path.isfile(expected_zip_file)
         if not html_file_exists or not zip_file_exists:
-           log.error(f"FAIL: {checkname}: "
-                     f"html file: {expected_html_file}: {html_file_exists}: "
-                     f"zip file: {expected_zip_file}: {zip_file_exists}"
-                     )
+            Flagger.flag(message=f"Missing {expected_html_file} and/or {expected_zip_file}",
+                            severity=90)
         else:
             log.info(f"PASS: {checkname}")
