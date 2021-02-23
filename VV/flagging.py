@@ -15,7 +15,8 @@ class Flagger():
         self._log_threshold = 30
         timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
         self._log_file = f"{timestamp}_VV_Results.txt"
-
+        with open(self._log_file, "w") as f:
+            f.write(f"START OF VV RUN: {timestamp}")
 
     def flag(self, message, severity):
         """ Given an issue, logs a flag, prints human readable message
