@@ -129,7 +129,7 @@ def main(config: dict()):
     thresholds['percent_duplicates'] = config['Raw'].getfloat("PercentDuplicatesVariationTolerance")
 
     raw_mqc = multiqc.MultiQC(
-            multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
+            multiQC_out_path=config["Paths"].get("RawMultiQCDir"),
             samples=isa.assays['transcription profiling by RNASeq'].samples,
             paired_end=config["GLDS"].getboolean("PairedEnd"),
             outlier_thresholds=thresholds)
@@ -156,7 +156,7 @@ def main(config: dict()):
     thresholds['percent_duplicates'] = config['Trimmed'].getfloat("PercentDuplicatesVariationTolerance")
 
     trimmed_mqc = multiqc.MultiQC(
-            multiQC_zip_path=config["Paths"].get("TrimmedMultiQCZip"),
+            multiQC_out_path=config["Paths"].get("TrimmedMultiQCDir"),
             samples=isa.assays['transcription profiling by RNASeq'].samples,
             paired_end=config["GLDS"].getboolean("PairedEnd"),
             outlier_thresholds=thresholds)
