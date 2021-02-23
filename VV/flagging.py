@@ -1,6 +1,7 @@
 """ Functions to create a consistent system for flagging issues found during
 the V-V checks.  Uses logging
 """
+from datetime import datetime
 
 class Flagger():
     """ Flagging object
@@ -12,9 +13,14 @@ class Flagger():
                             70:"Red Warning",
                             90:"Fail"}
         self._log_threshold = 30
+        timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+        self._log_file = f"{timestamp}_VV_Results.txt"
 
 
     def flag(self, message, severity):
         """ Given an issue, logs a flag, prints human readable message
         """
-        print(f"{self._severity[severity]}: {message}: source:{self._script}")
+        report = f"{self._severity[severity]}: {message}: source:{self._script}"
+        print(report)
+        with open(self._log_file, "w") as f:
+            f.write(report)
