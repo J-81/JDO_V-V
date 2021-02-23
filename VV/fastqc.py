@@ -6,6 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from VV.flagging import Flagger
+Flagger = Flagger(script=__name__)
 
 def validate_verify(samples: [str],
                     input_path: str,

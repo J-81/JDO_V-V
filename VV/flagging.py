@@ -17,4 +17,4 @@ class Flagger():
     def flag(self, message, severity):
         """ Given an issue, logs a flag, prints human readable message
         """
-        print(f"{self._severity[severity]}: {message}")
+        print(f"{self._severity[severity]}: {message}: source:{self._script}")
