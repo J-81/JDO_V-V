@@ -40,7 +40,8 @@ class RsemCounts():
         file_missing_flag = False
         for sample in self.samples:
             file_path = os.path.join(self.dir_path,
-                                     f"{sample}.{result_type}.results")
+                                     ,sample
+                                     ,f"{sample}.{result_type}.results")
             if not os.path.isfile(file_path):
                 log.error(f"FAIL: For {sample}, {file_path} not found")
                 continue
