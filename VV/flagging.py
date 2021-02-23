@@ -18,10 +18,10 @@ class Flagger():
         with open(self._log_file, "w") as f:
             f.write(f"START OF VV RUN: {timestamp}")
 
-    def flag(self, message, severity):
+    def flag(self, message, severity, checkID):
         """ Given an issue, logs a flag, prints human readable message
         """
-        report = f"{self._severity[severity]}: {message}: source:{self._script}"
+        report = f"{self._severity[severity]}: {message}: source:{self._script}: checkID: {checkID}"
         print(report)
         with open(self._log_file, "w") as f:
             f.write(report)
