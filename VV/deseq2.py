@@ -36,31 +36,95 @@ class Deseq2NormalizedCounts():
         - additionally checks that the first and last lines of each counts csv are different
             - This implies normalization with performed correctly
         """
-        files = ["SampleTable.csv", "Unnormalized_Counts.csv", "Normalized_Counts.csv"]
+        # SampleTable.csv Check
+        check_file = os.path.join(self.dir_path, "SampleTable.csv")
+        log.debug(f"Checking {check_file}")
+        if os.path.isfile(check_file):
+            df = pd.read_csv(check_file, header=0)
+            samples_in_file = list(df.iloc[:,0])
+            if set(samples_in_file) != set(self.samples):
+                Flagger.flag(message=(f"{check_file} samples do not match ones"
+                                    f" expected: SampleTable {samples_in_file}"
+                                    f" expected {self.samples}"),
+                              severity=70,
+                              checkID="D_0001")
+        else:
+            Flagger.flag(message=(f"Missing {check_file}"),
+                          severity=70,
+                          checkID="D_0002")
+
+        # Unnormalized_Counts.csv Check
+        check_file = os.path.join(self.dir_path, "Unnormalized_Counts.csv")
+        log.debug(f"Checking {check_file}")
+        if os.path.isfile(check_file):
+            df = pd.read_csv(check_file, header=0, index_col=0)
+            # capture first row of data for comparision
+            unnorm_df = df.copy()
+
+            samples_in_file = list(df.columns)
+            if set(samples_in_file) != set(self.samples):
+                Flagger.flag(message=(f"{check_file} samples do not match ones"
+                                    f" expected: Unnormalized_Counts {samples_in_file}"
+                                    f" expected {self.samples}"),
+                              severity=70,
+                              checkID="D_0003")
+
+        else:
+            Flagger.flag(message=(f"Missing {check_file}"),
+                          severity=70,
+                          checkID="D_0004")
+
+        # Normalized_Counts.csv Check
+        check_file = os.path.join(self.dir_path, "Normalized_Counts.csv")
+        log.debug(f"Checking {check_file}")
+        if os.path.isfile(check_file):
+            df = pd.read_csv(check_file, header=0, index_col=0)
+            # capture first row of data for comparision
+            norm_df = df.copy()
+
+            samples_in_file = list(df.columns)
+            if set(samples_in_file) != set(self.samples):
+                Flagger.flag(message=(f"{check_file} samples do not match ones"
+                                    f" expected: Normalized_Counts {samples_in_file}"
+                                    f" expected {self.samples}"),
+                              severity=70,
+                              checkID="D_0005")
+
+        else:
+            Flagger.flag(message=(f"Missing {check_file}"),
+                          severity=70,
+                          checkID="D_0006")
+
+        # ERCC_Normalized_Counts.csv Check
         if self.has_ERCC:
-            files.append("ERCC_Normalized_Counts.csv")
-        for i, file in enumerate(files):
-            check_file = os.path.join(self.dir_path, file)
+            check_file = os.path.join(self.dir_path, "ERCC_Normalized_Counts.csv")
             log.debug(f"Checking {check_file}")
             if os.path.isfile(check_file):
-                df = pd.read_csv(check_file, header=0)
-                samples_in_file = list(df.iloc[:,0])
-                if set(samples_in_file) != set(self.samples):
-                    Flagger.flag(message=(f"{check_file} samples do not match ones"
-                                        f" expected: In File {samples_in_file}"
-                                        f" expected {self.samples}"),
-                                  severity=70,
-                                  checkID=f"D_00{i}1")
-            else:
-                Flagger.flag(message=(f"Missing {check_file}"),
+                df = pd.read_csv(check_file, header=0, index_col=0)
+                # capture first row of data for comparision
+                ercc_norm_df = df.copy()
+
+                samples_in_file = list(df.columns)
+            if set(samples_in_file) != set(self.samples):
+                Flagger.flag(message=(f"{check_file} samples do not match ones"
+                                    f" expected: ERCC_Normalized_Counts {samples_in_file}"
+                                    f" expected {self.samples}"),
                               severity=70,
-                              checkID=f"D_00{i+1}1")
+                              checkID="D_0007")
+
+        else:
+            Flagger.flag(message=(f"Missing {check_file}"),
+                          severity=70,
+                          checkID="D_0008")
+
 
         # length checks
         if self.has_ERCC and len(norm_df) == len(unnorm_df):
-            log.error(f"FAIL: Normalized count rows should not be equal to"
-                    " Unnormalized count rows in terms of number of rows if ERCC"
-                    " Spikein added.  This may indicate ERCC not detected.")
+            Flagger.flag(message=(f"Normalized count rows should not be equal to"
+                                    " Unnormalized count rows in terms of number of rows if ERCC"
+                                    " Spikein added.  This may indicate ERCC not detected."),
+                          severity=70,
+                          checkID="D_0009")
 
         # find matching gene and compare values
         for i in range(1000):
@@ -76,11 +140,11 @@ class Deseq2NormalizedCounts():
         log.debug(f"Value NORM: {norm_df.iloc[0,:]} should NOT equal"
                 f" Value UNNORM: {unnorm_df.iloc[i,:]}")
         if norm_df.iloc[0,:].equals(unnorm_df.iloc[i,:]):
-            log.error(f"FAIL: Normalized count values are the same as "
-                    "Unnormalized count values.  This means normalization was NOT "
-                    " performed.")
-
-
+            Flagger.flag(message=(f"Normalized count values are the same as"
+                                      " Unnormalized count values.  This means normalization was NOT "
+                                      " performed."),
+                          severity=70,
+                          checkID="D_0010")
 
         if self.has_ERCC:
             # length checks
