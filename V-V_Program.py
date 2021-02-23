@@ -66,7 +66,7 @@ else:
     sys.exit()
 # Fixes ISA logging but needs a much better fix
 log = logging.getLogger("VV")
-log.setLevel(logging_level)
+log.setLevel(50)
 
 
 run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
