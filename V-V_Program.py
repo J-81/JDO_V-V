@@ -28,7 +28,7 @@ import logging
 import datetime
 
 
-from VV import raw_reads, parse_isa, fastqc, multiqc
+from VV import raw_reads, parse_isa, fastqc, multiqc, trimmed_reads
 from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.rsem import RsemCounts
@@ -66,7 +66,7 @@ else:
     sys.exit()
 # Fixes ISA logging but needs a much better fix
 log = logging.getLogger("VV")
-log.setLevel(50)
+log.setLevel(log_levels[config["Logging"].get("LoggingConsole")])
 
 
 run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -116,17 +116,13 @@ def main(config: dict()):
     ########################################################################
     # Raw Read VV
     ########################################################################
-    raw_results = raw_reads.validate_verify(
-                    input_path=config["Paths"].get("RawReadDir"),
-                    paired_end=config["GLDS"].getboolean("PairedEnd"),
-                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
-                    expected_suffix=config["Naming"].get("RawReadsSuffix"))
+    input_paths = raw_reads.find_files(input_path = config["Paths"].get("RawReadDir"),
+                                       paired_end = config["GLDS"].getboolean("PairedEnd"),
+                                       samples = isa.assays['transcription profiling by RNASeq'].samples)
 
-    fastqc.validate_verify(
-        samples=isa_raw_sample_names,
-        input_path=config["Paths"].get("RawFastQCDir"),
-        paired_end=config["GLDS"].getboolean("PairedEnd"),
-        expected_suffix=config["Naming"].get("RawFastQCSuffix"))
+    raw_reads.validate_verify(input_paths = input_paths,
+                              paired_end = config["GLDS"].getboolean("PairedEnd"),
+                              count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
 
 
     thresholds = dict()
@@ -144,17 +140,13 @@ def main(config: dict()):
     ########################################################################
     # Trimmed Read VV
     ########################################################################
-    trimmed_results = raw_reads.validate_verify(
-                    input_path=config["Paths"].get("TrimmedReadDir"),
-                    paired_end=config["GLDS"].getboolean("PairedEnd"),
-                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"),
-                    expected_suffix=config["Naming"].get("TrimmedReadsSuffix"))
+    input_paths = trimmed_reads.find_files(input_path = config["Paths"].get("TrimmedReadDir"),
+                                   paired_end = config["GLDS"].getboolean("PairedEnd"),
+                                   samples = isa.assays['transcription profiling by RNASeq'].samples)
 
-    fastqc.validate_verify(
-        samples=isa_raw_sample_names,
-        input_path=config["Paths"].get("TrimmedFastQCDir"),
-        paired_end=config["GLDS"].getboolean("PairedEnd"),
-        expected_suffix=config["Naming"].get("TrimmedFastQCSuffix"))
+    trimmed_reads.validate_verify(input_paths = input_paths,
+                              paired_end = config["GLDS"].getboolean("PairedEnd"),
+                              count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
 
     thresholds = dict()
     thresholds['avg_sequence_length'] = config['Trimmed'].getfloat("SequenceLengthVariationTolerance")
@@ -187,25 +179,6 @@ def main(config: dict()):
     Deseq2NormalizedCounts(samples=isa.assays['transcription profiling by RNASeq'].samples,
                             dir_path=config['Paths'].get("Deseq2ParentDir"),
                             has_ERCC=config['Deseq2'].getboolean("HasERCC"))
-
-    ###########################################################################
-    # Filename Checking
-    ###########################################################################
-    sample_names_match = raw_results.sample_names == \
-                         set(isa.assays['transcription profiling by RNASeq'].samples) ==\
-                         trimmed_results.sample_names
-
-    checkname = "ISA sample names should match both raw reads"\
-                "and trimmed reads folder"
-    if sample_names_match:
-        log.info(f"PASS: {checkname}")
-    else:
-        log.error(f"FAIL: {checkname}: "
-                  f"ISA: {isa.assays['transcription profiling by RNASeq'].samples}"
-                  f"RawReads Folder: {raw_results.sample_names} "
-                  f"TrimmedReads Folder: {trimmed_results.sample_names} ")
-
-
 
 if __name__ == '__main__':
     main(config)
