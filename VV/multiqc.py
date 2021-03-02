@@ -1,6 +1,7 @@
 import zipfile
 import tempfile
 import os
+from pathlib import Path
 import json
 from typing import Tuple
 from statistics import median
@@ -8,6 +9,8 @@ import logging
 log = logging.getLogger(__name__)
 
 from VV.utils import readsWise_outlier_check
+from VV.flagging import Flagger
+Flagger = Flagger(script=Path(__file__).name)
 
 # TODO:
     # check total sequences between paired reads match
@@ -70,10 +73,13 @@ class MultiQC():
         for sample, sample_data in self.sample_mapping.items():
             forward_count = sample_data[0]['total_sequences']
             reverse_count = sample_data[1]['total_sequences']
-            log.debug(f"Read Counts: {sample}: forward {forward_count}: "
-                      f"reverse: {reverse_count}")
+            Flagger.flag(   message = f"Read Counts: {sample}: forward {forward_count}: reverse: {reverse_count}",
+                            severity=20,
+                            checkID="INFO")
             if forward_count != reverse_count:
-                log.error(f"Sample: {sample} has different forward and reverse reads counts")
+                Flagger.flag(   message = f"Sample: {sample} has different forward and reverse reads counts",
+                                severity=90,
+                                checkID="R_0004")
 
     def _check_outliers(self):
         """ Checks for outliers across reads for the following:
@@ -130,55 +136,6 @@ class MultiQC():
             zip_ref.extractall(temp_dir)
         return os.path.join(temp_dir, os.path.splitext(os.path.basename(multiQC_zip_path))[0], "multiqc_data.json")
 
-
-def validate_verify(multiQC_zip_path: str,
-                    paired_end: bool,
-                    sequence_length_tolerance: float = 0.05):
-    """ Checks multiQC data to ensure a metrics about raw reads are reasonable.
-
-    Logs an error if the average sequence length of any sample significantly
-    different than the rest of the data.
-
-    :param multiQC_zip_path: path to multiQC zip file
-    :param paired_end: True for assessing paired end reads, False for single end
-    :param sequence_length_tolerance: Percent allowed smaller or greater than the median before error is logged
-    """
-    json_file = _json_multiQC(multiQC_zip_path)
-    with open(json_file, "r") as f:
-        data = json.load(f)
-
-    # get max,min,median
-    avg_sequence_length = _extract_general_stats("avg_sequence_length", data)
-    max_avg_seq_len, med_avg_seq_len, min_avg_seq_len = _quick_stats(list(avg_sequence_length.values()))
-    log.info(f"INFO: Maximum ReadsWise Average Sequence Length: {max_avg_seq_len}")
-    log.info(f"INFO: Median  ReadsWise Average Sequence Length: {med_avg_seq_len}")
-    log.info(f"INFO: Minimum ReadsWise Average Sequence Length: {min_avg_seq_len}")
-    # define min and max and check
-    MAX_ALLOWED_LEN = med_avg_seq_len*(1+sequence_length_tolerance)
-    MIN_ALLOWED_LEN = med_avg_seq_len*(1-sequence_length_tolerance)
-    log.info(f"Checking if average sequence length is reasonable")
-    length_pass = True
-    for sample, value in avg_sequence_length.items():
-        log.debug(f"{sample} has average sequence length: {value}")
-        if not (MAX_ALLOWED_LEN > value > MIN_ALLOWED_LEN):
-            log.warning(f"Average sequence length is outside tolerated deviation from median: "
-                        f"Sample: {sample}")
-            length_pass = False
-    if not length_pass:
-        log.error(f"FAIL: At least one sample's average sequence length is outside tolerated deviation from median")
-
-'''
-def _json_multiQC(multiQC_zip_path: str) -> str:
-    """ Unzips multiQC and places into a tmp contents folder.
-    Returns path to multiQC json file.
-
-    :param multiQC_zip_path: path to multiQC zip file
-    """
-    temp_dir = tempfile.mkdtemp()
-    with zipfile.ZipFile(multiQC_zip_path, 'r') as zip_ref:
-        zip_ref.extractall(temp_dir)
-    return os.path.join(temp_dir, os.path.splitext(os.path.basename(multiQC_zip_path))[0], "multiqc_data.json")
-'''
 def _quick_stats(values: [float]) -> Tuple[float,float,float]:
     """ Given a list of values returns Max, Median and Maximum
 
