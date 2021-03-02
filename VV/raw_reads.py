@@ -6,18 +6,53 @@ import hashlib
 import statistics
 import glob
 import os
+import sys
+import configparser
+import argparse
+from pathlib import Path
 import gzip
 import logging
 log = logging.getLogger(__name__)
+
+from VV.data import Dataset
+from VV.multiqc import MultiQC
+from VV.flagging import Flagger
+Flagger = Flagger(script=Path(__file__).name)
 
 # information extracted from raw reads V-V
 # used to check against other sources of information including ISA file.
 rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
 
-def validate_verify(input_path: str,
+def find_files(input_path: str,
+                samples: list,
+                paired_end: bool):
+    """ Finds expected raw read files.
+
+    Returns paths to files is successfully found.
+    """
+    paths = dict()
+    for sample in samples:
+        # create list of expected file paths
+        expected_paths = list()
+        expected_paths.append(Path(input_path) / Path(f"{sample}_R1_raw.fastq.gz"))
+        if paired_end:
+            expected_paths.append(Path(input_path) / Path(f"{sample}_R2_raw.fastq.gz"))
+
+        for expected_path in expected_paths:
+            if expected_path.exists():
+                log.debug(f"Found {expected_path}")
+            else:
+                Flagger.flag(message = f"Could not find expected raw read file for {sample} (Expected file: {expected_path})",
+                                severity=90,
+                                checkID="R_0001")
+        paths[sample] = expected_paths
+    return paths
+
+
+
+def validate_verify(input_paths: dict,
                     paired_end: bool,
                     count_lines_to_check: int,
-                    expected_suffix: str,
                     md5sums: dict = {},
                     ):
     """Performs validation and verification for input of RNASeq datasets.
@@ -42,7 +77,7 @@ def validate_verify(input_path: str,
     #. FastQC file count check
     #. File Size stats
 
-    :param input_path: path where the raw read files are location
+    :param input_paths: samples, list(raw read paths)
     :param paired_end: True for paired end, False for single reads
     :param md5sums: dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1
     :param count_lines_to_check: number of lines to check, takes around 10 min per file with GLDS-194 for 100% check.  Special values: -1 indicates to check all lines, 0 disables line checking completely
@@ -50,7 +85,8 @@ def validate_verify(input_path: str,
     log.debug(f"Processing Paired End: {paired_end}")
 
     # load files from input_path
-    files = glob.glob(os.path.join(input_path, "Fastq", "*fastq.gz"))
+    files = list()
+    [files.extend(paths) for paths in input_paths.values()]
     log.info(f"{len(files)} Raw Read Files, example: {files[0]}")
     log.debug(files)
 
@@ -60,26 +96,6 @@ def validate_verify(input_path: str,
     log.info(f"Median file size: {statistics.median(file_sizes.values()):.3} GB")
     log.info(f"Min    file size: {min(file_sizes.values()):.3} GB")
     log.debug(f"All file sizes (in GB): {file_sizes}")
-
-
-    # extract sample names
-    sample_names = _parse_samples(files, paired_end, expected_suffix)
-    log.info(f"{len(sample_names)} Samples, example: {sample_names[0]}")
-    log.debug(f"Samples: {sample_names}")
-
-    #  check if number of raw files is appropriate
-    check_name = f"{expected_suffix} Read File Number Check"
-    for sample in sample_names:
-        R1_count, R2_count = _file_counts_check(files, sample)
-        if (paired_end and R1_count == 1 and R2_count == 1):
-            log.info(f"PASS: {check_name}:"
-                     f"Found both forward and reverse read files for {sample}")
-        elif (not paired_end and R1_count == 1 and R2_count == 0):
-            log.info(f"PASS: {check_name}:"
-                     f"Found R1 read file for {sample}")
-        else:
-            log.error(f"FAIL: {check_name}:"
-                      f"Incorrect number of files, R1:{R1_count}, R2:{R2_count} for {sample}")
 
     # check lines of files
     if count_lines_to_check:
@@ -105,8 +121,6 @@ def validate_verify(input_path: str,
                 log.error(f"MISMATCH: md5sum does not match expected for {os.path.basename(file)}")
     else:
         log.warning(f"No expected md5sums supplied, cannot verify raw read files")
-
-    return rawReadsInfo(sample_names = set(sample_names))
 
 def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
     """ Returns the number of R1 and R2 files found for each sample
@@ -209,3 +223,45 @@ def _md5_check(file: str, expected_md5: str) -> bool:
     :param expected_md5: expected md5 hex digest, supplied by GeneLab
     """
     return expected_md5 == hashlib.md5(open(file,'rb').read()).hexdigest()
+
+if __name__ == '__main__':
+    def _parse_args():
+        """ Parse command line args.
+        """
+        parser = argparse.ArgumentParser(description='Perform Automated V&V on '
+                                                     'raw reads.')
+        parser.add_argument('--config', metavar='c', nargs='+', required=True,
+                            help='INI format configuration file')
+
+        args = parser.parse_args()
+        print(args)
+        return args
+
+
+    args = _parse_args()
+    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+    config.read(args.config)
+
+
+    isa = Dataset(config["Paths"].get("ISAZip"))
+    samples = isa.assays['transcription profiling by RNASeq'].samples
+
+    input_paths = find_files(   input_path = config["Paths"].get("RawReadDir"),
+                                paired_end = config["GLDS"].getboolean("PairedEnd"),
+                                samples = samples)
+
+    validate_verify(input_paths = input_paths,
+                    paired_end = config["GLDS"].getboolean("PairedEnd"),
+                    count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
+
+    thresholds = dict()
+    thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
+    thresholds['percent_gc'] = config['Raw'].getfloat("PercentGCVariationTolerance")
+    thresholds['total_sequences'] = config['Raw'].getfloat("TotalSequencesVariationTolerance")
+    thresholds['percent_duplicates'] = config['Raw'].getfloat("PercentDuplicatesVariationTolerance")
+
+    raw_mqc = MultiQC(
+            multiQC_out_path=config["Paths"].get("RawMultiQCDir"),
+            samples=samples,
+            paired_end=config["GLDS"].getboolean("PairedEnd"),
+            outlier_thresholds=thresholds)
