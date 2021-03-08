@@ -1,35 +1,80 @@
 """ Data structures representing RNASeq Datasets in GeneLab
 
+Validation related to file existence is performed at the data loading steps
+
 """
 import zipfile
 import tempfile
 import os
+import statistics
+from pathlib import Path
 import logging
 log = logging.getLogger(__name__)
+
+#from VV.flagging import Flagger
+#Flagger = Flagger(script=Path(__file__).name)
 
 from isatools.io import isatab_parser
 from isatools.io.isatab_parser import ISATabRecord, ISATabAssayRecord
 
-class RNASeq_Sample():
+################################################################################
+# Utility Functions
+################################################################################
+def _size_check(files: [str]) -> dict:
+    """ Gets file size for input files.
+
+    :param files: compressed raw read files
+    """
+    return {f:_bytes_to_gb(os.path.getsize(f)) for f in files}
+
+def _bytes_to_gb(bytes: int):
+    """ utility function, converts bytes to gb
+
+    :param bytes: bytes to convert
+    """
+    return bytes/float(1<<30)
+
+################################################################################
+# Data Objects
+################################################################################
+
+class Sample():
     """ Representation of one sample and associated data files
     """
-    def __init__(self, name):
+    def __init__(self, name, assay):
         """
         """
         self.name = name
         self.data = dict()
+        self.assay = assay
+
+class RNASeq_Sample(Sample):
+    """ Representation of one sample and associated data files
+    """
+    def __init__(self, name, assay):
+        """
+        """
+        super().__init__(name, assay)
+        self.files = dict() # fileType: path
+
+    def __repr__(self):
+        return f"RNASeq Sample labeled: {self.name}"
 
 class Assay():
     """ Generic assay functionality and data representation
     """
     def __init__(self, assay: ISATabAssayRecord):
         self._assay = assay
-        self.samples = self._get_samples()
+        self._sample_type = Sample # override
+        self.samples = self._get_samples() # override
 
     def _get_samples(self):
-        return [node.name
+        return [self._sample_type(node.name, self)
                 for node in self._assay.nodes.values()
                 if node.ntype == "Sample Name"]
+
+    def __repr__(self):
+        return f"Assay Type: {self._assay}"
 
 class RNASeqAssay(Assay):
     """ Representation of a transcription profiling by RNASeq
@@ -37,8 +82,65 @@ class RNASeqAssay(Assay):
     """
     def __init__(self, assay: ISATabAssayRecord):
         super().__init__(assay)
+        self._sample_type = RNASeq_Sample
+        self.samples = self._get_samples()
         self.platform = self._assay.metadata['Study Assay Technology Platform']
+        self.library_layout = self._get_library_layout()
+        self.data_files_loaded = {'raw_reads':False}
+        self.data = dict() # data described entire assay
 
+    def _get_library_layout(self):
+        return self._assay\
+                   .process_nodes['rna-seq']\
+                   .metadata['Parameter Value[library layout]'][0]\
+                   .library_layout
+
+    def load_raw_reads(self, input_path, validate = True):
+        """ Load raw read files from selected directory
+        """
+        paths = dict()
+        for sample in self.samples:
+            forward_read_path = Path(input_path) / Path(f"{sample.name}_R1_raw.fastq.gz")
+            if self.library_layout == 'PAIRED':
+                reverse_read_path = Path(input_path) / Path(f"{sample.name}_R2_raw.fastq.gz")
+
+            # check for file existence
+            if not forward_read_path.exists():
+                Flagger.flag(message = f"Could not find expected raw read file for {sample.name} (Expected file: {forward_read_path})",
+                                severity=90,
+                                checkID="R_0001")
+            sample.files['forward_raw_read'] = forward_read_path
+
+            # check for file existence
+            if self.library_layout == 'PAIRED':
+                if not reverse_read_path.exists():
+                    Flagger.flag(message = f"Could not find expected raw read file for {sample.name} (Expected file: {forward_read_path})",
+                                    severity=90,
+                                    checkID="R_0001")
+                sample.files['reverse_raw_read'] = reverse_read_path
+
+        self.data_files_loaded['raw_reads'] = True
+
+    def validate_raw_reads(self):
+        if not self.data_files_loaded['raw_reads']:
+            raise ValueError("Raw Reads Files Not Loaded.  Use method: load_raw_reads")
+        else:
+            # calculate aggregate values
+            # forward reads first
+            files = self._get_files(file_type = "forward_raw_read")
+            # get compressed files sizes and log max,min,median
+            file_sizes = _size_check(files)
+            self.data["raw_read_file_size_stats_GB"] = {'max':max(file_sizes.values()),
+                                                        'median':statistics.median(file_sizes.values()),
+                                                        'min':min(file_sizes.values())}
+
+
+            # sample by sample line check
+            for sample in self.samples:
+                
+
+    def _get_files(self, file_type):
+        return [sample.files[file_type] for sample in self.samples]
 
 class Dataset():
     """ Datasets are composed of multiple samples and their associated sample files
