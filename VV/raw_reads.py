@@ -8,12 +8,13 @@ import gzip
 
 from VV.utils import outlier_check, label_file
 from VV.flagging import Flagger
+from seqpy import multiqc
 
 def validate_verify(samples: list[str],
                     raw_reads_dir: Path,
                     params: dict,
+                    flagger: Flagger,
                     file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
-                    flagger: Flagger = Flagger(script=__name__),
                     ):
     """ Performs VV for raw reads for checks involving raw reads files directly
     """
@@ -21,7 +22,7 @@ def validate_verify(samples: list[str],
     # SET FLAGGING OUTPUT ATTRIBUTES
     ##############################################################
     flagger.set_script(__name__)
-
+    flagger.set_step("Raw Reads")
     ##############################################################
     # GENERATE SAMPLE TO FILE MAPPING
     ##############################################################
@@ -86,7 +87,6 @@ def validate_verify(samples: list[str],
     # TODO: add file size checks (R_0003)
     ### DONE R_0003 ###################################################
 
-
 def _check_headers(file, count_lines_to_check: int) -> int:
     """ Checks fastq lines for expected header content
 
@@ -135,3 +135,48 @@ def _check_headers(file, count_lines_to_check: int) -> int:
     else:
         message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
     return (passes, message)
+
+def validate_verify_multiqc(samples: list[str],
+                            multiqc_json: Path,
+                            params: dict,
+                            flagger: Flagger,
+                            file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
+                            outlier_comparision_point: str = "median",
+                            ):
+    """ Performs VV for raw reads for checks involving multiqc json generated
+            by raw reads fastqc aggregation
+    """
+    ##############################################################
+    # SET FLAGGING OUTPUT ATTRIBUTES
+    ##############################################################
+    flagger.set_script(__name__)
+    flagger.set_step("Raw Reads [MultiQC]")
+    ##############################################################
+    # STAGE MULTIQC DATA FROM JSON
+    ##############################################################
+    mqc = multiqc.MultiQC(multiQC_json = multiqc_json,
+                          samples = samples,
+                          file_mapping_substrings = file_mapping_substrings,
+                          outlier_comparision_point = outlier_comparision_point)
+
+    ### START R_1001 ##################################################
+    # TODO: add paired read length match check (R_1001)
+    checkID = "R_1001"
+    for sample in samples:
+        entity = sample
+        # I.E: if the study is paired end
+        if set(("forward", "reverse")) == set(mqc.file_labels):
+            print(mqc.data[sample]["forward-avg_sequence_length"])
+            print(mqc.data[sample]["reverse-avg_sequence_length"])
+            pairs_match = mqc.data[sample]["forward-avg_sequence_length"].value == mqc.data[sample]["reverse-avg_sequence_length"].value
+            if pairs_match:
+                flagger.flag(entity = entity,
+                             message = f"Average sequence lengths match between pairs",
+                             severity = 30,
+                             checkID = checkID)
+            else:
+                flagger.flag(entity = entity,
+                             message = f"Average sequence lengths DO NOT match between pairs",
+                             severity = 90,
+                             checkID = checkID)
+    ### DONE R_1001 ###################################################
