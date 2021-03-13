@@ -177,8 +177,9 @@
 
 ### FastQC
 
-F_0001
-Check if expected FastQC files exist based on samples
+ - F_0001
+   - Check if expected FastQC files exist based on samples
+    - zip and html file should exist for each sample
 
 ### Deseq2
 
