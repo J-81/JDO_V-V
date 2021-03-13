@@ -30,15 +30,12 @@ from pathlib import Path
 
 from VV import raw_reads
 from VV import trimmed_reads
-from VV import parse_isa
 from VV import fastqc
-from VV import multiqc
-#from VV.star import StarAlignments
+from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.parameters import DEFAULT_PARAMS as PARAMS
-#from VV.rsem import RsemCounts
-#from VV.deseq2 import Deseq2NormalizedCounts
-# ISA TOOLS Causes an issue with logging level
+from VV.rsem import RsemCounts
+from VV.deseq2 import Deseq2NormalizedCounts
 from VV.flagging import Flagger
 
 ##############################################################
@@ -82,37 +79,27 @@ def main(config: dict()):
     ########################################################################
     # ISA File parsing
     ########################################################################
-    isa = Dataset(isa_zip_path = config["Paths"].get("ISAZip"))
-    print(isa)
+    isa_zip_path = Path(config["Paths"].get("ISAZip"))
+    isa = Dataset(isa_zip_path = isa_zip_path,
+                  flagger = flagger,
+                  entity = f"GLDS-{config['GLDS'].get('Number')}")
+    isa.validate_verify(vv_for = "RNASeq")
     samples = isa.get_sample_names(assay_name = "transcription profiling by RNASeq")
-
     ########################################################################
     # Raw Read VV
     ########################################################################
-    flagger.set_step("Raw Reads")
     raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
                               samples = samples,
                               flagger = flagger,
                               params = PARAMS["raw_reads"]
                               )
-    flagger.set_step("Raw Reads [MultiQC]")
-    raw_reads.validate_verify_mqc(multiqc_dir = Path(config["Paths"].get("RawMultiQCDir")),
-                                  samples = samples,
-                                  flagger = flagger,
-                                  params = PARAMS["raw_reads"]
-                                  )
+    raw_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("RawMultiQCDir")) / "multiqc_data.json",
+                                      samples = samples,
+                                      flagger = flagger,
+                                      params = PARAMS["raw_reads"],
+                                      outlier_comparision_point = "median")
 
-    thresholds = dict()
-    thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
-    thresholds['percent_gc'] = config['Raw'].getfloat("PercentGCVariationTolerance")
-    thresholds['total_sequences'] = config['Raw'].getfloat("TotalSequencesVariationTolerance")
-    thresholds['percent_duplicates'] = config['Raw'].getfloat("PercentDuplicatesVariationTolerance")
-
-    raw_mqc = multiqc.MultiQC(
-            multiQC_out_path=config["Paths"].get("RawMultiQCDir"),
-            samples=isa.assays['transcription profiling by RNASeq'].samples,
-            paired_end=config["GLDS"].getboolean("PairedEnd"),
-            outlier_thresholds=thresholds)
+    raise Exception("REACHED VV_PROG")
 
     ########################################################################
     # Trimmed Read VV
