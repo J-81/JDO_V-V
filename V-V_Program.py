@@ -35,6 +35,7 @@ from VV import fastqc
 from VV import multiqc
 #from VV.star import StarAlignments
 from VV.data import Dataset
+from VV.parameters import DEFAULT_PARAMS as PARAMS
 #from VV.rsem import RsemCounts
 #from VV.deseq2 import Deseq2NormalizedCounts
 # ISA TOOLS Causes an issue with logging level
@@ -94,8 +95,15 @@ def main(config: dict()):
     flagger.set_step("Raw Reads")
     raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
                               samples = samples,
-                              flagger = flagger
+                              flagger = flagger,
+                              params = PARAMS["raw_reads"]
                               )
+    flagger.set_step("Raw Reads [MultiQC]")
+    raw_reads.validate_verify_mqc(multiqc_dir = Path(config["Paths"].get("RawMultiQCDir")),
+                                  samples = samples,
+                                  flagger = flagger,
+                                  params = PARAMS["raw_reads"]
+                                  )
 
     thresholds = dict()
     thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
