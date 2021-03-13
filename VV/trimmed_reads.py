@@ -1,23 +1,14 @@
-""" V-V for raw reads.
+#! /usr/bin/env python
+""" Validation/Verification for trimmed reads in RNASeq Concensus Pipeline
 """
-from collections import namedtuple
-from typing import Tuple
-import hashlib
-import statistics
-import glob
-import os
-import sys
-import configparser
-import argparse
+from __future__ import annotations
+from collections import namedtuple, defaultdict
 from pathlib import Path
 import gzip
-import logging
-log = logging.getLogger(__name__)
 
-from VV.data import Dataset
-from VV.multiqc import MultiQC
+from VV.utils import outlier_check, label_file
 from VV.flagging import Flagger
-Flagger = Flagger(script=Path(__file__).name)
+from seqpy import multiqc
 
 # information extracted from raw reads V-V
 # used to check against other sources of information including ISA file.

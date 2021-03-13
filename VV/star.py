@@ -2,10 +2,9 @@
 """
 import os
 import subprocess
-import logging
-log = logging.getLogger(__name__)
 
-from VV.utils import sampleWise_outlier_check, max_median_mean_stdev
+
+#from VV.utils import sampleWise_outlier_check, max_median_mean_stdev
 
 class StarAlignments():
     """ Representation of Star Alignment output results data.

@@ -1,10 +1,8 @@
 """ VV related to the output from RSEM results
 """
 import os
-import logging
-log = logging.getLogger(__name__)
 
-from VV.utils import sampleWise_outlier_check, max_median_mean_stdev
+#from VV.utils import sampleWise_outlier_check, max_median_mean_stdev
 
 class RsemCounts():
     """ Representation of Rsem results for a set of samples.
