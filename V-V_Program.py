@@ -84,10 +84,9 @@ def main(config: dict()):
     ########################################################################
     # ISA File parsing
     ########################################################################
-    samples= parse_isa.get_sample_names(
-                            config["Paths"].get("ISAZip"),
-                            samples_only = True)
-
+    isa = Dataset(isa_zip_path = config["Paths"].get("ISAZip"))
+    print(isa)
+    samples = isa.get_sample_names(assay_name = "transcription profiling by RNASeq")
 
     ########################################################################
     # Raw Read VV
