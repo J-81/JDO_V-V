@@ -1,153 +1,101 @@
-""" V-V for raw reads.
+#! /usr/bin/env python
+""" Validation/Verification for raw reads in RNASeq Concensus Pipeline
 """
-from collections import namedtuple
-from typing import Tuple
-import hashlib
-import statistics
-import glob
-import os
-import sys
+from __future__ import annotations
+from collections import namedtuple, defaultdict
 import configparser
 import argparse
 from pathlib import Path
 import gzip
-import logging
-log = logging.getLogger(__name__)
 
-from VV.data import Dataset
-from VV.multiqc import MultiQC
+from VV.utils import outlier_check, label_file
 from VV.flagging import Flagger
-Flagger = Flagger(script=Path(__file__).name)
 
-# information extracted from raw reads V-V
-# used to check against other sources of information including ISA file.
-rawReadsInfo = namedtuple("rawReadsInfo", "sample_names")
-
-def find_files(input_path: str,
-                samples: list,
-                paired_end: bool):
-    """ Finds expected raw read files.
-
-    Returns paths to files is successfully found.
+def validate_verify(samples: list[str],
+                    raw_reads_dir: Path,
+                    file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
+                    flagger: Flagger = Flagger(script=__name__)):
+    """ Performs VV for raw reads
     """
-    paths = dict()
+    flagger.set_script(__name__)
+    # First, data parsing
+
+    # generate sample to read mapping
+    file_mapping = dict()
     for sample in samples:
-        # create list of expected file paths
-        expected_paths = list()
-        expected_paths.append(Path(input_path) / Path(f"{sample}_R1_raw.fastq.gz"))
-        if paired_end:
-            expected_paths.append(Path(input_path) / Path(f"{sample}_R2_raw.fastq.gz"))
 
-        for expected_path in expected_paths:
-            if expected_path.exists():
-                log.debug(f"Found {expected_path}")
-            else:
-                Flagger.flag(message = f"Could not find expected raw read file for {sample} (Expected file: {expected_path})",
-                                severity=90,
-                                checkID="R_0001")
-        paths[sample] = expected_paths
-    return paths
+        # set up each sample entry as a dictionary
+        file_mapping[sample] = dict()
 
+        for filename in raw_reads_dir.glob(f"{sample}*.fastq.gz"):
+            file_label = label_file(str(filename), file_mapping_substrings)
+            # file patterns for paired end studies
+            # note: this may be replaced in the future using expected filenames specified in the ISA
+            file_mapping[sample][file_label] = filename
 
-
-def validate_verify(input_paths: dict,
-                    paired_end: bool,
-                    count_lines_to_check: int,
-                    md5sums: dict = {},
-                    ):
-    """Performs validation and verification for input of RNASeq datasets.
-    Additionally checks for FastQC file existence.
-
-    This assumes the following file format:
-
-    |  ``Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R2_raw.fastq.gz``
-    |  ``<SAMPLE NAME-----------------><READ->.fastq.gz``
-
-    This also assumes that regardless of paired or single mode, there exists a file named:
-
-    <SAMPLE NAME>_R1_raw.fastq.gz
-    and <SAMPLE NAME> never includes "_R1_raw.fastq.gz"
-
-    Performs the following checks:
-    #. File name enumeration
-    #. Sample name extraction
-    #. Checks for appropriate number of raw read files (2x samples for Paired, 1x samples for Single)
-    #. Check every identifier lines appear every four lines as expect TODO: parse identifier lines for UMI
-    #. md5sum check (if expected md5sums are supplied)
-    #. FastQC file count check
-    #. File Size stats
-
-    :param input_paths: samples, list(raw read paths)
-    :param paired_end: True for paired end, False for single reads
-    :param md5sums: dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1
-    :param count_lines_to_check: number of lines to check, takes around 10 min per file with GLDS-194 for 100% check.  Special values: -1 indicates to check all lines, 0 disables line checking completely
-    """
-    log.debug(f"Processing Paired End: {paired_end}")
-
-    # load files from input_path
-    files = list()
-    [files.extend(paths) for paths in input_paths.values()]
-    log.info(f"{len(files)} Raw Read Files, example: {files[0]}")
-    log.debug(files)
-
-    # get compressed files sizes and log max,min,median
-    file_sizes = _size_check(files)
-    log.info(f"Max    file size: {max(file_sizes.values()):.3} GB")
-    log.info(f"Median file size: {statistics.median(file_sizes.values()):.3} GB")
-    log.info(f"Min    file size: {min(file_sizes.values()):.3} GB")
-    log.debug(f"All file sizes (in GB): {file_sizes}")
-
-    # check lines of files
-    if count_lines_to_check:
-        for file in files:
-            _check_fastq_content(file, count_lines_to_check=count_lines_to_check)
-    else:
-        log.warning(f"WARNING: Line checking disabled.  Make sure this was intentional!")
-
-
-    # calculate md5sum of files and check against known md5sums
-    if md5sums:
-        log.info(f"Checking md5sum against supplied values")
-        for file in files:
-            try:
-                expected = md5sum[os.path.basename(file)]
-            except KeyError:
-                log.error(f"expected md5sum not supplied for {os.path.basename(file)}, skipping")
-                continue
-            match = _md5_check(file, expected_md5=expected)
-            if match:
-                log.debug(f"md5sum for {os.path.basename(file)} matches")
-            elif not match:
-                log.error(f"MISMATCH: md5sum does not match expected for {os.path.basename(file)}")
-    else:
-        log.warning(f"No expected md5sums supplied, cannot verify raw read files")
-
-def _file_counts_check(files: [str], sample: str) -> Tuple[int,int]:
-    """ Returns the number of R1 and R2 files found for each sample
-
-    Note: the replace ensures the 'R1' and 'R2' substrings from the sample name
-    are not detected for counting Forward and Reverse read files.
-
-    :param files: compressed raw read files
-    :param sample: sample name
-    """
-    filenames = [os.path.basename(file) for file in files]
-    R1_count = 0
-    R2_count = 0
-    for filename in filenames:
-        cleaned_filename = filename.replace(sample, "")
-        # skip filenames that do not contain sample
-        if sample not in filename:
-            continue
-        elif "R1" in cleaned_filename:
-            R1_count += 1
-        elif "R2" in cleaned_filename:
-            R2_count += 1
+    # assert expected files exist
+    checkID = "R_0001"
+    expected_file_lables = list(file_mapping_substrings.values())
+    for sample in samples:
+        missing_files = list()
+        for file_label in expected_file_lables:
+            if not file_label in file_mapping[sample].keys():
+                missing_file.append(file_label)
+        if len(missing_files) != 0:
+            flagger.flag(entity = sample,
+                         message = f"Missing expected files for {missing_files}",
+                         severity = 90,
+                         checkID = checkID)
         else:
-            log.warning(f"ANOMOLY: Unexpected filename format for {filename}")
-    return (R1_count, R2_count)
+            flagger.flag(entity = sample,
+                         message = f"All expected files present: {expected_file_lables}",
+                         severity = 30,
+                         checkID = checkID)
 
-def _check_fastq_content(file: str, count_lines_to_check: int) -> int:
+
+
+
+    1/0
+
+    vv_mapping = defaultdict(dict)
+
+    file_sizes = list()
+    for sample in samples:
+        if config["GLDS"].getboolean("PairedEnd"):
+            file_size = file_mapping[sample]["forward_read"].stat().st_size + file_mapping[sample]["reverse_read"].stat().st_size
+        else:
+            file_size = file_mapping[sample]["read"].stat().st_size + file_mapping[sample]["reverse_read"].stat().st_size
+        file_sizes.append(file_size)
+        vv_mapping[sample]["file_size"] = file_size
+    vv_mapping["all"]["file_sizes"] = file_sizes
+
+    # sampleWise data checks
+    for sample in samples:
+
+        # mapping to save results by sample
+        sample_file_mapping = file_mapping[sample]
+        sample_vv_mapping = vv_mapping[sample]
+
+        sample_vv_mapping["file_exists"] = _check_file_existence(sample_file_mapping)
+        sample_vv_mapping["header_check"] = _check_headers(sample_file_mapping.values(), config["Options"].getint("MaxFastQLinesToCheck"))
+        sample_vv_mapping["file_size_deviation"] = outlier_check(value = sample_vv_mapping["file_size"],
+                                                                 against = vv_mapping["all"]["file_sizes"]
+                                                                )
+
+    return file_mapping, vv_mapping
+
+def _check_file_existence(sample_file_mapping):
+    missing_files = list()
+    for file_alias, file in sample_file_mapping.items():
+        if not file.exists():
+            missing_files.append(file)
+    if len(missing_files) != 0:
+        result = (False, f"{missing_files} missing")
+    else:
+        result = (True, f"All expected files present: {sample_file_mapping.items()}")
+    return result
+
+def _check_headers(files, count_lines_to_check: int) -> int:
     """ Checks fastq lines for expected header content
 
     Note: Example of header from GLDS-194
@@ -163,105 +111,107 @@ def _check_fastq_content(file: str, count_lines_to_check: int) -> int:
     if count_lines_to_check == -1:
         count_lines_to_check = float("inf")
 
-    checkname = "FastQ Lines Check"
+    # TODO: add expected length check
     expected_length = None
-    with gzip.open(file, "rb") as f:
-        for i, line in enumerate(f):
-            # only check every fifth line to save time checking
-            if i+1 == count_lines_to_check:
-                log.debug(f"Reached {count_lines_to_check} lines, ending line check")
-                return
 
-            line = line.decode()
-            # every fourth line should be an identifier
-            expected_identifier_line = (i % 4 == 0)
-            # check if line is actually an identifier line
-            if (expected_identifier_line and line[0] != "@"):
-                log.error(f"FAIL: {checkname}: "
-                          f"Line {i} of {file} was not an identifier line as expected "
-                          f"LINE {i}: {line}")
-            # update every 20,000,000 reads
-            if i % 20000000 == 0:
-                log.debug(f"Checked {i} lines for {file}")
-    log.info(f"Reached end of read file at {i+1} lines, ending line check")
-    return
+    lines_with_issues = list()
 
-def _parse_samples(files: [str], paired_end: bool, expected_suffix: str) -> [str]:
-    """ Parses file names from raw read files
+    passes = True
+    message = ""
+    for file in files:
+        with gzip.open(file, "rb") as f:
+            for i, line in enumerate(f):
+                # checks if lines counted equals the limit input
+                if i+1 == count_lines_to_check:
+                    print(f"Reached {count_lines_to_check} lines, ending line check")
+                    break
 
-    :param files: compressed raw read files
-    :param paired_end: flag indicating whether the data is paired ended or single
+                line = line.decode()
+                # every fourth line should be an identifier
+                expected_identifier_line = (i % 4 == 0)
+                # check if line is actually an identifier line
+                if (expected_identifier_line and line[0] != "@"):
+                    lines_with_issues.append(i+1)
+                    print(f"FAIL: {checkname}: "
+                          f"Line {i+1} of {file} was not an identifier line as expected "
+                          f"LINE {i+1}: {line}")
+                # update every 20,000,000 reads
+                if i % 20000000 == 0:
+                    print(f"Checked {i} lines for {file}")
+        if len(lines_with_issues) != 0:
+            passes = False
+            message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
+        else:
+            message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
+    return (passes, message)
+
+def write_results(output: Path, all_results):
+    """ Write VV results to output file.
+    Also formats for consistency across VV steps
     """
-    # extract basename from full paths
-    fnames = [os.path.basename(f) for f in files]
+    with open(output, "a+") as f:
+        for sample in samples:
+            results = all_results[sample]
 
-    # extract sample names
-    unique_samples = list(set([fname.replace(f"_R1{expected_suffix}.fastq.gz","")\
-                                    .replace(f"_R2{expected_suffix}.fastq.gz","")
-                               for fname in fnames]))
+            # header check logging
+            if results["header_check"][0] == False:
+                flag_level = FLAG_LEVELS[50]
+                entity = sample
+                file_checked = "Raw Reads"
+                details = results['header_check'][1]
+                check_id = f"R_0001"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
+            else:
+                flag_level = FLAG_LEVELS[20]
+                entity = sample
+                file_checked = "Raw Reads"
+                details = results['header_check'][1]
+                check_id = f"R_0001"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
 
-    return unique_samples
+        for sample in samples:
+            results = all_results[sample]
 
-def _size_check(files: [str]) -> dict:
-    """ Gets file size for input files.
+            # file existence logging
+            if results["file_exists"][0] == False:
+                flag_level = FLAG_LEVELS[70]
+                entity = sample
+                file_checked = "Raw Reads"
+                details = results['file_exists'][1]
+                check_id = f"X_0001"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
+            else:
+                flag_level = FLAG_LEVELS[20]
+                entity = sample
+                file_checked = "Raw Reads"
+                details = results['file_exists'][1]
+                check_id = f"X_0001"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
 
-    :param files: compressed raw read files
-    """
-    return {f:_bytes_to_gb(os.path.getsize(f)) for f in files}
+        # file size deviation
+        for sample in samples:
+            deviation = all_results[sample]["file_size_deviation"]
+            flag_level = None
+            entity = sample
+            file_checked = "Raw Reads"
+            details = None
+            check_id = f"R_0002"
 
-def _bytes_to_gb(bytes: int):
-    """ utility function, converts bytes to gb
+            if deviation > config["Raw"].getfloat("FileSizeVariationToleranceRed"):
+                flag_level = FLAG_LEVELS[50]
+                details = f"File size(s) differ from median by {deviation:.2f}"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
 
-    :param bytes: bytes to convert
-    """
-    return bytes/float(1<<30)
+            elif deviation > config["Raw"].getfloat("FileSizeVariationToleranceYellow"):
+                flag_level = FLAG_LEVELS[50]
+                details = f"File size(s) differ from median by {deviation:.2f}"
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
 
-def _md5_check(file: str, expected_md5: str) -> bool:
-    """ Checks md5 hex digest of the file against an expected md5 hex digest
 
-    :param file: compressed raw read file
-    :param expected_md5: expected md5 hex digest, supplied by GeneLab
-    """
-    return expected_md5 == hashlib.md5(open(file,'rb').read()).hexdigest()
+
 
 if __name__ == '__main__':
-    def _parse_args():
-        """ Parse command line args.
-        """
-        parser = argparse.ArgumentParser(description='Perform Automated V&V on '
-                                                     'raw reads.')
-        parser.add_argument('--config', metavar='c', nargs='+', required=True,
-                            help='INI format configuration file')
+    with open(args.samples, "r") as f:
+        samples = [sample.strip() for sample in f.readlines()]
 
-        args = parser.parse_args()
-        print(args)
-        return args
-
-
-    args = _parse_args()
-    config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
-    config.read(args.config)
-
-
-    isa = Dataset(config["Paths"].get("ISAZip"))
-    samples = isa.assays['transcription profiling by RNASeq'].samples
-
-    input_paths = find_files(   input_path = config["Paths"].get("RawReadDir"),
-                                paired_end = config["GLDS"].getboolean("PairedEnd"),
-                                samples = samples)
-
-    validate_verify(input_paths = input_paths,
-                    paired_end = config["GLDS"].getboolean("PairedEnd"),
-                    count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
-
-    thresholds = dict()
-    thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
-    thresholds['percent_gc'] = config['Raw'].getfloat("PercentGCVariationTolerance")
-    thresholds['total_sequences'] = config['Raw'].getfloat("TotalSequencesVariationTolerance")
-    thresholds['percent_duplicates'] = config['Raw'].getfloat("PercentDuplicatesVariationTolerance")
-
-    raw_mqc = MultiQC(
-            multiQC_out_path=config["Paths"].get("RawMultiQCDir"),
-            samples=samples,
-            paired_end=config["GLDS"].getboolean("PairedEnd"),
-            outlier_thresholds=thresholds)
+    validate_verify(samples, Path(args.input))

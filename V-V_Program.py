@@ -24,16 +24,22 @@ import os
 import sys
 import configparser
 import argparse
-import logging
 import datetime
+from pathlib import Path
 
 
-from VV import raw_reads, parse_isa, fastqc, multiqc, trimmed_reads
-from VV.star import StarAlignments
+from VV import raw_reads
+from VV import trimmed_reads
+from VV import parse_isa
+from VV import fastqc
+from VV import multiqc
+#from VV.star import StarAlignments
 from VV.data import Dataset
-from VV.rsem import RsemCounts
-from VV.deseq2 import Deseq2NormalizedCounts
+#from VV.rsem import RsemCounts
+#from VV.deseq2 import Deseq2NormalizedCounts
 # ISA TOOLS Causes an issue with logging level
+from VV.flagging import Flagger
+flagger = Flagger(__file__)
 
 
 ##############################################################
@@ -57,18 +63,6 @@ args = _parse_args()
 config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 config.read(args.config)
 
-# Set up logging
-if config['Logging']["LoggingConsole"] in ["INFO","DEBUG","WARNING","ERROR","CRITICAL"]:
-    log_levels = {"INFO":20,"DEBUG":10,"WARNING":30, "ERROR":40, "CRITICAL":50}
-    logging_level = log_levels[config['Logging']['LoggingConsole']]
-else:
-    print("Logging level must be one of the following: <DEBUG,INFO,WARNING,ERROR,CRITICAL>")
-    sys.exit()
-# Fixes ISA logging but needs a much better fix
-log = logging.getLogger("VV")
-log.setLevel(log_levels[config["Logging"].get("LoggingConsole")])
-
-
 run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
 ########################################################################
@@ -77,20 +71,6 @@ run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 os.makedirs(name = "log", exist_ok = True)
 os.makedirs(name = "debug", exist_ok = True)
 
-
-# set up file logging (warning)
-fh = logging.FileHandler(f"log/{run_timestamp}_issues.log")
-fh.setLevel(logging.WARNING)
-fh_formatter = logging.Formatter('%(levelname)s: %(message)s')
-fh.setFormatter(fh_formatter)
-log.addHandler(fh)
-
-# full debug log (debug level)
-fh = logging.FileHandler(f"debug/{run_timestamp}_debug.log")
-fh.setLevel(logging.DEBUG)
-fh_formatter = logging.Formatter('%(asctime)s:%(levelname)s:<%(filename)s:Line:%(lineno)s>: %(message)s')
-fh.setFormatter(fh_formatter)
-log.addHandler(fh)
 
 ##############################################################
 # Main Function To Call Each V&V Function
@@ -104,26 +84,19 @@ def main(config: dict()):
     ########################################################################
     # ISA File parsing
     ########################################################################
-    samples_dict = parse_isa.get_sample_names(
-            config["Paths"].get("ISAZip"))
-    isa_raw_sample_names = set([sample
-                                for study in samples_dict.values()
-                                for assay_samples in study.values()
-                                for sample in assay_samples])
+    samples= parse_isa.get_sample_names(
+                            config["Paths"].get("ISAZip"),
+                            samples_only = True)
 
-    isa = Dataset(config["Paths"].get("ISAZip"))
 
     ########################################################################
     # Raw Read VV
     ########################################################################
-    input_paths = raw_reads.find_files(input_path = config["Paths"].get("RawReadDir"),
-                                       paired_end = config["GLDS"].getboolean("PairedEnd"),
-                                       samples = isa.assays['transcription profiling by RNASeq'].samples)
-
-    raw_reads.validate_verify(input_paths = input_paths,
-                              paired_end = config["GLDS"].getboolean("PairedEnd"),
-                              count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
-
+    flagger.set_step("Raw Reads")
+    raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
+                              samples = samples,
+                              flagger = flagger
+                              )
 
     thresholds = dict()
     thresholds['avg_sequence_length'] = config['Raw'].getfloat("SequenceLengthVariationTolerance")
