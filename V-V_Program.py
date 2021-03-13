@@ -40,8 +40,6 @@ from VV.parameters import DEFAULT_PARAMS as PARAMS
 #from VV.deseq2 import Deseq2NormalizedCounts
 # ISA TOOLS Causes an issue with logging level
 from VV.flagging import Flagger
-flagger = Flagger(__file__)
-
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
@@ -56,15 +54,14 @@ def _parse_args():
                         help='INI format configuration file')
 
     args = parser.parse_args()
-    print(args)
     return args
 
 
 args = _parse_args()
 config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 config.read(args.config)
-
-run_timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+flagger = Flagger(__file__,
+                  halt_level = config["Logging"].getint("HaltSeverity"))
 
 ########################################################################
 # Log Folder Setup
