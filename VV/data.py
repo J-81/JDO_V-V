@@ -95,53 +95,6 @@ class RNASeqAssay(Assay):
                    .metadata['Parameter Value[library layout]'][0]\
                    .library_layout
 
-    def load_raw_reads(self, input_path, validate = True):
-        """ Load raw read files from selected directory
-        """
-        paths = dict()
-        for sample in self.samples:
-            forward_read_path = Path(input_path) / Path(f"{sample.name}_R1_raw.fastq.gz")
-            if self.library_layout == 'PAIRED':
-                reverse_read_path = Path(input_path) / Path(f"{sample.name}_R2_raw.fastq.gz")
-
-            # check for file existence
-            if not forward_read_path.exists():
-                Flagger.flag(message = f"Could not find expected raw read file for {sample.name} (Expected file: {forward_read_path})",
-                                severity=90,
-                                checkID="R_0001")
-            sample.files['forward_raw_read'] = forward_read_path
-
-            # check for file existence
-            if self.library_layout == 'PAIRED':
-                if not reverse_read_path.exists():
-                    Flagger.flag(message = f"Could not find expected raw read file for {sample.name} (Expected file: {forward_read_path})",
-                                    severity=90,
-                                    checkID="R_0001")
-                sample.files['reverse_raw_read'] = reverse_read_path
-
-        self.data_files_loaded['raw_reads'] = True
-
-    def validate_raw_reads(self):
-        if not self.data_files_loaded['raw_reads']:
-            raise ValueError("Raw Reads Files Not Loaded.  Use method: load_raw_reads")
-        else:
-            # calculate aggregate values
-            # forward reads first
-            files = self._get_files(file_type = "forward_raw_read")
-            # get compressed files sizes and log max,min,median
-            file_sizes = _size_check(files)
-            self.data["raw_read_file_size_stats_GB"] = {'max':max(file_sizes.values()),
-                                                        'median':statistics.median(file_sizes.values()),
-                                                        'min':min(file_sizes.values())}
-
-
-            # sample by sample line check
-            for sample in self.samples:
-                
-
-    def _get_files(self, file_type):
-        return [sample.files[file_type] for sample in self.samples]
-
 class Dataset():
     """ Datasets are composed of multiple samples and their associated sample files
     """
@@ -199,10 +152,10 @@ class Dataset():
         except KeyError:
             log.error(f"{assay_name} Assay not found in this study")
 
-    def get_samples_names(self, assay_name: str) -> [str]:
+    def get_sample_names(self, assay_name: str) -> [str]:
         try:
             return [sample_node.name
-                    for sample_node in self.assays[assay_name].nodes.values()
+                    for sample_node in self.assays[assay_name]._assay.nodes.values()
                     if sample_node.ntype == "Sample Name"]
         except KeyError:
             log.error(f"{assay_name} Assay not found in this study")
