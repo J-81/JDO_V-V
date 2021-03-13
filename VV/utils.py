@@ -12,6 +12,25 @@ FLAG_LEVELS = {
     70:"Issue-Terminate_Process"
     }
 
+def label_file(filename: str, file_substring_mapping: dict):
+    """ Given a filename.  Return the file label based on a unique substring.
+
+    Substrings to file label mapping should be provided at init.
+    """
+    matched = False
+    for substring, filelabel in file_substring_mapping.items():
+        if substring in filename:
+            if not matched:
+                matched = filelabel
+            else:
+                raise ValueError(f"File name {filename} matched multiple substrings in provided mapping {file_substring_mapping}")
+    if matched:
+        return matched
+    else:
+        # no matches
+        raise ValueError(f"File name {filename} did not match any substrings in provided mapping {file_substring_mapping}")
+
+
 def outlier_check(value: float, against: list) -> [str]:
     """ For a dictionary of entity and a value.  Flag outliers with that are beyond a specified
         standard deviation threshold.
