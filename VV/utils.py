@@ -6,9 +6,10 @@ from statistics import median, stdev
 
 FLAG_LEVELS = {
     20:"Info-Only",
-    50:"Yellow-Warning",
-    60:"Red-Warning",
-    70:"Severe-Issue"
+    30:"Passed-Green",
+    50:"Warning-Yellow",
+    60:"Warning-Red",
+    70:"Issue-Terminate_Process"
     }
 
 def outlier_check(value: float, against: list) -> [str]:
@@ -21,6 +22,11 @@ def outlier_check(value: float, against: list) -> [str]:
     _median = median(against)
     _stdev = stdev(against)
 
+    # account for zero _stdev,
+    # in these cases there should be no outliers (all values are the same)
+    # deviation should be computed as zero
+    if _stdev == 0:
+        return 0
     return  abs(value - _median) / _stdev
 
 def bytes_to_gb(bytes: int) -> float:

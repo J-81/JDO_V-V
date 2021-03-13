@@ -1,10 +1,10 @@
+#! /usr/bin/env python
 import zipfile
 import tempfile
 import os
 
 from isatools.io import isatab_parser
 from isatools.io.isatab_parser import ISATabRecord
-
 
 def _unzip_ISA(isa_zip_path: str) -> str:
     """ Unzips ISA and places into a tmp contents folder.
@@ -70,13 +70,16 @@ def parse_isa_dir_from_zip(isa_zip_path: str, pretty_print: bool = False) -> ISA
 
     return investigation
 
-def get_sample_names(isa_zip_path: str) -> None:
+def get_sample_names(isa_zip_path: str,
+                     samples_only: bool = False) -> None:
     """ Extracts investigation sample names given a GLDS isa zip file path.
     Returns a dictionary
 
     :param isa_zip_path: path to isa zip file
+    :param samples_only: default, returns dictionary of values, if true, list of sample names only is returned
     """
     samples = dict()
+    samples_only_list = list()
     investigation = parse_isa_dir_from_zip(isa_zip_path)
     for study in investigation.studies:
         # study level
@@ -86,5 +89,9 @@ def get_sample_names(isa_zip_path: str) -> None:
             # assay level
             assay_key = f"ASSAY: {assay.metadata['Study Assay Measurement Type']}"
             sample_nodes = [node for node in assay.nodes.values() if node.ntype == "Sample Name"]
-            samples[study_key][assay_key] = [sample_node.name for sample_node in sample_nodes]
+            new_samples = [sample_node.name for sample_node in sample_nodes]
+            samples[study_key][assay_key] = new_samples
+            samples_only_list.extend(new_samples)
+    if samples_only:
+        return list(set(samples_only_list)) # list,set trick to return only non-redudant set
     return samples
