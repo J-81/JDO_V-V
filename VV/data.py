@@ -11,7 +11,7 @@ from pathlib import Path
 import logging
 log = logging.getLogger(__name__)
 
-#from VV.flagging import Flagger
+from VV.flagging import Flagger
 #Flagger = Flagger(script=Path(__file__).name)
 
 from isatools.io import isatab_parser
@@ -99,9 +99,35 @@ class Dataset():
     """ Datasets are composed of multiple samples and their associated sample files
     """
 
-    def __init__(self, isa_zip_path):
+    def __init__(self,
+                 isa_zip_path: Path,
+                 flagger: Flagger,
+                 entity: str):
         """
+
+
+        :param isa_zip_path: Path to zip to parse
+        :param flagger: Flagging object, often shared for a single VV process (with multiple steps)
+        :param entity: description of this dataset.  Used as the entity for flagging
         """
+        ### START S_0001 ##################################################
+        checkID = "S_0001"
+        self.entity = entity
+        if isa_zip_path.is_file():
+            flagger.flag(entity = self.entity,
+                         message = f"Found ISA zip file: {isa_zip_path}",
+                         severity = 30,
+                         checkID = checkID
+                        )
+        else:
+            flagger.flag(entity = self.entity,
+                         message = f"Missing ISA zip file: {isa_zip_path}",
+                         severity = 90,
+                         checkID = checkID
+                        )
+            raise FileNotFoundError(f"ISA FILE MISSING: {isa_zip_path}")
+        ### DONE S_0001 ##################################################
+        self.flagger = flagger
         self._isa_data = self._parse_isa_dir_from_zip(isa_zip_path) # composition of ISATabRecord
         # assertions consistent with GLDS ISA files
         # only 1 study
@@ -170,7 +196,25 @@ class Dataset():
         study = self._investigation.studies[0]
         return study
 
-
+    def validate_verify(self,
+                        vv_for: str):
+        if vv_for == "RNASeq":
+            assay_name = "transcription profiling by RNASeq"
+            checkID = "S_0002"
+            if assay_name in self.assays.keys():
+                self.flagger.flag(entity = self.entity,
+                                  message = f"Expected assay ({assay_name}) was found in ISA file as parsed.",
+                                  severity = 30,
+                                  checkID = checkID
+                                 )
+            else:
+                self.flagger.flag(entity = self.entity,
+                                  message = f"Expected assay ({assay_name}) not found in ISA file as parsed.",
+                                  severity = 90,
+                                  checkID = checkID
+                                  )
+        else:
+            raise ValueError(f"VV for {vv_for} has not been implemented.")
     def _unzip_ISA(self, isa_zip_path: str) -> str:
         """ Unzips ISA and places into a tmp contents folder.
         Returns path to temporary directory holding ISA zip file contents.
