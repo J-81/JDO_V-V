@@ -4,6 +4,8 @@ verification
 from typing import Tuple, Callable
 import statistics
 
+from VV.flagging import Flagger
+
 FLAG_LEVELS = {
     20:"Info-Only",
     30:"Passed-Green",
@@ -86,6 +88,77 @@ def filevalues_from_mapping(file_mapping: dict,
             file_value_mapping[sample][filelabel] = file_value
 
     return file_value_mapping, all_values
+
+def value_based_checks(check_params: dict,
+                       value_mapping: dict,
+                       all_values: list,
+                       flagger: Flagger,
+                       checkID: str,
+                       value_alias: str,
+                       middlepoint: str):
+    """ Performs checks and sends appropriate flag calls for a value.
+    """
+    # calculate middlepoint and standard deviation
+    stdev = statistics.stdev(all_values)
+    try:
+        middlepoint_function = MIDDLEPOINT_FUNC[middlepoint]
+    except KeyError:
+        raise KeyError(f"Middlepoint named {middlepoint} not valid. Try from {list(MIDDLEPOINT_FUNC.keys())}")
+    middlepoint = middlepoint_function(all_values)
+
+    for sample in value_mapping.keys():
+        for filelabel, value in value_mapping[sample].items():
+            entity = f"{sample}:{filelabel}"
+            flagged = False
+            # global maximum threshold checks
+            if check_params["max_thresholds"]:
+                for threshold in sorted(check_params["max_thresholds"], reverse=True):
+                    if value > threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} is over threshold of {threshold}. "
+                                                   f"[value: {value:.7f}][threshold: {threshold}]"
+                                                   ),
+                                        severity = check_params["max_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks)
+
+            # global minimum threshold checks
+            if check_params["min_thresholds"]:
+                for threshold in sorted(check_params["min_thresholds"]).items():
+                    if value < threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} is under threshold of {threshold}. "
+                                                   f"[value: {value:.7f}][threshold: {threshold}]"
+                                                   ),
+                                        severity = check_params["min_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+
+            # outlier by standard deviation threshold checks
+            if check_params["outlier_thresholds"]:
+                if stdev == 0:
+                    deviation = 0
+                else:
+                    deviation = abs(value - middlepoint)/stdev
+                for threshold in sorted(check_params["outlier_thresholds"], reverse=True):
+                    if deviation > threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} flagged as outlier. "\
+                                                  f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
+                                                  f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
+                                                  ),
+                                        severity = check_params["outlier_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+
+            if not flagged:
+                flagger.flag(entity = entity,
+                             message = f"No issues with {value_alias}. [value: {value:.7f}]",
+                             severity = 30,
+                             checkID = checkID)
 
 def bytes_to_gb(bytes: int) -> float:
     """ utility function, converts bytes to gb

@@ -7,7 +7,7 @@ from pathlib import Path
 import gzip
 import statistics
 
-from VV.utils import outlier_check, label_file, filevalues_from_mapping, MIDDLEPOINT_FUNC
+from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks
 from VV.flagging import Flagger
 from seqpy import multiqc
 
@@ -86,10 +86,6 @@ def validate_verify(samples: list[str],
 
     ### START R_0003 ##################################################
     checkID = "R_0003"
-    file_size_params = params["raw_reads"]["file_size"]
-    value_alias = "Filesize (units:GB)"
-    middlepoint_alias = params["middlepoint"]
-    middlepoint_function = MIDDLEPOINT_FUNC[middlepoint_alias]
     def file_size(file: Path):
         """ Returns filesize for a Path object
         """
@@ -97,63 +93,15 @@ def validate_verify(samples: list[str],
     # compute file sizes
     filesize_mapping, all_filesizes = filevalues_from_mapping(file_mapping, file_size)
 
-    # calculate middlepoint and standard deviation
-    stdev = statistics.stdev(all_filesizes)
-    middlepoint = middlepoint_function(all_filesizes)
-
-    for sample in samples:
-        for filelabel, value in filesize_mapping[sample].items():
-            entity = f"{sample}:{filelabel}"
-            flagged = False
-            # global maximum threshold checks
-            if file_size_params["max_thresholds"]:
-                for threshold in sorted(file_size_params["max_thresholds"], reverse=True):
-                    if value > threshold:
-                        flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} is over threshold of {threshold}. "
-                                                   f"[value: {value:.7f}][threshold: {threshold}]"
-                                                   ),
-                                        severity = file_size_params["max_thresholds"][threshold],
-                                        checkID = checkID)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks)
-
-            # global minimum threshold checks
-            if file_size_params["min_thresholds"]:
-                for threshold in sorted(file_size_params["min_thresholds"]).items():
-                    if value < threshold:
-                        flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} is under threshold of {threshold}. "
-                                                   f"[value: {value:.7f}][threshold: {threshold}]"
-                                                   ),
-                                        severity = file_size_params["min_thresholds"][threshold],
-                                        checkID = checkID)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
-
-            # outlier by standard deviation threshold checks
-            if file_size_params["outlier_thresholds"]:
-                if stdev == 0:
-                    deviation = 0
-                else:
-                    deviation = abs(value - middlepoint)/stdev
-                for threshold in sorted(file_size_params["outlier_thresholds"], reverse=True):
-                    if deviation > threshold:
-                        flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} flagged as outlier. "\
-                                                  f"Exceeds {middlepoint_alias} by {threshold} standard deviations. "\
-                                                  f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
-                                                  ),
-                                        severity = file_size_params["outlier_thresholds"][threshold],
-                                        checkID = checkID)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
-
-            if not flagged:
-                flagger.flag(entity = entity,
-                             message = f"No issues with {value_alias}. [value: {value:.7f}]",
-                             severity = 30,
-                             checkID = checkID)
+    metric = "file_size"
+    value_based_checks(check_params = params["raw_reads"][metric],
+                       value_mapping = filesize_mapping,
+                       all_values = all_filesizes,
+                       flagger = flagger,
+                       checkID = checkID,
+                       value_alias = metric,
+                       middlepoint = params["middlepoint"]
+                       )
     ### DONE R_0003 ###################################################
 
 def _check_headers(file, count_lines_to_check: int) -> int:
