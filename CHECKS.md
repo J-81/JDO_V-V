@@ -23,7 +23,7 @@
   - Check that raw reads headers are present every 4 lines.
     - Configuration: By default, first 10,000,000 lines are checked.
 
-- R_0003 (Staged in script)
+- R_0003 (Implemented)
   - Check for outliers in terms of file size.
     - Assumption: Raw reads files should be comparable in terms of file size.
 
