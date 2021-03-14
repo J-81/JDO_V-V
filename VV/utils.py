@@ -12,6 +12,11 @@ FLAG_LEVELS = {
     70:"Issue-Terminate_Process"
     }
 
+MIDDLEPOINT_FUNC = {
+    "median":statistics.median,
+    "mean":statistics.mean
+    }
+
 def label_file(filename: str, file_substring_mapping: dict):
     """ Given a filename.  Return the file label based on a unique substring.
 
