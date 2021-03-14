@@ -37,11 +37,38 @@ DEFAULT_PARAMS = \
         },
     },
     "trimmed_reads": {
+        "fastq_lines_to_check" : 15000,
         "sequence_length" : {
             "max_thresholds" : {},
             "min_thresholds" : {},
             "outlier_thresholds" : {
-                60 : 1,
+                0 : 60,
+            },
+        },
+        "sequence_length_dist" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {},
+            "outlier_thresholds" : {
+                4 : 60,
+            },
+        },
+        "file_size" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {},
+            "outlier_thresholds" : {
+                2 : 50,
+                4 : 60,
+            },
+        },
+        "percent_duplicates" :{
+            "max_thresholds" : {
+                60 : 60,
+                50 : 40,
+            },
+            "min_thresholds" : {},
+            "outlier_thresholds" : {
+                60 : 4,
+                50 : 2,
             },
         },
     },

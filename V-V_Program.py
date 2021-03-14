@@ -99,11 +99,22 @@ def main(config: dict()):
                                       params = PARAMS,
                                       outlier_comparision_point = "median")
 
-    raise Exception("REACHED VV_PROG")
 
     ########################################################################
     # Trimmed Read VV
     ########################################################################
+    trimmed_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("TrimmedReadDir")),
+                              samples = samples,
+                              flagger = flagger,
+                              params = PARAMS
+                              )
+    trimmed_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("TrimmedMultiQCDir")) / "multiqc_data.json",
+                                      samples = samples,
+                                      flagger = flagger,
+                                      params = PARAMS,
+                                      outlier_comparision_point = "median")
+
+    raise Exception("REACHED VV_PROG")
     input_paths = trimmed_reads.find_files(input_path = config["Paths"].get("TrimmedReadDir"),
                                    paired_end = config["GLDS"].getboolean("PairedEnd"),
                                    samples = isa.assays['transcription profiling by RNASeq'].samples)
