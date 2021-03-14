@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections import namedtuple, defaultdict
 from pathlib import Path
 import gzip
+import statistics
 
-from VV.utils import outlier_check, label_file
+from VV.utils import outlier_check, label_file, filevalues_from_mapping, MIDDLEPOINT_FUNC
 from VV.flagging import Flagger
 from seqpy import multiqc
 
@@ -65,7 +66,7 @@ def validate_verify(samples: list[str],
     ### START R_0002 ##################################################
     # TODO: add header check (R_0002)
     checkID = "R_0002"
-    lines_to_check = params["fastq_lines_to_check"]
+    lines_to_check = params["raw_reads"]["fastq_lines_to_check"]
     for sample in samples:
         for filelabel, filename in file_mapping[sample].items():
             entity = f"{sample}:{filelabel}"
@@ -84,7 +85,75 @@ def validate_verify(samples: list[str],
     ### DONE R_0002 ###################################################
 
     ### START R_0003 ##################################################
-    # TODO: add file size checks (R_0003)
+    checkID = "R_0003"
+    file_size_params = params["raw_reads"]["file_size"]
+    value_alias = "Filesize (units:GB)"
+    middlepoint_alias = params["middlepoint"]
+    middlepoint_function = MIDDLEPOINT_FUNC[middlepoint_alias]
+    def file_size(file: Path):
+        """ Returns filesize for a Path object
+        """
+        return file.stat().st_size/float(1<<30)
+    # compute file sizes
+    filesize_mapping, all_filesizes = filevalues_from_mapping(file_mapping, file_size)
+
+    # calculate middlepoint and standard deviation
+    stdev = statistics.stdev(all_filesizes)
+    middlepoint = middlepoint_function(all_filesizes)
+
+    for sample in samples:
+        for filelabel, value in filesize_mapping[sample].items():
+            entity = f"{sample}:{filelabel}"
+            flagged = False
+            # global maximum threshold checks
+            if file_size_params["max_thresholds"]:
+                for threshold in sorted(file_size_params["max_thresholds"], reverse=True):
+                    if value > threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} is over threshold of {threshold}. "
+                                                   f"[value: {value:.7f}][threshold: {threshold}]"
+                                                   ),
+                                        severity = file_size_params["max_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks)
+
+            # global minimum threshold checks
+            if file_size_params["min_thresholds"]:
+                for threshold in sorted(file_size_params["min_thresholds"]).items():
+                    if value < threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} is under threshold of {threshold}. "
+                                                   f"[value: {value:.7f}][threshold: {threshold}]"
+                                                   ),
+                                        severity = file_size_params["min_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+
+            # outlier by standard deviation threshold checks
+            if file_size_params["outlier_thresholds"]:
+                if stdev == 0:
+                    deviation = 0
+                else:
+                    deviation = abs(value - middlepoint)/stdev
+                for threshold in sorted(file_size_params["outlier_thresholds"], reverse=True):
+                    if deviation > threshold:
+                        flagger.flag(   entity = entity,
+                                        message = (f"{value_alias} flagged as outlier. "\
+                                                  f"Exceeds {middlepoint_alias} by {threshold} standard deviations. "\
+                                                  f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
+                                                  ),
+                                        severity = file_size_params["outlier_thresholds"][threshold],
+                                        checkID = checkID)
+                        flagged = True
+                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+
+            if not flagged:
+                flagger.flag(entity = entity,
+                             message = f"No issues with {value_alias}. [value: {value:.7f}]",
+                             severity = 30,
+                             checkID = checkID)
     ### DONE R_0003 ###################################################
 
 def _check_headers(file, count_lines_to_check: int) -> int:
