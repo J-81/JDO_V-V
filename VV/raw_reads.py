@@ -183,17 +183,58 @@ def validate_verify_multiqc(samples: list[str],
         entity = sample
         # I.E: if the study is paired end
         if set(("forward", "reverse")) == set(mqc.file_labels):
-            print(mqc.data[sample]["forward-avg_sequence_length"])
-            print(mqc.data[sample]["reverse-avg_sequence_length"])
-            pairs_match = mqc.data[sample]["forward-avg_sequence_length"].value == mqc.data[sample]["reverse-avg_sequence_length"].value
+            forward_count = mqc.data[sample]["forward-total_sequences"].value
+            reverse_count = mqc.data[sample]["reverse-total_sequences"].value
+            pairs_match = forward_count == reverse_count
             if pairs_match:
                 flagger.flag(entity = entity,
-                             message = f"Average sequence lengths match between pairs",
+                             message = f"Total Count of reads matches between pairs.",
                              severity = 30,
                              checkID = checkID)
             else:
                 flagger.flag(entity = entity,
-                             message = f"Average sequence lengths DO NOT match between pairs",
+                             message = f"Total Count of reads does NOT matches between pairs.",
                              severity = 90,
                              checkID = checkID)
     ### DONE R_1001 ###################################################
+
+    ### START R_1002 ##################################################
+    checkID = "R_1002"
+    key = "fastqc_sequence_length_distribution_plot"
+    try:
+        mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
+        print(mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"])
+        1/0
+        for sample in samples:
+            entity = sample
+            # I.E: if the study is paired end
+            if set(("forward", "reverse")) == set(mqc.file_labels):
+                print(mqc.data[sample]["forward-avg_sequence_length"])
+                print(mqc.data[sample]["reverse-avg_sequence_length"])
+                pairs_match = mqc.data[sample]["forward-avg_sequence_length"].value == mqc.data[sample]["reverse-avg_sequence_length"].value
+                if pairs_match:
+                    flagger.flag(entity = entity,
+                                 message = f"Average sequence lengths match between pairs",
+                                 severity = 30,
+                                 checkID = checkID)
+                else:
+                    flagger.flag(entity = entity,
+                                 message = f"Average sequence lengths DO NOT match between pairs",
+                                 severity = 90,
+                                 checkID = checkID)
+    except KeyError:
+        # this indicates the plot was not generated.
+        # this happens when all average sequences are the same.
+        # therefore this is a pass condition for the check
+        for sample in samples:
+            entity = sample
+            flagger.flag(entity = entity,
+                         message = ("Average sequence lengths across all samples matches. "\
+                                   "Reason: MultiQC did not graph average sequence "\
+                                   "lengths.  This happens when the graph is replace "\
+                                   "with a message indicating 'All samples have "\
+                                   "sequences of a single length'"),
+                         severity = 30,
+                         checkID = checkID)
+
+    ### DONE R_1002 ###################################################
