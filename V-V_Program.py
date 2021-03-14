@@ -91,12 +91,12 @@ def main(config: dict()):
     raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
                               samples = samples,
                               flagger = flagger,
-                              params = PARAMS["raw_reads"]
+                              params = PARAMS
                               )
     raw_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("RawMultiQCDir")) / "multiqc_data.json",
                                       samples = samples,
                                       flagger = flagger,
-                                      params = PARAMS["raw_reads"],
+                                      params = PARAMS,
                                       outlier_comparision_point = "median")
 
     raise Exception("REACHED VV_PROG")
