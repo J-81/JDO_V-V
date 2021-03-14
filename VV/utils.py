@@ -1,8 +1,8 @@
 """ utility functions common to a number of operations to validation and
 verification
 """
-from typing import Tuple
-from statistics import median, stdev
+from typing import Tuple, Callable
+import statistics
 
 FLAG_LEVELS = {
     20:"Info-Only",
@@ -38,8 +38,8 @@ def outlier_check(value: float, against: list) -> [str]:
     :param value: Value to compute deviations for compared to full list of values
     :param against: Values to check for an outlier against
     """
-    _median = median(against)
-    _stdev = stdev(against)
+    _median = statistics.median(against)
+    _stdev = statistics.stdev(against)
 
     # account for zero _stdev,
     # in these cases there should be no outliers (all values are the same)
