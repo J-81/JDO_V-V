@@ -27,14 +27,11 @@
   - Check for outliers in terms of file size.
     - Assumption: Raw reads files should be comparable in terms of file size.
 
-- R_0004 (To be staged -> validate_verify_multiqc)
+- R_1001 (Implemented)
   - Check that read counts between paired raw reads match.
 
-- R_0005 (To be staged -> validate_verify_multiqc)
+- R_1002 (Implemented)
   - Sample-wise comparison check that read lengths are the same.
-
-- R_0006 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison check that read length variations across samples are the same.
 
 - R_0007  (To be staged -> validate_verify_multiqc)
   - Sample-wise comparison for duplication percentage outliers.
@@ -91,29 +88,26 @@
 
 ### Trimmed Reads
 
-- T_0001 (To be staged -> validate_verify)
+- T_0001 (Implemented)
   - Check that raw reads exist for the samples described in ISA.
     - Input: SAMPLE, list of sample names.
     - Assumption for single end: File expected is {SAMPLE}_R1_raw.fastq.gz
     - Assumption for paired end: Files expected are {SAMPLE}_R1_raw.fastq.gz and {SAMPLE}_R2_raw.fastq.gz
     - Assumption: SAMPLE never includes "_R1_raw.fastq.gz" nor "_R2_raw.fastq.gz"
 
-- T_0002 (To be staged -> validate_verify)
+- T_0002 (Implemented)
   - Check that raw reads headers are present every 4 lines.
     - Configuration: By default, first 10,000,000 lines are checked.
 
-- T_0003 (To be staged -> validate_verify)
+- T_0003 (Implemented)
   - Check for outliers in terms of file size.
     - Assumption: Raw reads files should be comparable in terms of file size.
 
-- T_0004 (To be staged -> validate_verify_multiqc)
-  - Check that read counts between paired raw reads match.
+- T_1001 (Implemented)
+  - Check that read counts between paired read files match.
 
-- T_0005 (To be staged -> validate_verify_multiqc)
+- T_1002 (Implemented)
   - Sample-wise comparison check that read lengths are the same.
-
-- T_0006 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison check that read length variations across samples are the same.
 
 - T_0007 (To be staged -> validate_verify_multiqc)
   - Sample-wise comparison for duplication percentage outliers.
