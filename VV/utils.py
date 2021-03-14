@@ -53,6 +53,40 @@ def outlier_check(value: float, against: list) -> [str]:
         return 0
     return  abs(value - _median) / _stdev
 
+def filevalues_from_mapping(file_mapping: dict,
+                            file_func: Callable):
+    """ Returns outliers from the typical file mapping structure.
+    Example:
+        file_mapping = {
+            sample1: {
+                filelabel1 : file,
+                filelabel2 : file
+                }
+            sample2: {
+                filelabel1 : file,
+                filelabel2 : file
+                }
+            }
+    :param file_mapping: two depth nested dictionary (see example above)
+    :param file_func: a function to be applied to each file, must return a numeric value
+    """
+    # first, iterate to get all values as a list
+    # and map values in same nested dictionary format
+    # (with the value replacing the filepath)
+    all_values = list()
+    file_value_mapping = dict()
+    for sample, sample_mapping in file_mapping.items():
+        file_value_mapping[sample] = dict()
+        for filelabel, file in sample_mapping.items():
+            try:
+                file_value = float(file_func(file))
+            except TypeError:
+                raise TypeError(f"Error: {file_func} MUST return a numeric value.  Value returned: {file_value}. File: {file}")
+            all_values.append(file_value)
+            file_value_mapping[sample][filelabel] = file_value
+
+    return file_value_mapping, all_values
+
 def bytes_to_gb(bytes: int) -> float:
     """ utility function, converts bytes to gb
 
