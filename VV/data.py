@@ -110,8 +110,8 @@ class Dataset():
         :param flagger: Flagging object, often shared for a single VV process (with multiple steps)
         :param entity: description of this dataset.  Used as the entity for flagging
         """
-        ### START S_0001 ##################################################
-        checkID = "S_0001"
+        ### START I_0001 ##################################################
+        checkID = "I_0001"
         self.entity = entity
         if isa_zip_path.is_file():
             flagger.flag(entity = self.entity,
@@ -200,7 +200,7 @@ class Dataset():
                         vv_for: str):
         if vv_for == "RNASeq":
             assay_name = "transcription profiling by RNASeq"
-            checkID = "S_0002"
+            checkID = "I_0002"
             if assay_name in self.assays.keys():
                 self.flagger.flag(entity = self.entity,
                                   message = f"Expected assay ({assay_name}) was found in ISA file as parsed.",
