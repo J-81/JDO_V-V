@@ -1,7 +1,7 @@
 """ VV for deseq2 output
 """
-
 import os
+from pathlib import Path
 
 from VV.flagging import Flagger
 
@@ -13,11 +13,20 @@ class Deseq2NormalizedCounts():
     def __init__(self,
                  samples: str,
                  dir_path: str,
-                 has_ERCC: bool):
-        log.debug(f"Checking Deseq2 Normalized Counts Results")
+                 flagger: Flagger,
+                 params: dict):
+        ##############################################################
+        # SET FLAGGING OUTPUT ATTRIBUTES
+        ##############################################################
+        flagger.set_script(__name__)
+        flagger.set_step("DESEQ2_OUTPUT")
+        self.flagger = flagger
+        self.params = params
+
+        print(f"Checking Deseq2 Normalized Counts Results")
         self.samples = samples
-        self.dir_path = dir_path
-        self.has_ERCC = has_ERCC
+        self.dir_path = Path(dir_path)
+        self.has_ERCC = params["hasERCC"]
         self._check_csv_files()
 
     def _check_csv_files(self):
@@ -34,132 +43,39 @@ class Deseq2NormalizedCounts():
             - This implies normalization with performed correctly
         """
         # SampleTable.csv Check
-        check_file = os.path.join(self.dir_path, "SampleTable.csv")
-        log.debug(f"Checking {check_file}")
-        if os.path.isfile(check_file):
-            df = pd.read_csv(check_file, header=0)
-            samples_in_file = list(df.iloc[:,0])
-            if set(samples_in_file) != set(self.samples):
-                Flagger.flag(message=(f"{check_file} samples do not match ones"
-                                    f" expected: SampleTable {samples_in_file}"
-                                    f" expected {self.samples}"),
-                              severity=70,
-                              checkID="D_0001")
-        else:
-            Flagger.flag(message=(f"Missing {check_file}"),
-                          severity=70,
-                          checkID="D_0002")
+        entity = "FULL_DATASET"
+        checkID_to_file = {
+            "D_0001" : self.dir_path / "SampleTable.csv",
+            "D_0002" : self.dir_path / "Unnormalized_Counts.csv",
+            "D_0003" : self.dir_path / "Normalized_Counts.csv",
+            }
+        if self.params["hasERCC"]:
+            checkID_to_file["D_0004"] = self.dir_path / "ERCC_Normalized_Counts.csv"
 
-        # Unnormalized_Counts.csv Check
-        check_file = os.path.join(self.dir_path, "Unnormalized_Counts.csv")
-        log.debug(f"Checking {check_file}")
-        if os.path.isfile(check_file):
-            df = pd.read_csv(check_file, header=0, index_col=0)
-            # capture first row of data for comparision
-            unnorm_df = df.copy()
+        for checkID, expectedFile in checkID_to_file.items():
+            # check file existence
+            if expectedFile.is_file():
+                # check if samples match expectation
+                df = pd.read_csv(expectedFile, header=0)
+                # in counts tables, samples are columns (excluing first column)
+                # in samples table, samples are rows
+                samples_in_file = list(df.columns[1:]) if checkID != "D_0001" else list(df.iloc[:,0])
+                if set(samples_in_file) == set(self.samples):
+                    message = f"{expectedFile.name} exists and samples are correct"
+                    self.flagger.flag(message = message,
+                                      severity = 30,
+                                      checkID = checkID,
+                                      entity = entity)
+                else:
+                    message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
+                    self.flagger.flag(message = message,
+                                      severity = 90,
+                                      checkID = checkID,
+                                      entity = entity)
 
-            samples_in_file = list(df.columns)
-            if set(samples_in_file) != set(self.samples):
-                Flagger.flag(message=(f"{check_file} samples do not match ones"
-                                    f" expected: Unnormalized_Counts {samples_in_file}"
-                                    f" expected {self.samples}"),
-                              severity=70,
-                              checkID="D_0003")
-
-        else:
-            Flagger.flag(message=(f"Missing {check_file}"),
-                          severity=70,
-                          checkID="D_0004")
-
-        # Normalized_Counts.csv Check
-        check_file = os.path.join(self.dir_path, "Normalized_Counts.csv")
-        log.debug(f"Checking {check_file}")
-        if os.path.isfile(check_file):
-            df = pd.read_csv(check_file, header=0, index_col=0)
-            # capture first row of data for comparision
-            norm_df = df.copy()
-
-            samples_in_file = list(df.columns)
-            if set(samples_in_file) != set(self.samples):
-                Flagger.flag(message=(f"{check_file} samples do not match ones"
-                                    f" expected: Normalized_Counts {samples_in_file}"
-                                    f" expected {self.samples}"),
-                              severity=70,
-                              checkID="D_0005")
-
-        else:
-            Flagger.flag(message=(f"Missing {check_file}"),
-                          severity=70,
-                          checkID="D_0006")
-
-        # ERCC_Normalized_Counts.csv Check
-        if self.has_ERCC:
-            check_file = os.path.join(self.dir_path, "ERCC_Normalized_Counts.csv")
-            log.debug(f"Checking {check_file}")
-            if os.path.isfile(check_file):
-                df = pd.read_csv(check_file, header=0, index_col=0)
-                # capture first row of data for comparision
-                ercc_norm_df = df.copy()
-
-                samples_in_file = list(df.columns)
-            if set(samples_in_file) != set(self.samples):
-                Flagger.flag(message=(f"{check_file} samples do not match ones"
-                                    f" expected: ERCC_Normalized_Counts {samples_in_file}"
-                                    f" expected {self.samples}"),
-                              severity=70,
-                              checkID="D_0007")
-
-        else:
-            Flagger.flag(message=(f"Missing {check_file}"),
-                          severity=70,
-                          checkID="D_0008")
-
-
-        # length checks
-        if self.has_ERCC and len(norm_df) == len(unnorm_df):
-            Flagger.flag(message=(f"Normalized count rows should not be equal to"
-                                    " Unnormalized count rows in terms of number of rows if ERCC"
-                                    " Spikein added.  This may indicate ERCC not detected."),
-                          severity=70,
-                          checkID="D_0009")
-
-        # find matching gene and compare values
-        for i in range(1000):
-            if norm_df.index[0] == (unnorm_df.index[i]):
-                log.debug(f"Gene in row 1 of NORM: {norm_df.index[0]} should equal"
-                f" Gene in row {i} of UNNORM: {unnorm_df.index[i+1]}")
-                log.debug(f"Checking values of this row next")
-                break
-
-
-        # Gene name should match
-        # values should not
-        log.debug(f"Value NORM: {norm_df.iloc[0,:]} should NOT equal"
-                f" Value UNNORM: {unnorm_df.iloc[i,:]}")
-        if norm_df.iloc[0,:].equals(unnorm_df.iloc[i,:]):
-            Flagger.flag(message=(f"Normalized count values are the same as"
-                                      " Unnormalized count values.  This means normalization was NOT "
-                                      " performed."),
-                          severity=70,
-                          checkID="D_0010")
-
-        if self.has_ERCC:
-            # length checks
-            log.debug(f"Count ERCC_NORM: {len(ercc_norm_df.index)} should NOT equal"
-                    f" Count UNNORM: {len(unnorm_df.index)}")
-            if len(ercc_norm_df.index) == len(unnorm_df.index):
-                log.error(f"FAIL: ERCC_Normalized count rows should NOT be equal to"
-                        " Unnormalized count rows in terms of number of rows if ERCC"
-                        " Spikein added.")
-
-            log.debug(f"Count NORM: {len(norm_df.index)} should equal"
-                    f" Count UNNORM: {len(unnorm_df.index)}")
-            if len(norm_df.index) != len(ercc_norm_df.index):
-                log.error(f"FAIL: The number of Normalized count rows should "
-                        " equal the number of ERCC-Normalized count rows.")
-
-            log.debug(f"Value NORM: {norm_df.iloc[0,:]} should NOT equal"
-                    f" Value ERCC-NORM: {ercc_norm_df.iloc[0,:]}")
-            if norm_df.iloc[0,:].equals(ercc_norm_df.iloc[0,:]):
-                log.error(f"FAIL: Normalized count values are the same as "
-                        "ERCC normalized count values.  This should differ.")
+            else:
+                message = f"{expectedFile.name} does not exist"
+                self.flagger.flag(message=(f"Missing {expectedFile}"),
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)

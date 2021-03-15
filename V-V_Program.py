@@ -127,13 +127,15 @@ def main(config: dict()):
                dir_path=config['Paths'].get("RsemParentDir"),
                flagger = flagger,
                params = PARAMS)
-    raise Exception(f"less -S {flagger._log_file}")
     ###########################################################################
     # Deseq2 Normalized Counts VV
     ###########################################################################
-    Deseq2NormalizedCounts(samples=isa.assays['transcription profiling by RNASeq'].samples,
-                            dir_path=config['Paths'].get("Deseq2ParentDir"),
-                            has_ERCC=config['Deseq2'].getboolean("HasERCC"))
+    Deseq2NormalizedCounts(samples = samples,
+                           dir_path = config['Paths'].get("Deseq2ParentDir"),
+                           flagger = flagger,
+                           params = PARAMS)
+    print(f"VV complete: examine results using command below\nless -S {flagger._log_file}")
+
 
 if __name__ == '__main__':
     main(config)
