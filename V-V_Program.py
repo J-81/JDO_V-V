@@ -121,6 +121,13 @@ def main(config: dict()):
     print(f"{'='*40}")
     print(f"VV complete: Full Results Saved To {flagger._log_file}")
 
+    ###########################################################################
+    # Generate derivative log files
+    ###########################################################################
+    for log_type in ["only-issues", "by-sample", "by-step"]:
+        flagger.generate_derivative_log(log_type = log_type,
+                                        samples = samples)
+
 
 if __name__ == '__main__':
     main(config)

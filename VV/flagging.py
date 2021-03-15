@@ -3,6 +3,8 @@ the V-V checks.  Uses logging
 """
 from datetime import datetime
 import sys
+from pathlib import Path
+
 import pandas as pd
 
 FLAG_LEVELS = {
@@ -31,11 +33,16 @@ class Flagger():
         self._severity = FLAG_LEVELS
         self._halt_level = halt_level # level to raise a VV exception at
         self._log_threshold = 30
-        timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
-        self._log_file = f"{timestamp}_VV_Results.tsv"
+
+        self.timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.log_folder = Path("VV_output") / Path(self.timestamp)
+        self.log_folder.mkdir(exist_ok=True, parents=True)
+        self._log_filename = f"VV_Results.tsv"
+        self._log_file = self.log_folder / self._log_filename
+
         with open(self._log_file, "w") as f:
             f.write("#START OF VV RUN:\n")
-            f.write(f"#Time started: {timestamp}\n")
+            f.write(f"#Time started: {self.timestamp}\n")
             f.write(f"#Python Command: {' '.join(sys.argv)}\n")
 
     def set_step(self, step: str):
@@ -60,14 +67,17 @@ class Flagger():
         if severity >= self._halt_level:
             raise VVError(f"SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING\nSee {self._log_file}")
 
+    def _get_log_as_df(self):
+        return pd.read_csv(self._log_file,
+                           sep="\t",
+                           comment="#",
+                           names=["severity","flag_id","step","script","entity","message","checkID"])
+
     def check_sample_proportions(self,
                                  checkID: str,
                                  check_params: dict,
                                  protoflag_map: dict):
-        df = pd.read_csv(self._log_file,
-                        sep="\t",
-                        comment="#",
-                        names=["severity","flag_id","step","script","entity","message","checkID"])
+        df = self._get_log_as_df()
         # filter by checkID
         checkdf = df.loc[df["checkID"] == checkID]
 
@@ -98,3 +108,35 @@ class Flagger():
                                 ),
                       severity = 30,
                       checkID = checkID)
+
+    def generate_derivative_log(self, log_type: str, samples: list):
+        known_log_types = ["only-issues", "by-sample", "by-step"]
+        if log_type == "only-issues":
+            full_df = self._get_log_as_df()
+            output = f"{log_type}:{self._log_filename}"
+            filter_out = [severity for flag_code, severity
+                          in FLAG_LEVELS.items()
+                          if flag_code <= 30]
+            derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
+            derived_df.to_csv(self.log_folder / output, index=False)
+            print(f">>> Created {output}: Derived from {self._log_file}")
+        elif log_type == "by-sample":
+            full_df = self._get_log_as_df()
+            parent_dir = self.log_folder / Path("bySample")
+            parent_dir.mkdir()
+            for sample in samples:
+                output = parent_dir / f"{sample}:{self._log_filename}"
+                derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
+                derived_df.to_csv(output, index=False)
+                print(f">>> Created {output}: Derived from {self._log_file}")
+        elif log_type == "by-step":
+            full_df = self._get_log_as_df()
+            parent_dir = self.log_folder / Path("byStep")
+            parent_dir.mkdir()
+            for step in full_df["step"].unique():
+                output = parent_dir / f"{step}:{self._log_filename}"
+                derived_df = full_df.loc[full_df["step"] == step]
+                derived_df.to_csv(output, index=False)
+                print(f">>> Created {output}: Derived from {self._log_file}")
+        else:
+            raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
