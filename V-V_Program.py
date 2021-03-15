@@ -44,13 +44,6 @@ config.read(args.config)
 flagger = Flagger(__file__,
                   halt_level = config["Logging"].getint("HaltSeverity"))
 
-########################################################################
-# Log Folder Setup
-########################################################################
-os.makedirs(name = "log", exist_ok = True)
-os.makedirs(name = "debug", exist_ok = True)
-
-
 ##############################################################
 # Main Function To Call Each V&V Function
 ##############################################################
