@@ -3,14 +3,24 @@ the V-V checks.  Uses logging
 """
 from datetime import datetime
 import sys
+import pandas as pd
 
 FLAG_LEVELS = {
     20:"Info-Only",
     30:"Passed-Green",
+    49:"Proto-Warning-Yellow",
     50:"Warning-Yellow",
+    59:"Proto-Warning-Red",
     60:"Warning-Red",
     90:"Issue-Halt_Processing"
     }
+
+# maps which codes to consider for assessing realized flags
+# from protoflags
+PROTOFLAG_MAP = {
+    60 : [59],
+    50 : [59,49]
+}
 
 class VVError(Exception):
     pass
@@ -47,7 +57,7 @@ class Flagger():
              checkID: str):
         """ Given an issue, logs a flag, prints human readable message
         """
-        report = f"{self._severity[severity]}\t{self._step}\t{self._script}\t{entity}\t{message}\t{checkID}"
+        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{message}\t{checkID}"
         #print(report)
         with open(self._log_file, "a") as f:
             f.write(report + "\n")
@@ -55,3 +65,39 @@ class Flagger():
         # full exit upon severe enough issue
         if severity >= self._halt_level:
             raise VVError("SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING")
+
+    def check_sample_proportions(self, checkID, check_params):
+        df = pd.read_csv(self._log_file,
+                        sep="\t",
+                        comment="#",
+                        names=["severity","flag_id","step","script","entity","message","checkID"])
+        # filter by checkID
+        checkdf = df.loc[df["checkID"] == checkID]
+
+        # compute proportion with proto flags
+        flagged = False
+        for flag_id in sorted(PROTOFLAG_MAP, reverse=True):
+            threshold = check_params["sample_proportion_thresholds"][flag_id]
+            valid_proto_ids = PROTOFLAG_MAP[flag_id]
+            valid_proto_count = len(checkdf.loc[checkdf["flag_id"].isin(valid_proto_ids)])
+            total_count = len(checkdf)
+            proportion = valid_proto_count / total_count
+            # check if exceeds threshold
+            if proportion > threshold:
+                self.flag(entity = "FULL_DATASET",
+                          message = (f"{proportion*100}% of samples:files "
+                                    f"({valid_proto_count} of {total_count}) "
+                                    f"meet criteria for flagging. [threshold: {threshold*100}%]"
+                                    ),
+                          severity = flag_id,
+                          checkID = checkID)
+                flagged = True
+                break
+        if not flagged:
+            self.flag(entity = "FULL_DATASET",
+                      message = (f"{proportion*100}% of samples:files "
+                                f"({valid_proto_count} of {total_count}) "
+                                f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
+                                ),
+                      severity = 30,
+                      checkID = checkID)
