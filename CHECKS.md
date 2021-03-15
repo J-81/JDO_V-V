@@ -66,23 +66,21 @@
 
 - R_1009 (Implemented)
   - Sample-wise comparison for N calls per position.
-  - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
+  - Standard Deviation Threshold 1: Summed N calls 1 - 2 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: Summed N calls 2+ deviations -> Warning - red
 
+- R_0010 (Implemented) [Change for globals below]
+  - Global Threshold 1: NEW - Mean position value > 3% Prior(3% - 8% of total bases/read >80% of reads/sample) -> Warning - yellow
+  - Global Threshold 2: NEW - Mean position value > 8% Prior(8%+ of total bases/read >80% of reads/sample) -> Warning - red
 
-- R_0012 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for N calls per position.
-  - Global Threshold 1: 3% - 8% of total bases/read >80% of reads/sample -> Warning - yellow
-  - Global Threshold 2: 8%+ of total bases/read >80% of reads/sample -> Warning - red
-
-- R_0014 (To be staged -> validate_verify_multiqc)
+- R_0011 (Implemented)
   - Sample-wise comparison for Top overrepresented sequence percent of total sequences.
   - Global Threshold 1: 40% - 60% duplication percent/ in >80% of samples -> Warning - yellow
   - Global Threshold 2: 60%+ duplication percent/ in >80% of samples -> Warning - red
   - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
   - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
 
-- R_0015 (To be staged -> validate_verify_multiqc)
+- R_0012 (Implemented)
   - Sample-wise comparison for Sum of  remaining overrepresented sequences percent of total sequences.
   - Global Threshold 1: 40% - 60% duplication percent/ in >80% of samples -> Warning - yellow
   - Global Threshold 2: 60%+ duplication percent/ in >80% of samples -> Warning - red
