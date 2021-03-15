@@ -41,14 +41,14 @@ class Flagger():
         self._script = script
 
     def flag(self,
-             entity: str, 
-             message: str, 
-             severity: int, 
+             entity: str,
+             message: str,
+             severity: int,
              checkID: str):
         """ Given an issue, logs a flag, prints human readable message
         """
         report = f"{self._severity[severity]}\t{self._step}\t{self._script}\t{entity}\t{message}\t{checkID}"
-        print(report)
+        #print(report)
         with open(self._log_file, "a") as f:
             f.write(report + "\n")
 
