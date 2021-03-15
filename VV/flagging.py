@@ -127,7 +127,7 @@ class Flagger():
             for sample in samples:
                 output = parent_dir / f"{sample}:{self._log_filename}"
                 derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
-                derived_df.to_csv(output, index=False)
+                derived_df.to_csv(output, index=False, sep="\t")
                 print(f">>> Created {output}: Derived from {self._log_file}")
         elif log_type == "by-step":
             full_df = self._get_log_as_df()
@@ -136,7 +136,7 @@ class Flagger():
             for step in full_df["step"].unique():
                 output = parent_dir / f"{step}:{self._log_filename}"
                 derived_df = full_df.loc[full_df["step"] == step]
-                derived_df.to_csv(output, index=False)
+                derived_df.to_csv(output, index=False, sep="\t")
                 print(f">>> Created {output}: Derived from {self._log_file}")
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
