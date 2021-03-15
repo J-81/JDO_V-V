@@ -195,7 +195,8 @@ def value_check_direct(check_params: dict,
 
     # global minimum threshold checks
     if check_params["min_thresholds"]:
-        for threshold in sorted(check_params["min_thresholds"]).items():
+        ascending_thresholds = sorted(check_params["min_thresholds"])
+        for threshold in ascending_thresholds:
             if value < threshold:
                 flagger.flag(   entity = entity,
                                 message = (f"<{message_prefix}> {value_alias} is under threshold of {threshold}. "
