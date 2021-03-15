@@ -238,15 +238,14 @@ class StarAlignments():
         Also checks using samtools quickcheck which should catch truncations and
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
+        checkID = "S_0005"
         for sample in self.samples:
-            print(f"Checking Star Alignment Files for {sample}")
+            error_message = ""
             coord_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.sortedByCoord.out.bam")
             if not os.path.isfile(coord_file):
-                print(f"FAIL: {sample} does not "
-                           "have *_Aligned.sortedByCoord.out.bam file")
-                continue
+                error_message += (f"*_Aligned.sortedByCoord.out.bam file missing")
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],
@@ -254,15 +253,15 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                print(f"FAIL: samtools quick checkout output for {sample} on {coord_file}: {stdout}")
+                error_message += (f"FAIL: samtools quick checkout output for on {coord_file}: {stdout}")
 
             # check transcriptome alignment file
             transcript_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.toTranscriptome.out.bam")
             if not os.path.isfile(transcript_file):
-                print(f"FAIL: {sample} does not "
-                           "have *_Aligned.toTranscriptome.out.bam")
+                error_message += (f"*_Aligned.toTranscriptome.out.bam file missing")
+
                 continue
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', transcript_file],
@@ -270,9 +269,20 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                print(f"FAIL: samtools quick checkout output for {sample} on {transcript_file}: {stdout}")
+                error_message += (f"FAIL: samtools quick checkout output for on {transcript_file}: {stdout}")
 
-            print(f"Finished Checking Star Alignment Files for {sample}")
+            if error_message:
+                self.flagger.flag(entity = sample,
+                                  message = error_message,
+                                  severity = 90,
+                                  checkID = checkID
+                                  )
+            else:
+                self.flagger.flag(entity = sample,
+                                  message = "Both bam files exist and raise not issues with samtools quickcheck",
+                                  severity=30,
+                                  checkID = checkID
+                                  )
 
     def _check_samples_proportions_for_dataset_flags(self):
         ### Check if any sample proportion related flags should be raised
