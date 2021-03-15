@@ -238,15 +238,14 @@ class StarAlignments():
         Also checks using samtools quickcheck which should catch truncations and
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
+        checkID = "S_0005"
         for sample in self.samples:
-            print(f"Checking Star Alignment Files for {sample}")
+            error_message = ""
             coord_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.sortedByCoord.out.bam")
             if not os.path.isfile(coord_file):
-                print(f"FAIL: {sample} does not "
-                           "have *_Aligned.sortedByCoord.out.bam file")
-                continue
+                error_message += (f"*_Aligned.sortedByCoord.out.bam file missing")
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],

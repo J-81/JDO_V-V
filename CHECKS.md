@@ -198,6 +198,10 @@
    - Warning-Red : value < 30%
    - DATASETWISE : >80% of samples flagged
 
+- S_0005 (Implemented)
+  - Check bam files exist and ,using samtools, check both bam files to see if they have any issues.
+    - Fail: files don't exist or samtools raises issues with either file
+
 ### RSEM
 
 - M_0001 (Implemented)
