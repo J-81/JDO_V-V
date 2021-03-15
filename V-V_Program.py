@@ -120,14 +120,14 @@ def main(config: dict()):
                    dir_path=config['Paths'].get("StarParentDir"),
                    flagger = flagger,
                    params = PARAMS)
-    raise Exception(f"less -S {flagger._log_file}")
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################
-    RsemCounts(samples=isa.assays['transcription profiling by RNASeq'].samples,
+    RsemCounts(samples= samples,
                dir_path=config['Paths'].get("RsemParentDir"),
-               outlier_stdev_threshold=config["Rsem"].getfloat('CountsVariationTolerance'))
-
+               flagger = flagger,
+               params = PARAMS)
+    raise Exception(f"less -S {flagger._log_file}")
     ###########################################################################
     # Deseq2 Normalized Counts VV
     ###########################################################################

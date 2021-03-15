@@ -7,6 +7,7 @@
 DEFAULT_PARAMS = \
 {
     "middlepoint": "median",
+    "hasERCC": True,
     "raw_reads": {
         "fastq_lines_to_check" : 10000,
         "sequence_length" : {
@@ -308,6 +309,37 @@ DEFAULT_PARAMS = \
                 60 : 0.80,
                 50 : 0.80,
             },
+        },
+    },
+    "RSEM" : {
+        "count_of_unique_genes_expressed" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {},
+            "outlier_thresholds" : {
+                4 : 60,
+                2 : 50,
+            },
+            "sample_proportion_thresholds" : {},
+        },
+        "count_of_unique_isoforms_expressed" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {},
+            "outlier_thresholds" : {
+                4 : 60,
+                2 : 50,
+            },
+            "sample_proportion_thresholds" : {},
+        },
+        "count_of_ERCC_genes_detected" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {
+                1 : 60,
+            },
+            "outlier_thresholds" : {
+                4 : 60,
+                2 : 50,
+            },
+            "sample_proportion_thresholds" : {},
         },
     },
 }
