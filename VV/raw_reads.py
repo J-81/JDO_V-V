@@ -9,7 +9,7 @@ import statistics
 
 from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks, value_check_direct
 from VV.flagging import Flagger
-from seqpy import multiqc
+from VV import multiqc
 
 def validate_verify(samples: list[str],
                     raw_reads_dir: Path,
