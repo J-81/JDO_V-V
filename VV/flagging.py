@@ -15,12 +15,6 @@ FLAG_LEVELS = {
     90:"Issue-Halt_Processing"
     }
 
-# maps which codes to consider for assessing realized flags
-# from protoflags
-PROTOFLAG_MAP = {
-    60 : [59],
-    50 : [59,49]
-}
 
 class VVError(Exception):
     pass
@@ -66,7 +60,10 @@ class Flagger():
         if severity >= self._halt_level:
             raise VVError("SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING")
 
-    def check_sample_proportions(self, checkID, check_params):
+    def check_sample_proportions(self,
+                                 checkID: str,
+                                 check_params: dict,
+                                 protoflag_map: dict):
         df = pd.read_csv(self._log_file,
                         sep="\t",
                         comment="#",
@@ -76,9 +73,9 @@ class Flagger():
 
         # compute proportion with proto flags
         flagged = False
-        for flag_id in sorted(PROTOFLAG_MAP, reverse=True):
+        for flag_id in sorted(protoflag_map, reverse=True):
             threshold = check_params["sample_proportion_thresholds"][flag_id]
-            valid_proto_ids = PROTOFLAG_MAP[flag_id]
+            valid_proto_ids = protoflag_map[flag_id]
             valid_proto_count = len(checkdf.loc[checkdf["flag_id"].isin(valid_proto_ids)])
             total_count = len(checkdf)
             proportion = valid_proto_count / total_count

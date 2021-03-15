@@ -390,9 +390,17 @@ def validate_verify_multiqc(samples: list[str],
 
 
     ### DONE R_1003 ###################################################
+    # maps which codes to consider for assessing realized flags
+    # from protoflags
+    PROTOFLAG_MAP = {
+        60 : [59],
+        50 : [59,49]
+    }
     ### Check if any sample proportion related flags should be raised
     checkID_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
     for checkID, params_key in checkID_with_samples_proportion_threshold.items():
-        flagger.check_sample_proportions(checkID, params["trimmed_reads"][params_key])
+        flagger.check_sample_proportions(checkID,
+                                         params["trimmed_reads"][params_key],
+                                         PROTOFLAG_MAP)
