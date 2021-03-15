@@ -33,44 +33,47 @@
 - R_1002 (Implemented)
   - Sample-wise comparison check that read lengths are the same.
 
-- R_0007  (To be staged -> validate_verify_multiqc)
+- R_1003 (Implemented)
   - Sample-wise comparison for duplication percentage outliers.
     - Global Threshold 1: 40 - 60% -> Warning - yellow
     - Global Threshold 2: 60%+ -> Warning - red
     - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
     - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
 
-- R_0008 (To be staged -> validate_verify_multiqc)
+- R_1004 (Implemented)
   - Sample-wise comparison for GC content outliers.
     - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
     - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
 
-- R_0009 (To be staged -> validate_verify_multiqc)
+- R_1005 (Implemented)
   - Sample-wise comparison for sequence quality by position.
   - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
   - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
 
-- R_0010 (To be staged -> validate_verify_multiqc)
+- R_1006 (Implemented)
   - Sample-wise comparison for sequence quality by sequence.
   - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
   - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
 
-- R_0011 (To be staged -> validate_verify_multiqc)
+- R_1007 (Implemented)
   - Sample-wise comparison for GC content in sequence position bins.
   - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
   - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
+
+- R_1008 (Implemented)
+  - Sample-wise comparison for sequence duplication.
+  - Standard Deviation Threshold 1: for any duplication level bin if 2+ deviations -> Warning - red
+
+- R_1009 (Implemented)
+  - Sample-wise comparison for N calls per position.
+  - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
+
 
 - R_0012 (To be staged -> validate_verify_multiqc)
   - Sample-wise comparison for N calls per position.
   - Global Threshold 1: 3% - 8% of total bases/read >80% of reads/sample -> Warning - yellow
   - Global Threshold 2: 8%+ of total bases/read >80% of reads/sample -> Warning - red
-  - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
-
-- R_0013 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for sequence duplication.
-  - Standard Deviation Threshold 1: for any duplication level bin if 2+ deviations -> Warning - red
-
 
 - R_0014 (To be staged -> validate_verify_multiqc)
   - Sample-wise comparison for Top overrepresented sequence percent of total sequences.
