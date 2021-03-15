@@ -7,7 +7,7 @@ from pathlib import Path
 import gzip
 import statistics
 
-from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks
+from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks, value_check_direct
 from VV.flagging import Flagger
 from seqpy import multiqc
 
@@ -131,7 +131,7 @@ def _check_headers(file, count_lines_to_check: int) -> int:
         for i, line in enumerate(f):
             # checks if lines counted equals the limit input
             if i+1 == count_lines_to_check:
-                print(f"Reached {count_lines_to_check} lines, ending line check")
+                #print(f"Reached {count_lines_to_check} lines, ending line check")
                 break
 
             line = line.decode()
@@ -145,7 +145,8 @@ def _check_headers(file, count_lines_to_check: int) -> int:
                       f"LINE {i+1}: {line}")
             # update every 20,000,000 reads
             if i % 20000000 == 0:
-                print(f"Checked {i} lines for {file}")
+                #print(f"Checked {i} lines for {file}")
+                pass
     if len(lines_with_issues) != 0:
         passes = False
         message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
@@ -206,22 +207,17 @@ def validate_verify_multiqc(samples: list[str],
         mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
         for sample in samples:
             for file_label in mqc.file_labels:
+                flagged = False
                 entity = f"{sample}:{file_label}"
                 cur_data_key = f"{file_label}-{key}"
-                for threshold, severity in check_params["outlier_thresholds"].items():
+                thresholds = sorted(check_params["outlier_thresholds"], reverse=True)
+                for threshold in thresholds:
+                    severity = check_params["outlier_thresholds"][threshold]
                     outliers = mqc.detect_outliers(key = cur_data_key,
                                                    deviation = threshold
                                                  )
                     outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
-                    if len(outliers_for_sample) == 0:
-                        flagger.flag(entity = entity,
-                                     message = (f"Sequence length varies "
-                                                f"across samples; however, "
-                                                f"no outliers detected by "
-                                                f"sequence length bin [deviation > {threshold}]."),
-                                     severity = 50,
-                                     checkID = checkID)
-                    else:
+                    if len(outliers_for_sample) != 0:
                         flagger.flag(entity = entity,
                                      message = (f"Outliers detected by sequence "
                                                f"length bin. This indicates sequence length "
@@ -230,6 +226,16 @@ def validate_verify_multiqc(samples: list[str],
                                                f"{outliers_for_sample}"),
                                      severity = severity,
                                      checkID = checkID)
+                        flagged = True
+                        break
+                if not flagged:
+                    flagger.flag(entity = entity,
+                                 message = (f"Sequence length varies "
+                                            f"across samples; however, "
+                                            f"no outliers detected by "
+                                            f"sequence length bin [deviation > {threshold}]."),
+                                 severity = 30,
+                                 checkID = checkID)
 
     except KeyError:
         # this indicates the plot was not generated.
@@ -247,3 +253,146 @@ def validate_verify_multiqc(samples: list[str],
                          checkID = checkID)
 
     ### DONE T_1002 ###################################################
+
+    ################################################################
+    # Checks for each sample:file_label vs all samples
+    # for single value cases
+    checkIDs_to_keys = {"T_1003":"percent_duplicates",
+                        "T_1004":"percent_gc",
+                        "T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+                        "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"
+                        }
+    for checkID, key in checkIDs_to_keys.items():
+        # compile all values for all file labels
+        # e.g. for paired end, both forward and reverse reads
+        all_values = list()
+        for file_label in mqc.file_labels:
+            full_key = f"{file_label}-{key}"
+            all_values.extend(mqc.compile_subset(samples_subset = samples,
+                                                 key = full_key))
+        # iterate through each sample:file_label
+        # test against all values from all file-labels
+        for sample in samples:
+            for file_label in mqc.file_labels:
+                entity = f"{sample}:{file_label}"
+                all_values = mqc.compile_subset(samples_subset = samples,
+                                                key = full_key)
+                value = mqc.data[sample][full_key].value
+                value_check_direct(value = value,
+                                   all_values = all_values,
+                                   check_params = params["trimmed_reads"][key],
+                                   flagger = flagger,
+                                   checkID = checkID,
+                                   entity = entity,
+                                   value_alias = key,
+                                   middlepoint = params["middlepoint"],
+                                   message_prefix = "Sample:File_Label vs Samples")
+
+    #######################################################
+    # Checks against index values
+    # Outliers are detected within each index bin and outlier bins are reported
+    checkIDs_to_keys = {"T_1007":"fastqc_per_base_sequence_quality_plot",
+                        "T_1008":"fastqc_per_sequence_quality_scores_plot",
+                        "T_1009":"fastqc_per_sequence_gc_content_plot-Percentages",
+                        "T_1010":"fastqc_sequence_duplication_levels_plot",
+                        }
+    for checkID, key in checkIDs_to_keys.items():
+        check_params = params["trimmed_reads"][key]
+        for sample in samples:
+            for file_label in mqc.file_labels:
+                flagged = False
+                entity = f"{sample}:{file_label}"
+                cur_data_key = f"{file_label}-{key}"
+                bin_units = mqc.data[sample][cur_data_key].bin_units
+                # iterate through thresholds in descending order (more severe first)
+                thresholds = sorted(check_params["outlier_thresholds"], reverse=True)
+                for threshold in thresholds:
+                    outliers = mqc.detect_outliers(key = cur_data_key,
+                                                   deviation = threshold
+                                                 )
+                    outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
+                    if len(outliers_for_sample) != 0:
+                        flagger.flag(entity = entity,
+                                     message = (f"<Sample:Filelabel:bin vs AllSamples:Filelabel:bin> Outliers detected by {bin_units} "
+                                              f" bin. This indicates {bin_units} "
+                                              f"distribution may vary by sample. "
+                                              f"See the following x-indices in {key} "
+                                              f"{outliers_for_sample}"),
+                                     severity = check_params["outlier_thresholds"][threshold],
+                                     checkID = checkID)
+                        flagged = True
+                # log passes
+                if not flagged:
+                    flagger.flag(entity = entity,
+                                 message = (f"No outliers detected for {key} [deviation > {threshold}]."),
+                                 severity = 30,
+                                 checkID = checkID)
+
+    ################################################################
+    # Checks against indexed values with aggregation of such values
+    checkIDs_to_keys = {"T_1011":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
+                        "T_1012":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
+                        }
+    for checkID, (key, aggregator, params_key) in checkIDs_to_keys.items():
+        check_params = params["trimmed_reads"][key][params_key]
+        for sample in samples:
+            for file_label in mqc.file_labels:
+                entity = f"{sample}:{file_label}"
+                cur_data_key = f"{file_label}-{key}"
+                bin_units = mqc.data[sample][cur_data_key].bin_units
+                all_values = mqc.compile_subset(samples_subset = samples,
+                                            key = cur_data_key,
+                                            aggregator = aggregator)
+                value = mqc.compile_subset(samples_subset = [sample], # note: this is just the sample to check for outliers!
+                                            key = cur_data_key,
+                                            aggregator = aggregator)
+                assert len(value) == 1, "Aggregation should return more than one value!"
+                value = float(value[0]) # an error here may indicate an issue generating a single value from the compile subset arg
+                value_check_direct(value = value,
+                                   all_values = all_values,
+                                   check_params = check_params,
+                                   flagger = flagger,
+                                   checkID = checkID,
+                                   entity = entity,
+                                   value_alias = f"{key}-aggregated by {params_key}",
+                                   middlepoint = params["middlepoint"],
+                                   message_prefix = "Sample:File_Label vs Samples")
+
+
+    ### START T_1002 ##################################################
+    # NOTE: outliers is calculated for each sample.  This is redudant and efficiency may be improved by refactoring this in the future.
+    checkID = "T_1013"
+    key = "fastqc_adapter_content_plot"
+    check_params = params["trimmed_reads"]["fastqc_adapter_content_plot"]
+    try:
+        mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
+        flagger.flag(entity = "FULL_DATASET",
+                     message = ("Adaptor content across all samples is neglible (< 0.1%). "
+                               "Reason: MultiQC did not Adaptor content. "
+                               "This happens when the graph is replace "
+                               "with a message indicating 'No samples found "
+                               "with any adapter contamination > 0.1%'"),
+                     severity = 60,
+                     checkID = checkID)
+
+    except KeyError:
+        # this indicates the plot was not generated.
+        # this happens when neglible adaptor content is found.
+        # therefore this is a pass condition for the check
+        flagger.flag(entity = "FULL_DATASET",
+                     message = ("Adaptor content across all samples is neglible (< 0.1%). "
+                               "Reason: MultiQC did not Adaptor content. "
+                               "This happens when the graph is replace "
+                               "with a message indicating 'No samples found "
+                               "with any adapter contamination > 0.1%'"),
+                     severity = 30,
+                     checkID = checkID)
+
+
+    ### DONE R_1003 ###################################################
+    ### Check if any sample proportion related flags should be raised
+    checkID_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+                                                 "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
+    }
+    for checkID, params_key in checkID_with_samples_proportion_threshold.items():
+        flagger.check_sample_proportions(checkID, params["trimmed_reads"][params_key])

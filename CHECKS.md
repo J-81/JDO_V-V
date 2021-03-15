@@ -107,67 +107,69 @@
 - T_1001 (Implemented)
   - Check that read counts between paired read files match.
 
-- T_1002 (Implemented)
-  - Sample-wise comparison check that read lengths are the same.
+- T_1002 (Implemented) [Change to pass vs Warning-Yellow]
+  - Sample-wise comparison check that read lengths are the similar.
+    - passes if no outliers detected. No yellow warning in this case
+      - rationale: some variation is okay as adapter trimming will yield different lengths depending on how much adapter contamination was in a given sequence
 
-- T_0007 (To be staged -> validate_verify_multiqc)
+- T_1003 (Implemented)
   - Sample-wise comparison for duplication percentage outliers.
     - Global Threshold 1: 40 - 60% -> Warning - yellow
     - Global Threshold 2: 60%+ -> Warning - red
     - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
     - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
 
-- T_0007 (To be staged -> validate_verify_multiqc)
+- T_1004 (Implemented)
   - Sample-wise comparison for GC content outliers.
     - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
     - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
 
-- T_0008 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for sequence quality by position.
-  - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
-
-- T_0009 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for sequence quality by sequence.
-  - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
-
-- T_0010 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for GC content in sequence position bins.
-  - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
-
-- T_0011 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for N calls per position.
-  - Global Threshold 1: 3% - 8% of total bases/read >80% of reads/sample -> Warning - yellow
-  - Global Threshold 2: 8%+ of total bases/read >80% of reads/sample -> Warning - red
-  - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
-
-- T_0012 (To be staged -> validate_verify_multiqc)
-  - Sample-wise comparison for sequence duplication.
-  - Standard Deviation Threshold 1: for any duplication level bin if 2+ deviations -> Warning - red
-
-
-- T_0013 (To be staged -> validate_verify_multiqc)
+- T_1005 (Implemented)
   - Sample-wise comparison for Top overrepresented sequence percent of total sequences.
   - Global Threshold 1: 40% - 60% duplication percent/ in >80% of samples -> Warning - yellow
   - Global Threshold 2: 60%+ duplication percent/ in >80% of samples -> Warning - red
-  - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
-  - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
+  - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
 
-
-- T_0014 (To be staged -> validate_verify_multiqc)
+- T_1006 (Implemented)
   - Sample-wise comparison for Sum of  remaining overrepresented sequences percent of total sequences.
   - Global Threshold 1: 40% - 60% duplication percent/ in >80% of samples -> Warning - yellow
   - Global Threshold 2: 60%+ duplication percent/ in >80% of samples -> Warning - red
   - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
   - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
 
-- T_0015 (To be staged -> validate_verify_multiqc)
+- T_1007 (Implemented)
+  - Sample-wise comparison for sequence quality by position.
+  - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
+
+- T_1008 (Implemented)
+  - Sample-wise comparison for sequence quality by sequence.
+  - Standard Deviation Threshold 1: 2 - 3 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: 3+ deviations -> Warning - red
+
+- T_1009 (Implemented)
+  - Sample-wise comparison for GC content in sequence bins.
+  - Standard Deviation Threshold 1: 2 - 4 deviations -> Warning - yellow
+  - Standard Deviation Threshold 2: 4+ deviations -> Warning - red
+
+- T_1010 (Implemented)
+  - Sample-wise comparison for sequence duplication.
+  - Standard Deviation Threshold 1: for any duplication level bin if 2+ deviations -> Warning - red
+
+- T_1011 (Implemented)
+  - Sample-wise comparison for N calls per position.
+    - Standard Deviation Threshold 1: aggregate N calls 1 - 2 deviations -> Warning - yellow
+    - Standard Deviation Threshold 2: aggregate N calls 2+ deviations -> Warning - red
+
+- T_1012 (Implemented)
+  - Sample-wise comparison for N calls per position.
+    - Global Threshold 1: NEW - Mean position value > 3% Prior(3% - 8% of total bases/read >80% of reads/sample) -> Warning - yellow
+    - Global Threshold 2: NEW - Mean position value > 8% Prior(8%+ of total bases/read >80% of reads/sample) -> Warning - red
+
+- T_1013 (Implemented) [Changed]
   - Sample-wise adapters should be removed.
-  - Global Threshold 1: 1% - 3% sequences with detected adapter content in >80% of samples -> Warning - yellow
-  - Global Threshold 2: 3%+ sequences with detected adapter content in >80% of samples -> Warning - red
+    - Global Threshold 1: greater than 80% of samples have at least 0.1% adaptor content -> Warning - red
 
 ### FastQC
 
