@@ -2,10 +2,10 @@
 
 ### ISA
 
-- S_0001 (Implemented)
+- I_0001 (Implemented)
   - Check that ISA file exists at specified path.
 
-- S_0002 (Implemented)
+- I_0002 (Implemented)
   - Check that valid experiment is described in ISA file.
     - Metadata: 'Study Assay Measurement Type' must include 'transcription profiling'
     - Metadata: 'Study Assay Technology Type' must include 'RNA Sequencing (RNA-Seq)'
@@ -176,6 +176,64 @@
  - F_0001 (Implemented)
    - Check if expected FastQC files exist based on samples
     - zip and html file should exist for each sample
+
+### STAR
+
+- S_0001 (Implemented)
+ - Check *_Log.final.out exists and looks correct (checked by data parsing)
+
+- S_0002 (Implemented)
+  - Check *_Log.out exists and looks correct
+    - Checks first line starts with "STAR version=" and last line is "ALL DONE!"
+
+- S_0003 (Implemented)
+ - Total Reads (Uniquely mapped reads % + % of reads mapped to multiple loci) check
+   - Warning-Yellow : 70% < value < 50%
+   - Warning-Red : value < 50%
+   - DATASETWISE : >80% of samples flagged
+
+- S_0004 (Implemented)
+ - Multiple Loci check (% of reads mapped to multiple loci + Number of reads mapped to too many loci)
+   - Warning-Yellow : 30% < value < 15%
+   - Warning-Red : value < 30%
+   - DATASETWISE : >80% of samples flagged
+
+### RSEM
+
+- M_0001 (Implemented)
+  - Check that gene counts files exists
+
+- M_0002 (Implemented)
+  - Check that isform counts files exists
+
+- M_0003 (Implemented)
+    - Under average flags (does not include ERCC)
+      - Warning-Yellow : value < average of counts
+
+- M_0004 (Implemented)
+    - Under average flags (does not include ERCC)
+      - Warning-Yellow : value < average of counts
+
+
+- M_0005 (Implemented)
+  - Check for counts for unique gene
+    - Outliers (with ERCC genes included)
+      - Warning-Yellow : 4 < value < 2
+      - Warning-Red : 4+
+
+- M_0006 (Implemented)
+  - Check for counts for unique transcripts
+    - Outliers (with ERCC isoforms included)
+      - Warning-Yellow : 4 < value < 2
+      - Warning-Red : 4+
+
+- M_0007 (Implemented)
+  - Check for ERCC genes
+    - Outlier
+      - Warning-Yellow : 4 < value < 2
+      - Warning-Red : 4+
+    - Minimum threshold
+      - Warning-Red  : 1
 
 ### Deseq2
 
