@@ -15,6 +15,7 @@ class Deseq2NormalizedCounts():
                  dir_path: str,
                  flagger: Flagger,
                  params: dict):
+        print(f"Starting VV for DESEQ2 script output")
         ##############################################################
         # SET FLAGGING OUTPUT ATTRIBUTES
         ##############################################################
@@ -23,7 +24,7 @@ class Deseq2NormalizedCounts():
         self.flagger = flagger
         self.params = params
 
-        print(f"Checking Deseq2 Normalized Counts Results")
+        #print(f"Checking Deseq2 Normalized Counts Results")
         self.samples = samples
         self.dir_path = Path(dir_path)
         self.has_ERCC = params["hasERCC"]

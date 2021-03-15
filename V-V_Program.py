@@ -1,20 +1,4 @@
 """ Validation and Verification Program For RNASeq Consenus Pipeline
-
-Terminology:
-- SampleWise: Describes metric based on entire sample
-- ReadsWise: Describes metrics based on a read file (forward and reverse reads
-    for the same samples are distinct entities in when this term is used)
-- DatasetWise: Describes metric based on all samples in set
-- PASS: Indicates the data has passed a V&V condition
-- FAIL: Indicates the data has failed a V&V condition and will need further manually assessment
-- WARN: Indicates the data has an anomoly.  In aggregate, this may indicate
-    further manual assessment but by taken itself should not require such measures
-
-- Logging Level Notes
-    - Debug: start of check
-    - Info: Check passes
-    - Warning: Anomoly found, but did not failing a hard check
-    - Error: Hard Check Failed
 """
 ##############################################################
 # Imports
@@ -134,7 +118,8 @@ def main(config: dict()):
                            dir_path = config['Paths'].get("Deseq2ParentDir"),
                            flagger = flagger,
                            params = PARAMS)
-    print(f"VV complete: examine results using command below\nless -S {flagger._log_file}")
+    print(f"{'='*40}")
+    print(f"VV complete: Full Results Saved To {flagger._log_file}")
 
 
 if __name__ == '__main__':

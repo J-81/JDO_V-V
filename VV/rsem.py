@@ -22,6 +22,7 @@ class RsemCounts():
                  flagger: Flagger,
                  params: dict
                  ):
+        print(f"Starting VV for RSEM counting output")
         ##############################################################
         # SET FLAGGING OUTPUT ATTRIBUTES
         ##############################################################

@@ -18,6 +18,7 @@ class StarAlignments():
                  dir_path: str,
                  flagger: Flagger,
                  params: dict):
+        print(f"Starting VV for STAR alignment output")
         ##############################################################
         # SET FLAGGING OUTPUT ATTRIBUTES
         ##############################################################
@@ -29,7 +30,6 @@ class StarAlignments():
         self.dir_path = dir_path
         self.final = self._parse_log_final()
         self._validate_alignment_files()
-        print(f"Validating additional files for Star")
         self._validate_additional_files()
         self._check_values()
         self._check_samples_proportions_for_dataset_flags()

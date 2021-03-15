@@ -19,6 +19,7 @@ def validate_verify(samples: list[str],
                     ):
     """ Performs VV for raw reads for checks involving raw reads files directly
     """
+    print(f"Starting VV for Raw Reads based on fastq.gz files")
     ##############################################################
     # SET FLAGGING OUTPUT ATTRIBUTES
     ##############################################################
@@ -164,6 +165,7 @@ def validate_verify_multiqc(samples: list[str],
     """ Performs VV for raw reads for checks involving multiqc json generated
             by raw reads fastqc aggregation
     """
+    print(f"Starting VV for Raw Reads based on multiQC file")
     ##############################################################
     # SET FLAGGING OUTPUT ATTRIBUTES
     ##############################################################
