@@ -58,7 +58,7 @@ class Flagger():
 
         # full exit upon severe enough issue
         if severity >= self._halt_level:
-            raise VVError("SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING")
+            raise VVError(f"SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING\nSee {self._log_file}")
 
     def check_sample_proportions(self,
                                  checkID: str,
