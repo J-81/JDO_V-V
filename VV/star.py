@@ -3,8 +3,8 @@
 import os
 import subprocess
 
-
-#from VV.utils import sampleWise_outlier_check, max_median_mean_stdev
+from VV.utils import value_check_direct
+from VV.flagging import Flagger
 
 class StarAlignments():
     """ Representation of Star Alignment output results data.
@@ -15,45 +15,48 @@ class StarAlignments():
     """
     def __init__(self,
                  samples: str,
-                 dir_path: str):
-        log.debug(f"Checking STAR Alignment Results")
+                 dir_path: str,
+                 flagger: Flagger,
+                 params: dict):
+        ##############################################################
+        # SET FLAGGING OUTPUT ATTRIBUTES
+        ##############################################################
+        flagger.set_script(__name__)
+        flagger.set_step("STAR")
+        self.flagger = flagger
+        self.params = params
         self.samples = samples
         self.dir_path = dir_path
         self.final = self._parse_log_final()
         self._validate_alignment_files()
-        self._check_outliers()
-        log.debug(f"Validating additional files for Star")
+        print(f"Validating additional files for Star")
         self._validate_additional_files()
+        self._check_values()
+        self._check_samples_proportions_for_dataset_flags()
 
-    def _check_outliers(self):
-        # TODO: add thresholds as configurables
-        # TODO: rearrange this, way too many loops/conditionals
-        threshold = 2
-        # grab all extracted metrics
-        for metric in self.final[self.samples[0]].keys():
-            log.debug(f"Checking {metric} for outliers in Star Results")
-            # repackage into {sample:value} format
-            metric_to_check = dict()
-            for sample, data in self.final.items():
-                for metric_name, value in data.items():
-                    if metric_name == metric:
-                        metric_to_check[sample] = value
-                        break
+    def _check_values(self):
+        ################################################################
+        # Checks for each sample:file_label vs all samples
+        checkIDs_to_keys = {"S_0003":"total_reads_mapped-Percentage",
+                            "S_0004":"mapped_to_multiple_loci-Percentage",
+                            }
+        for checkID, key in checkIDs_to_keys.items():
+            # compile values for the key for all samples
+            all_values = [sample_values[key] for sample_values in self.final.values()]
 
-            # log max median min
-            _max, _median, _min, _stdev = max_median_mean_stdev(list(metric_to_check.values()))
-            log.debug(f"{metric} stats: Max: {_max} Median: {_median} "
-                      f"Min: {_min} St.Dev: {_stdev}")
-
-            # check for outliers
-            outliers = sampleWise_outlier_check(metric_to_check,
-                                                outlier_stdev=threshold)
-            if outliers:
-                log.error(f"FAIL: {metric} Outliers detected "
-                          f"in Star Results: {outliers}")
-
-
-
+            # iterate through each sample
+            # test against all values from all samples
+            for sample in self.samples:
+                value = self.final[sample][key]
+                value_check_direct(value = value,
+                                   all_values = all_values,
+                                   check_params = self.params["STAR"][key],
+                                   flagger = self.flagger,
+                                   checkID = checkID,
+                                   entity = sample,
+                                   value_alias = key,
+                                   middlepoint = self.params["middlepoint"],
+                                   message_prefix = "Sample vs Samples")
 
     def __repr__(self):
         return f"Star Alignment Results: <{self.samples}>"
@@ -105,9 +108,20 @@ class StarAlignments():
             # create entry for sample
             final_data[sample] = dict()
             file_path = os.path.join(self.dir_path,sample,f"{sample}_Log.final.out")
+            checkID = "S_0001"
             if not os.path.isfile(file_path):
-                log.error(f"FAIL: {sample} does not have *_Log.final.out file")
+                message = f"Could not find {file_path}"
+                self.flagger.flag(entity = sample,
+                                  message = message,
+                                  severity = 90,
+                                  checkID = checkID)
                 continue
+            else:
+                message = f"Found {file_path}"
+                self.flagger.flag(entity = sample,
+                                  message = message,
+                                  severity = 30,
+                                  checkID = checkID)
             with open(file_path, "r") as f:
                 for line in f.readlines():
                     # Data lines contain '|''
@@ -125,6 +139,13 @@ class StarAlignments():
 
                         # add to dictionary
                         final_data[sample][metric] = data
+            # add additional data keys from combining base keys
+            final_data[sample]["total_reads_mapped-Percentage"] = sum((final_data[sample]["Uniquely mapped reads %"],
+                                                     final_data[sample]["% of reads mapped to multiple loci"])
+                                                     )
+            final_data[sample]["mapped_to_multiple_loci-Percentage"] = sum((final_data[sample]["% of reads mapped to multiple loci"],
+                                                           final_data[sample]["% of reads mapped to too many loci"])
+                                                           )
         return final_data
 
     def _validate_additional_files(self):
@@ -162,8 +183,22 @@ class StarAlignments():
             if lines[-1].strip() != expected:
                 error = (f"Last line does not "
                          f"equal {expected}")
+            # flag if errors found
+            checkID = "S_0002"
             if error:
-                log.error(f"FAIL: {log_out_file} has issue: {error}")
+                message = f"{log_out_file} has issue: {error}"
+                self.flagger.flag(entity = sample,
+                                  message = message,
+                                  severity = 90,
+                                  checkID = checkID)
+                continue
+            else:
+                message = f"{log_out_file}, no issues found"
+                self.flagger.flag(entity = sample,
+                                  message = message,
+                                  severity = 30,
+                                  checkID = checkID)
+
 
              # SJ.out.tab check
             sj_out_file = os.path.join(self.dir_path,
@@ -175,7 +210,7 @@ class StarAlignments():
                     if i % 100 == 0:
                         tokens = line.split()
                         if len(tokens)  != 9:
-                            log.error(f"FAIL: {sj_out_file} line {i} does not look correct: {line}")
+                            print(f"FAIL: {sj_out_file} line {i} does not look correct: {line}")
 
             # _Log.progress.out check
             log_progress_out_file = os.path.join(self.dir_path,
@@ -195,7 +230,7 @@ class StarAlignments():
                 error = (f"Last line does not "
                          f"equal {expected}")
             if error:
-                log.error(f"FAIL: {log_progress_out_file} has issue: {error}")
+                print(f"FAIL: {log_progress_out_file} has issue: {error}")
 
     def _validate_alignment_files(self):
         """ Checks for existence of expected alignment files.
@@ -204,12 +239,12 @@ class StarAlignments():
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
         for sample in self.samples:
-            log.debug(f"Checking Star Alignment Files for {sample}")
+            print(f"Checking Star Alignment Files for {sample}")
             coord_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.sortedByCoord.out.bam")
             if not os.path.isfile(coord_file):
-                log.error(f"FAIL: {sample} does not "
+                print(f"FAIL: {sample} does not "
                            "have *_Aligned.sortedByCoord.out.bam file")
                 continue
 
@@ -226,7 +261,7 @@ class StarAlignments():
                                       sample,
                                       f"{sample}_Aligned.toTranscriptome.out.bam")
             if not os.path.isfile(transcript_file):
-                log.error(f"FAIL: {sample} does not "
+                print(f"FAIL: {sample} does not "
                            "have *_Aligned.toTranscriptome.out.bam")
                 continue
             # check with coord file with samtools
@@ -237,4 +272,18 @@ class StarAlignments():
             if stdout:
                 print(f"FAIL: samtools quick checkout output for {sample} on {transcript_file}: {stdout}")
 
-            log.debug(f"Finished Checking Star Alignment Files for {sample}")
+            print(f"Finished Checking Star Alignment Files for {sample}")
+
+    def _check_samples_proportions_for_dataset_flags(self):
+        ### Check if any sample proportion related flags should be raised
+        PROTOFLAG_MAP = {
+            60 : [60],
+            50 : [50, 60]
+        }
+        checkID_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
+                                                     "S_0004":"mapped_to_multiple_loci-Percentage",
+                                    }
+        for checkID, params_key in checkID_with_samples_proportion_threshold.items():
+            self.flagger.check_sample_proportions(checkID,
+                                                  self.params["STAR"][params_key],
+                                                  PROTOFLAG_MAP)

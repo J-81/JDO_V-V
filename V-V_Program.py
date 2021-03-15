@@ -113,34 +113,14 @@ def main(config: dict()):
                                       flagger = flagger,
                                       params = PARAMS,
                                       outlier_comparision_point = "median")
-
-    raise Exception("REACHED VV_PROG")
-    input_paths = trimmed_reads.find_files(input_path = config["Paths"].get("TrimmedReadDir"),
-                                   paired_end = config["GLDS"].getboolean("PairedEnd"),
-                                   samples = isa.assays['transcription profiling by RNASeq'].samples)
-
-    trimmed_reads.validate_verify(input_paths = input_paths,
-                              paired_end = config["GLDS"].getboolean("PairedEnd"),
-                              count_lines_to_check = config["Options"].getint("MaxFastQLinesToCheck"))
-
-    thresholds = dict()
-    thresholds['avg_sequence_length'] = config['Trimmed'].getfloat("SequenceLengthVariationTolerance")
-    thresholds['percent_gc'] = config['Trimmed'].getfloat("PercentGCVariationTolerance")
-    thresholds['total_sequences'] = config['Trimmed'].getfloat("TotalSequencesVariationTolerance")
-    thresholds['percent_duplicates'] = config['Trimmed'].getfloat("PercentDuplicatesVariationTolerance")
-
-    trimmed_mqc = multiqc.MultiQC(
-            multiQC_out_path=config["Paths"].get("TrimmedMultiQCDir"),
-            samples=isa.assays['transcription profiling by RNASeq'].samples,
-            paired_end=config["GLDS"].getboolean("PairedEnd"),
-            outlier_thresholds=thresholds)
-
     ###########################################################################
     # STAR Alignment VV
     ###########################################################################
-    StarAlignments(samples=isa.assays['transcription profiling by RNASeq'].samples,
-                   dir_path=config['Paths'].get("StarParentDir"))
-
+    StarAlignments(samples=samples,
+                   dir_path=config['Paths'].get("StarParentDir"),
+                   flagger = flagger,
+                   params = PARAMS)
+    raise Exception(f"less -S {flagger._log_file}")
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################

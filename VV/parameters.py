@@ -284,4 +284,30 @@ DEFAULT_PARAMS = \
         },
 
     },
+    "STAR" : {
+        "total_reads_mapped-Percentage" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {
+                50 : 60,
+                70 : 50,
+            },
+            "outlier_thresholds" : {},
+            "sample_proportion_thresholds" : {
+                60 : 0.80,
+                50 : 0.80,
+            },
+        },
+        "mapped_to_multiple_loci-Percentage" : {
+            "max_thresholds" : {},
+            "min_thresholds" : {
+                15 : 60,
+                30 : 50,
+            },
+            "outlier_thresholds" : {},
+            "sample_proportion_thresholds" : {
+                60 : 0.80,
+                50 : 0.80,
+            },
+        },
+    },
 }
