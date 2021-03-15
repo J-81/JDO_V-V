@@ -131,7 +131,7 @@ def _check_headers(file, count_lines_to_check: int) -> int:
         for i, line in enumerate(f):
             # checks if lines counted equals the limit input
             if i+1 == count_lines_to_check:
-                print(f"Reached {count_lines_to_check} lines, ending line check")
+                #print(f"Reached {count_lines_to_check} lines, ending line check")
                 break
 
             line = line.decode()
@@ -145,7 +145,8 @@ def _check_headers(file, count_lines_to_check: int) -> int:
                       f"LINE {i+1}: {line}")
             # update every 20,000,000 reads
             if i % 20000000 == 0:
-                print(f"Checked {i} lines for {file}")
+                #print(f"Checked {i} lines for {file}")
+                pass
     if len(lines_with_issues) != 0:
         passes = False
         message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
@@ -251,7 +252,10 @@ def validate_verify_multiqc(samples: list[str],
     ################################################################
     # Checks for each sample:file_label vs all samples
     checkIDs_to_keys = {"R_1003":"percent_duplicates",
-                        "R_1004":"percent_gc"}
+                        "R_1004":"percent_gc",
+                        "R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+                        "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"
+                        }
     for checkID, key in checkIDs_to_keys.items():
         # compile all values for all file labels
         # e.g. for paired end, both forward and reverse reads
@@ -282,7 +286,7 @@ def validate_verify_multiqc(samples: list[str],
     checkIDs_to_keys = {"R_1005":"fastqc_per_base_sequence_quality_plot",
                         "R_1006":"fastqc_per_sequence_quality_scores_plot",
                         "R_1007":"fastqc_per_sequence_gc_content_plot-Percentages",
-                        "R_1008":"fastqc_sequence_duplication_levels_plot"
+                        "R_1008":"fastqc_sequence_duplication_levels_plot",
                         }
     for checkID, key in checkIDs_to_keys.items():
         check_params = params["raw_reads"][key]
@@ -318,11 +322,13 @@ def validate_verify_multiqc(samples: list[str],
     ### DONE R_1003 ###################################################
     # Checks that are performed across an aggregate value for indexed positions
     # for each file label
-    # implemented aggregations : [sum]
-    checkIDs_to_keys = {"R_1009":"fastqc_per_base_n_content_plot",
+    #
+    # format: { checkID: (key, aggregation_function, parameters_subkey)
+    checkIDs_to_keys = {"R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
+                        "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
                         }
-    for checkID, key in checkIDs_to_keys.items():
-        check_params = params["raw_reads"][key]
+    for checkID, (key, aggregator, params_key) in checkIDs_to_keys.items():
+        check_params = params["raw_reads"][key][params_key]
         for sample in samples:
             for file_label in mqc.file_labels:
                 entity = f"{sample}:{file_label}"
@@ -330,19 +336,26 @@ def validate_verify_multiqc(samples: list[str],
                 bin_units = mqc.data[sample][cur_data_key].bin_units
                 all_values = mqc.compile_subset(samples_subset = samples,
                                             key = cur_data_key,
-                                            aggregator = sum)
+                                            aggregator = aggregator)
                 value = mqc.compile_subset(samples_subset = [sample], # note: this is just the sample to check for outliers!
                                             key = cur_data_key,
-                                            aggregator = sum)
-                assert len(value) == 1, "Should not be longer than one value!"
+                                            aggregator = aggregator)
+                assert len(value) == 1, "Aggregation should return more than one value!"
                 value = float(value[0]) # an error here may indicate an issue generating a single value from the compile subset arg
                 value_check_direct(value = value,
                                    all_values = all_values,
-                                   check_params = params["raw_reads"][key],
+                                   check_params = check_params,
                                    flagger = flagger,
                                    checkID = checkID,
                                    entity = entity,
-                                   value_alias = key,
+                                   value_alias = f"{key}-aggregated by {params_key}",
                                    middlepoint = params["middlepoint"],
                                    message_prefix = "Sample:File_Label vs Samples")
-    1/0
+    ### DONE R_1003 ###################################################
+
+    ### Check if any sample proportion related flags should be raised
+    checkID_with_samples_proportion_threshold = {"R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+                                                 "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
+    }
+    for checkID, params_key in checkID_with_samples_proportion_threshold.items():
+        flagger.check_sample_proportions(checkID, params["raw_reads"][params_key])
