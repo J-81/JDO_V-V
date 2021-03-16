@@ -1,0 +1,154 @@
+#! /usr/bin/env python
+""" Validation and Verification Program For RNASeq Consenus Pipeline
+"""
+##############################################################
+# Imports
+##############################################################
+
+import os
+import sys
+import configparser
+import argparse
+import datetime
+from pathlib import Path
+
+from VV.parameters import PARAMS as MODULEPARAMS
+from VV import parameters
+DEFAULT_PARAMS_FILE = parameters.__file__
+
+from VV import RNASeq_VV
+
+##############################################################
+# Utility Functions To Handle Logging, Config and CLI Arguments
+##############################################################
+
+def _parse_args():
+    """ Parse command line args.
+    """
+    parser = argparse.ArgumentParser(prog="V-V_Program", description='Perform Automated V&V on '
+                                                                     'raw and processed for GeneLab.')
+    parser.set_defaults(subcommand="Nothing")
+
+    subparsers = parser.add_subparsers(help='sub-command help')
+    parser_RNASeq = subparsers.add_parser('RNASeq',
+        help='Perform Automated V&V on data processed through the RNASeq Consensus Pipeline')
+
+    parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
+                        help='INI format configuration file')
+
+
+    parser_RNASeq.add_argument('--parameter_file', metavar='file.py', default=DEFAULT_PARAMS_FILE,
+                        help=f"Override parameter set with custom file. " \
+                             f"This file MUST match the format for each entry in "\
+                             f"this modules VV/parameters.py file. "\
+                             f"A copy of the default parameter set can be created "\
+                             f"with the --create_parameter_file subcommand. ")
+
+    parser_RNASeq.add_argument('--parameter_set', default="DEFAULT",
+                        help=f"Parameter set to use. " \
+                             f"located in parameters file. "\
+                             f"Available parameter sets: {list(MODULEPARAMS.keys())}")
+    parser_RNASeq.set_defaults(subcommand="RNASeq")
+
+    parser_PARAMS = subparsers.add_parser('Params',
+        help='Handle V&V parameter files to examine flagging thresholds and settings')
+
+    parser_PARAMS.add_argument('--copy_module_param_file', action='store_true',
+                        help=f"Creates parameter file in current directory for "\
+                             f"custom parameter sets. When using this custom "\
+                             f"parameter file.  Make sure to indicate "\
+                             f"this file using --parameter_file!")
+
+    parser_PARAMS.add_argument('--list_parameter_sets', action="append", nargs="?",
+                        help=f"Lists parameter sets found in a parameter file " \
+                             f"If no file is specified, the module's parameter file "\
+                             f"parameter sets are listed.")
+
+    parser_PARAMS.set_defaults(subcommand="PARAMS")
+
+    args = parser.parse_args()
+    if args.subcommand == "Nothing":
+        print(f"No subcommand specified. Printing main program help")
+        parser.print_help()
+        sys.exit()
+    return args
+
+def _create_param_file(**args):
+    from VV import parameters
+    import shutil
+    copy = Path("copy_of_parameters.py")
+    original = Path(parameters.__file__)
+    print(f"Creating copy of {original} -> {copy}")
+    if copy.is_file():
+        print(f"{copy} already exists! Canceling to avoid overwrite.")
+        sys.exit(1)
+    shutil.copy(original, copy)
+    print(f"Successfully created {copy}!")
+    sys.exit(0)
+
+if __name__ == '__main__':
+    # parse commandline args and read config file
+    args = _parse_args()
+    if args.subcommand == "RNASeq":
+        # Load parameters
+        if args.parameter_file != DEFAULT_PARAMS_FILE:
+            from importlib import import_module
+            custom_params_module = str(Path(args.parameter_file).name)[:-3] # remove .py
+            print(custom_params_module)
+            sys.path.append(os.getcwd())
+            CUSTOM_PARAMS = import_module(custom_params_module)
+            PARAMS = CUSTOM_PARAMS.PARAMS
+            print(f"Loaded custom parameter file located at {args.parameter_file}")
+        else:
+            from VV.parameters import PARAMS
+            print(f"Using module's parameter file located at {args.parameter_file}")
+
+        print(f"Loading parameter set '{args.parameter_set}'")
+        try:
+            params = PARAMS[args.parameter_set]
+        except KeyError:
+            print(f"Could not load! Check if {args.parameter_set} is in {args.parameter_file}")
+            sys.exit(-1)
+
+        # Load config
+        # ensure all specified config files exists
+        missing_config = False
+        for config_file in args.config:
+            if not Path(config_file).is_file():
+                print(f"ERROR: Config file does not exist: {config_file}")
+                missing_config = True
+
+        if missing_config:
+            # exit with errror if any config files missing
+            print(f"Missing config files, exiting program")
+            sys.exit(1)
+        else:
+            # read in config files
+            config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+            print(f"Loading the following config files: {args.config}")
+            config.read(args.config)
+
+        RNASeq_VV.main(config, params)
+
+    elif args.subcommand == "PARAMS":
+        if args.copy_module_param_file:
+            _create_param_file()
+
+        elif args.list_parameter_sets:
+            # Load parameters
+            if args.list_parameter_sets[0]:
+                param_file = args.list_parameter_sets[0]
+                from importlib import import_module
+                custom_params_module = str(Path(param_file).name)[:-3] # remove .py
+                sys.path.append(os.getcwd())
+                CUSTOM_PARAMS = import_module(custom_params_module)
+                PARAMS = CUSTOM_PARAMS.PARAMS
+                print(f"Loaded custom parameter file located at {param_file}")
+            else:
+                from VV.parameters import PARAMS
+                print(f"Using module's parameter file located at {DEFAULT_PARAMS_FILE}")
+            print(f"The following parameter sets were found: {list(PARAMS.keys())}")
+        else:
+            print("Use --help to display subcommand help")
+    else:
+        raise ValueError(f"How did you even set args.subcommand to something wrong?")
