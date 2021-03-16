@@ -1,14 +1,4 @@
 """ Validation and Verification Program For RNASeq Consenus Pipeline
-
-Terminology:
-- SampleWise: Describes metric based on entire sample
-- ReadsWise: Describes metrics based on a read file (forward and reverse reads
-    for the same samples are distinct entities in when this term is used)
-- DatasetWise: Describes metric based on all samples in set
-- PASS: Indicates the data has passed a V&V condition
-- FAIL: Indicates the data has failed a V&V condition and will need further manually assessment
-- WARN: Indicates the data has an anomoly.  In aggregate, this may indicate
-    further manual assessment but by taken itself should not require such measures
 """
 ##############################################################
 # Imports
@@ -18,12 +8,19 @@ import os
 import sys
 import configparser
 import argparse
-import logging
+import datetime
+from pathlib import Path
 
 
-from VV import raw_reads, parse_isa, fastqc, multiqc
-# ISA TOOLS Causes an issue with logging level
-
+from VV import raw_reads
+from VV import trimmed_reads
+from VV import fastqc
+from VV.star import StarAlignments
+from VV.data import Dataset
+from VV.parameters import DEFAULT_PARAMS as PARAMS
+from VV.rsem import RsemCounts
+from VV.deseq2 import Deseq2NormalizedCounts
+from VV.flagging import Flagger
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
@@ -38,25 +35,14 @@ def _parse_args():
                         help='INI format configuration file')
 
     args = parser.parse_args()
-    print(args)
     return args
 
 
 args = _parse_args()
 config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
 config.read(args.config)
-
-# Set up logging
-if config['Logging']["LoggingConsole"] in ["INFO","DEBUG","WARNING","ERROR","CRITICAL"]:
-    log_levels = {"INFO":20,"DEBUG":10,"WARNING":30, "ERROR":40, "CRITICAL":50}
-    logging_level = log_levels[config['Logging']['LoggingConsole']]
-else:
-    print("Logging level must be one of the following: <DEBUG,INFO,WARNING,ERROR,CRITICAL>")
-    sys.exit()
-# Fixes ISA logging but needs a much better fix
-log = logging.getLogger("VV")
-log.setLevel(logging_level)
-
+flagger = Flagger(__file__,
+                  halt_level = config["Logging"].getint("HaltSeverity"))
 
 ##############################################################
 # Main Function To Call Each V&V Function
@@ -67,49 +53,73 @@ def main(config: dict()):
 
     :param config: configuration object
     """
-    #log.debug("Parsing ISA and Extracting Sample Names")
-    samples_dict = parse_isa.get_sample_names(config["Paths"].get("ISAZip"))
-    isa_raw_sample_names = set([sample
-                                for study in samples_dict.values()
-                                for assay_samples in study.values()
-                                for sample in assay_samples])
-    #log.debug(f"Full Sample Name Dict: {samples_dict}")
-    #log.info(f"{len(isa_raw_sample_names)} "
-    #         f"Total Unique Samples Found: {isa_raw_sample_names}")
+    ########################################################################
+    # ISA File parsing
+    ########################################################################
+    isa_zip_path = Path(config["Paths"].get("ISAZip"))
+    isa = Dataset(isa_zip_path = isa_zip_path,
+                  flagger = flagger,
+                  entity = f"GLDS-{config['GLDS'].get('Number')}")
+    isa.validate_verify(vv_for = "RNASeq")
+    samples = isa.get_sample_names(assay_name = "transcription profiling by RNASeq")
+    ########################################################################
+    # Raw Read VV
+    ########################################################################
+    raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
+                              samples = samples,
+                              flagger = flagger,
+                              params = PARAMS
+                              )
+    raw_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("RawMultiQCDir")) / "multiqc_data.json",
+                                      samples = samples,
+                                      flagger = flagger,
+                                      params = PARAMS,
+                                      outlier_comparision_point = "median")
 
-    #log.info("Starting Raw Data V-V")
-    #log.debug(f"raw_path: {raw_path}")
-    raw_results = raw_reads.validate_verify(
-                    input_path=config["Paths"].get("RawReadDir"),
-                    paired_end=config["GLDS"].getboolean("PairedEnd"),
-                    count_lines_to_check=config["Options"].getint("MaxFastQLinesToCheck"))
-    #log.info("Finished Raw Data V-V")
 
-    #log.info("Starting Check Raw FastQC and MultiQC files")
-    #log.debug(f"fastQC_path: {fastqc_path}")
-    fastqc.validate_verify(
-        samples=isa_raw_sample_names,
-        input_path=config["Paths"].get("RawFastQCDir"),
-        paired_end=config["GLDS"].getboolean("PairedEnd"),
-        expected_suffix=config["Naming"].get("FastQCSuffix"))
+    ########################################################################
+    # Trimmed Read VV
+    ########################################################################
+    trimmed_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("TrimmedReadDir")),
+                              samples = samples,
+                              flagger = flagger,
+                              params = PARAMS
+                              )
+    trimmed_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("TrimmedMultiQCDir")) / "multiqc_data.json",
+                                      samples = samples,
+                                      flagger = flagger,
+                                      params = PARAMS,
+                                      outlier_comparision_point = "median")
+    ###########################################################################
+    # STAR Alignment VV
+    ###########################################################################
+    StarAlignments(samples=samples,
+                   dir_path=config['Paths'].get("StarParentDir"),
+                   flagger = flagger,
+                   params = PARAMS)
+    ###########################################################################
+    # RSEM Counts VV
+    ###########################################################################
+    RsemCounts(samples= samples,
+               dir_path=config['Paths'].get("RsemParentDir"),
+               flagger = flagger,
+               params = PARAMS)
+    ###########################################################################
+    # Deseq2 Normalized Counts VV
+    ###########################################################################
+    Deseq2NormalizedCounts(samples = samples,
+                           dir_path = config['Paths'].get("Deseq2ParentDir"),
+                           flagger = flagger,
+                           params = PARAMS)
+    print(f"{'='*40}")
+    print(f"VV complete: Full Results Saved To {flagger._log_file}")
 
-    multiqc.validate_verify(
-        multiQC_zip_path=config["Paths"].get("RawMultiQCZip"),
-        paired_end=config["GLDS"].getboolean("PairedEnd"),
-        sequence_length_tolerance=config["Options"].getfloat("SequenceLengthVariationTolerance"))
-    #log.info("Finished Check Raw FastQC and MultiQC files")
-
-    #log.debug(f"Results from Raw VV: {raw_results}")
-
-    #log.info(f"Checking if sample names from raw reads folder match ISA file")
-    sample_names_match = raw_results.sample_names == isa_raw_sample_names
-    checkname = "ISA sample names should match raw reads folder"
-    if sample_names_match:
-        log.info(f"PASS: {checkname}")
-    else:
-        log.error(f"FAIL: {checkname}: "
-                  f"ISA: {isa_raw_sample_names}"
-                  f"RawReads Folder: {raw_results.sample_names}")
+    ###########################################################################
+    # Generate derivative log files
+    ###########################################################################
+    for log_type in ["only-issues", "by-sample", "by-step"]:
+        flagger.generate_derivative_log(log_type = log_type,
+                                        samples = samples)
 
 
 if __name__ == '__main__':
