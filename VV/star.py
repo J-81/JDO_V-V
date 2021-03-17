@@ -279,7 +279,7 @@ class StarAlignments():
                                   )
             else:
                 self.flagger.flag(entity = sample,
-                                  message = "Both bam files exist and raise not issues with samtools quickcheck",
+                                  message = "Both bam files exist and raise no issues with samtools quickcheck",
                                   severity=30,
                                   checkID = checkID
                                   )
