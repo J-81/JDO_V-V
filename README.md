@@ -19,6 +19,7 @@ Activate conda environment (Note: this environment is on the oberyn node)
 
 If on a different machine, you can install the program by downloading the release and running this inside the source code directory:
 > pip install .
+
 At this time, the dependencies are not included so this method will need additional steps to get it running.
 
 ### Usage ###
