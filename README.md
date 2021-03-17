@@ -13,8 +13,13 @@ the Nextflow implementation of the RNASeq consensus pipeline.
 
 * Summary of set up
 
+If on Oberyn, I've already installed the new release to a conda environment.
 Activate conda environment (Note: this environment is on the oberyn node)
 > conda activate /data2/JO_Internship_2021/conda/rnaseq_v1.0_modify
+
+If on a different machine, you can install the program by downloading the release and running this inside the source code directory:
+> pip install .
+At this time, the dependencies are not included so this method will need additional steps to get it running.
 
 ### Usage ###
 
