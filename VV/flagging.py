@@ -8,6 +8,8 @@ import math
 
 import pandas as pd
 
+from VV import __version__
+
 FLAG_LEVELS = {
     20:"Info-Only",
     30:"Passed-Green",
@@ -35,6 +37,7 @@ class Flagger():
         self._halt_level = halt_level # level to raise a VV exception at
         self._log_threshold = 30
 
+        self._version = __version__
         self.timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
         self.log_folder = Path("VV_output") / Path(self.timestamp)
         self.log_folder.mkdir(exist_ok=True, parents=True)
@@ -44,6 +47,7 @@ class Flagger():
         with open(self._log_file, "w") as f:
             f.write("#START OF VV RUN:\n")
             f.write(f"#Time started: {self.timestamp}\n")
+            f.write(f"#VV Program Version: {self._version}\n")
             f.write(f"#Python Command: {' '.join(sys.argv)}\n")
 
     def set_step(self, step: str):

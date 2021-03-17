@@ -17,6 +17,7 @@ from VV import parameters
 DEFAULT_PARAMS_FILE = parameters.__file__
 
 from VV import RNASeq_VV
+from VV import __version__
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
@@ -35,7 +36,6 @@ def _parse_args():
 
     parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
                         help='INI format configuration file')
-
 
     parser_RNASeq.add_argument('--parameter_file', metavar='file.py', default=DEFAULT_PARAMS_FILE,
                         help=f"Override parameter set with custom file. " \
@@ -87,6 +87,10 @@ def _create_param_file(**args):
     sys.exit(0)
 
 if __name__ == '__main__':
+    program_header = f"VV Program Version: {__version__}"
+    print(f"{'┅'*(len(program_header)+4)}")
+    print(f"┇ {program_header} ┇")
+    print(f"{'┅'*(len(program_header)+4)}")
     # parse commandline args and read config file
     args = _parse_args()
     if args.subcommand == "RNASeq":
@@ -94,7 +98,6 @@ if __name__ == '__main__':
         if args.parameter_file != DEFAULT_PARAMS_FILE:
             from importlib import import_module
             custom_params_module = str(Path(args.parameter_file).name)[:-3] # remove .py
-            print(custom_params_module)
             sys.path.append(os.getcwd())
             CUSTOM_PARAMS = import_module(custom_params_module)
             PARAMS = CUSTOM_PARAMS.PARAMS
