@@ -4,6 +4,7 @@ the V-V checks.  Uses logging
 from datetime import datetime
 import sys
 from pathlib import Path
+import math
 
 import pandas as pd
 
@@ -37,7 +38,7 @@ class Flagger():
         self.timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
         self.log_folder = Path("VV_output") / Path(self.timestamp)
         self.log_folder.mkdir(exist_ok=True, parents=True)
-        self._log_filename = f"VV_Results.tsv"
+        self._log_filename = f"VV-Results.tsv"
         self._log_file = self.log_folder / self._log_filename
 
         with open(self._log_file, "w") as f:
@@ -55,9 +56,19 @@ class Flagger():
              entity: str,
              message: str,
              severity: int,
-             checkID: str):
+             checkID: str,
+             preprocess_messages: bool = True):
         """ Given an issue, logs a flag, prints human readable message
         """
+        # not required but provides some quality of life improvements in the log messages
+        if preprocess_messages:
+            # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
+            message = message.replace("][","] [")
+            # significant figure rounding for non-indice related flags
+            if "indices" not in message:
+                message = self._parse_message_and_round_values_to_sigfig(message)
+            #### END PREPROCESS MESSAGES ####
+
         report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{message}\t{checkID}"
         #print(report)
         with open(self._log_file, "a") as f:
@@ -118,14 +129,14 @@ class Flagger():
                           in FLAG_LEVELS.items()
                           if flag_code <= 30]
             derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
-            derived_df.to_csv(self.log_folder / output, index=False)
+            derived_df.to_csv(self.log_folder / output, index=False, sep="\t")
             print(f">>> Created {output}: Derived from {self._log_file}")
         elif log_type == "by-sample":
             full_df = self._get_log_as_df()
             parent_dir = self.log_folder / Path("bySample")
             parent_dir.mkdir()
             for sample in samples:
-                output = parent_dir / f"{sample}:{self._log_filename}"
+                output = parent_dir / f"{sample}__{self._log_filename}"
                 derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
                 derived_df.to_csv(output, index=False, sep="\t")
                 print(f">>> Created {output}: Derived from {self._log_file}")
@@ -134,9 +145,44 @@ class Flagger():
             parent_dir = self.log_folder / Path("byStep")
             parent_dir.mkdir()
             for step in full_df["step"].unique():
-                output = parent_dir / f"{step}:{self._log_filename}"
+                # remove spaces in step for filename
+                output = parent_dir / f"{step.replace(' ', '_')}__{self._log_filename}"
                 derived_df = full_df.loc[full_df["step"] == step]
                 derived_df.to_csv(output, index=False, sep="\t")
                 print(f">>> Created {output}: Derived from {self._log_file}")
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
+
+    def _parse_message_and_round_values_to_sigfig(self,
+                                                  message,
+                                                  sigfigs = 2,
+                                                  ignore_ints = True):
+        def is_number(x):
+            try:
+                float(x)
+                return True
+            except ValueError:
+                return False
+        words = message.split()
+        new_message = list()
+        for i, word in enumerate(words):
+            # also catch values that look like this
+            # [value: 52.0000000] <- notice the trailing square bracket!
+            if word[-1] == "]":
+                hasTrailingBracket = True
+                word = word[:-1] # remove temporarily
+            else:
+                hasTrailingBracket = False
+
+            # round numeric values to sigfigs
+            is_int = "." not in word
+            if is_number(word) and not all([ignore_ints, is_int]):
+                original_value = float(word)
+                rounded_value = round(original_value, sigfigs - int(math.floor(math.log10(abs(original_value)))) - 1)
+                word = str(rounded_value)
+
+            # add back square bracket if removed
+            if hasTrailingBracket:
+                word += "]"
+            new_message.append(word)
+        return " ".join(new_message)
