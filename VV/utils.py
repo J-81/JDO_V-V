@@ -1,10 +1,17 @@
 """ utility functions common to a number of operations to validation and
 verification
 """
+from __future__ import annotations
+import sys
+import os
 from typing import Tuple, Callable
 import statistics
+import configparser
+from pathlib import Path
 
 from VV.flagging import Flagger
+from VV import parameters
+DEFAULT_PARAMS_FILE = parameters.__file__
 
 FLAG_LEVELS = {
     20:"Info-Only",
@@ -18,6 +25,49 @@ MIDDLEPOINT_FUNC = {
     "median":statistics.median,
     "mean":statistics.mean
     }
+
+def load_config(config_files: list[str]):
+    missing_config = False
+    for config_file in config_files:
+        if not Path(config_file).is_file():
+            print(f"ERROR: Config file does not exist: {config_file}")
+            missing_config = True
+
+    if missing_config:
+        # exit with errror if any config files missing
+        print(f"Missing config files, exiting program")
+        sys.exit(1)
+    else:
+        # read in config files
+        config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+        print(f"Loading the following config files: {config_files}")
+        config.read(config_files)
+    return config
+
+def load_params(parameter_file: Path, parameter_set: str = None):
+    """ if parameter_set is None, return all parameter sets as dictionary
+    """
+    if parameter_file != DEFAULT_PARAMS_FILE:
+        from importlib import import_module
+        custom_params_module = str(Path(parameter_file).name)[:-3] # remove .py
+        sys.path.append(os.getcwd())
+        CUSTOM_PARAMS = import_module(custom_params_module)
+        PARAMS = CUSTOM_PARAMS.PARAMS
+        print(f"Loaded custom parameter file located at {parameter_file}")
+    else:
+        from VV.parameters import PARAMS
+        print(f"Using module's parameter file located at {parameter_file}")
+
+    if not parameter_set:
+        return PARAMS
+    else:
+        print(f"Loading parameter set '{parameter_set}'")
+        try:
+            params = PARAMS[parameter_set]
+        except KeyError:
+            print(f"Could not load! Check if {parameter_set} is in {parameter_file}")
+            sys.exit(-1)
+        return params
 
 def label_file(filename: str, file_substring_mapping: dict):
     """ Given a filename.  Return the file label based on a unique substring.
