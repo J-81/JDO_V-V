@@ -35,7 +35,7 @@ def _parse_args():
     parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
                         help='INI format configuration file')
 
-    parser_RNASeq.add_argument('--parameter_file', metavar='file.py', default=DEFAULT_PARAMS_FILE,
+    parser_RNASeq.add_argument('--parameter_file', metavar='file.py', default=None,
                         help=f"Override parameter set with custom file. " \
                              f"This file MUST match the format for each entry in "\
                              f"this modules VV/parameters.py file. "\
@@ -104,7 +104,7 @@ if __name__ == '__main__':
             if args.list_parameter_sets[0]:
                 PARAMS = load_params(args.list_parameter_sets[0])
             else:
-                PARAMS = load_params(DEFAULT_PARAMS_FILE)
+                PARAMS = load_params()
 
             print(f"The following parameter sets were found: {list(PARAMS.keys())}")
         else:

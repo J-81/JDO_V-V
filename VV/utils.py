@@ -10,8 +10,6 @@ import configparser
 from pathlib import Path
 
 from VV.flagging import Flagger
-from VV import parameters
-DEFAULT_PARAMS_FILE = parameters.__file__
 
 FLAG_LEVELS = {
     20:"Info-Only",
@@ -44,10 +42,13 @@ def load_config(config_files: list[str]):
         config.read(config_files)
     return config
 
-def load_params(parameter_file: Path, parameter_set: str = None):
-    """ if parameter_set is None, return all parameter sets as dictionary
+def load_params(parameter_file: Path = None, parameter_set: str = None):
+    """ if parameter_set is None, return all parameter sets as dictionary.
+
+    By default loads the module packaged parameter file and DEFAULT parameter set from the file.
+
     """
-    if parameter_file != DEFAULT_PARAMS_FILE:
+    if parameter_file:
         from importlib import import_module
         custom_params_module = str(Path(parameter_file).name)[:-3] # remove .py
         sys.path.append(os.getcwd())
