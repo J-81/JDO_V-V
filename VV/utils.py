@@ -56,8 +56,9 @@ def load_params(parameter_file: Path = None, parameter_set: str = None):
         PARAMS = CUSTOM_PARAMS.PARAMS
         print(f"Loaded custom parameter file located at {parameter_file}")
     else:
-        from VV.parameters import PARAMS
-        print(f"Using module's parameter file located at {parameter_file}")
+        from VV import parameters
+        PARAMS = parameters.PARAMS
+        print(f"Using module's parameter file located at {parameters.__file__}")
 
     if not parameter_set:
         return PARAMS
