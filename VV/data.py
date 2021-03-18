@@ -110,23 +110,14 @@ class Dataset():
         :param flagger: Flagging object, often shared for a single VV process (with multiple steps)
         :param entity: description of this dataset.  Used as the entity for flagging
         """
-        ### START I_0001 ##################################################
-        checkID = "I_0001"
+        ##############################################################
+        # SET FLAGGING OUTPUT ATTRIBUTES
+        ##############################################################
+        flagger.set_script(Path(__file__).name)
+        flagger.set_step(f"Parse-ISA")
+
+        self.isa_zip_path = isa_zip_path
         self.entity = entity
-        if isa_zip_path.is_file():
-            flagger.flag(entity = self.entity,
-                         message = f"Found ISA zip file: {isa_zip_path}",
-                         severity = 30,
-                         checkID = checkID
-                        )
-        else:
-            flagger.flag(entity = self.entity,
-                         message = f"Missing ISA zip file: {isa_zip_path}",
-                         severity = 90,
-                         checkID = checkID
-                        )
-            raise FileNotFoundError(f"ISA FILE MISSING: {isa_zip_path}")
-        ### DONE S_0001 ##################################################
         self.flagger = flagger
         self._isa_data = self._parse_isa_dir_from_zip(isa_zip_path) # composition of ISATabRecord
         # assertions consistent with GLDS ISA files
@@ -162,11 +153,11 @@ class Dataset():
             assay_tech = assay.metadata['Study Assay Technology Type']
             if  assay_type == 'transcription profiling' and \
                 assay_tech == 'RNA Sequencing (RNA-Seq)':
-                log.debug(f"Found RNASeq Transcription Profiling Assay, loaded")
+                logging.debug(f"Found RNASeq Transcription Profiling Assay, loaded")
                 implemented_assays["transcription profiling by RNASeq"] = RNASeqAssay(assay)
             else:
                 unimplemented_assays.append(f"{assay_type} via {assay_tech}")
-                log.warning(f"Found {assay_type} via {assay_tech}; "
+                logging.warning(f"Found {assay_type} via {assay_tech}; "
                             "however, automated V-V for this assay type"
                             "not implemented in this package")
         return implemented_assays, unimplemented_assays
@@ -176,7 +167,7 @@ class Dataset():
         try:
             return self.assays[assay_name]
         except KeyError:
-            log.error(f"{assay_name} Assay not found in this study")
+            logging.error(f"{assay_name} Assay not found in this study")
 
     def get_sample_names(self, assay_name: str) -> [str]:
         try:
@@ -184,7 +175,7 @@ class Dataset():
                     for sample_node in self.assays[assay_name]._assay.nodes.values()
                     if sample_node.ntype == "Sample Name"]
         except KeyError:
-            log.error(f"{assay_name} Assay not found in this study")
+            logging.error(f"{assay_name} Assay not found in this study")
 
     def _get_study(self):
         """ Returns study name, checks only one study should exist
@@ -198,6 +189,24 @@ class Dataset():
 
     def validate_verify(self,
                         vv_for: str):
+
+        ### START I_0001 ##################################################
+        checkID = "I_0001"
+        if self.isa_zip_path.is_file():
+            self.flagger.flag(entity = self.entity,
+                         message = f"Found ISA zip file: {self.isa_zip_path}",
+                         severity = 30,
+                         checkID = checkID
+                        )
+        else:
+            self.flagger.flag(entity = self.entity,
+                         message = f"Missing ISA zip file: {self.isa_zip_path}",
+                         severity = 90,
+                         checkID = checkID
+                        )
+            raise FileNotFoundError(f"ISA FILE MISSING: {self.isa_zip_path}")
+        ### DONE S_0001 ##################################################
+
         if vv_for == "RNASeq":
             assay_name = "transcription profiling by RNASeq"
             checkID = "I_0002"
