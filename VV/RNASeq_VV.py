@@ -94,3 +94,5 @@ def main(config, params):
     for log_type in ["only-issues", "by-sample", "by-step"]:
         flagger.generate_derivative_log(log_type = log_type,
                                         samples = samples)
+    # Return flagger at successful completion
+    return flagger

@@ -1,0 +1,142 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R2_raw.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 2.6
+Python version: could not detect
+Number of cores used for trimming: 4
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR; user defined)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Output file will be GZIP compressed
+
+
+This is cutadapt 2.6 with Python 3.7.9
+Command line parameters: -j 4 -e 0.1 -q 20 -O 1 -a AGATCGGAAGAGC Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R2_raw.fastq.gz
+Processing reads on 4 cores in single-end mode ...
+Finished in 0.19 s (33 us/read; 1.79 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:                   5,814
+Reads with adapters:                     3,251 (55.9%)
+Reads written (passing filters):         5,814 (100.0%)
+
+Total basepairs processed:       877,914 bp
+Quality-trimmed:                  11,061 bp (1.3%)
+Total written (filtered):        795,604 bp (90.6%)
+
+=== Adapter 1 ===
+
+Sequence: AGATCGGAAGAGC; Type: regular 3'; Length: 13; Trimmed: 3251 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-13 bp: 1
+
+Bases preceding removed adapters:
+  A: 19.1%
+  C: 39.9%
+  G: 31.3%
+  T: 9.8%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	790	1453.5	0	790
+2	259	363.4	0	259
+3	124	90.8	0	124
+4	35	22.7	0	35
+5	43	5.7	0	43
+6	36	1.4	0	36
+7	38	0.4	0	38
+8	33	0.1	0	33
+9	31	0.0	0	31
+10	30	0.0	1	29 1
+11	34	0.0	1	32 2
+12	51	0.0	1	50 1
+13	46	0.0	1	46
+14	75	0.0	1	73 2
+15	21	0.0	1	21
+16	53	0.0	1	49 4
+17	44	0.0	1	42 2
+18	13	0.0	1	13
+19	48	0.0	1	47 1
+20	27	0.0	1	27
+21	26	0.0	1	26
+22	39	0.0	1	39
+23	45	0.0	1	44 1
+24	48	0.0	1	48
+25	26	0.0	1	24 2
+26	40	0.0	1	40
+27	48	0.0	1	45 3
+28	28	0.0	1	26 2
+29	22	0.0	1	20 2
+30	55	0.0	1	52 3
+31	18	0.0	1	18
+32	40	0.0	1	39 1
+33	29	0.0	1	29
+34	36	0.0	1	35 1
+35	24	0.0	1	21 3
+36	47	0.0	1	47
+37	33	0.0	1	30 3
+38	34	0.0	1	31 3
+39	26	0.0	1	26
+40	30	0.0	1	28 2
+41	36	0.0	1	34 2
+42	46	0.0	1	45 1
+43	16	0.0	1	16
+44	33	0.0	1	31 2
+45	28	0.0	1	28
+46	19	0.0	1	19
+47	16	0.0	1	16
+48	23	0.0	1	23
+49	25	0.0	1	23 2
+50	26	0.0	1	25 1
+51	34	0.0	1	34
+52	9	0.0	1	9
+53	22	0.0	1	22
+54	22	0.0	1	22
+55	21	0.0	1	21
+56	20	0.0	1	20
+57	19	0.0	1	18 1
+58	14	0.0	1	13 1
+59	19	0.0	1	19
+60	21	0.0	1	21
+61	19	0.0	1	18 1
+62	16	0.0	1	15 1
+63	10	0.0	1	10
+64	19	0.0	1	19
+65	8	0.0	1	8
+66	12	0.0	1	12
+67	11	0.0	1	10 1
+68	53	0.0	1	53
+69	41	0.0	1	41
+70	25	0.0	1	25
+71	6	0.0	1	6
+72	2	0.0	1	2
+73	5	0.0	1	5
+74	5	0.0	1	5
+75	4	0.0	1	4
+76	6	0.0	1	6
+77	4	0.0	1	4
+78	1	0.0	1	1
+81	1	0.0	1	1
+82	1	0.0	1	0 1
+83	1	0.0	1	1
+84	2	0.0	1	2
+86	2	0.0	1	2
+93	1	0.0	1	1
+103	2	0.0	1	1 1
+
+RUN STATISTICS FOR INPUT FILE: Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R2_raw.fastq.gz
+=============================================
+5814 sequences processed in total
+
+Total number of sequences analysed for the sequence pair length validation: 5814
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 11 (0.19%)

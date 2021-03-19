@@ -37,6 +37,8 @@ class Flagger():
         self._severity = FLAG_LEVELS
         self._halt_level = halt_level # level to raise a VV exception at
 
+        self._flag_count = 0 # increments for each flag call, useful for testing
+
         # timestamp only used for new logs
         self.timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
 
@@ -92,6 +94,7 @@ class Flagger():
              preprocess_messages: bool = True):
         """ Given an issue, logs a flag, prints human readable message
         """
+        self._flag_count += 1
         # not required but provides some quality of life improvements in the log messages
         if preprocess_messages:
             # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
