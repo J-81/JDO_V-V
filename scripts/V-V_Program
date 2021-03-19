@@ -23,14 +23,14 @@ from VV import __version__
 def _parse_args():
     """ Parse command line args.
     """
-    parser = argparse.ArgumentParser(prog="V-V_Program", description='Perform Automated V&V on '
-                                                                     'raw and processed for GeneLab.')
+    parser = argparse.ArgumentParser(prog="V-V_Program",
+        description='Perform Automated V&V on GeneLab raw and processed data.')
     parser.set_defaults(subcommand="Nothing")
     parser.set_defaults(parameter_file=DEFAULT_PARAMS_FILE)
 
     subparsers = parser.add_subparsers(help='sub-command help')
     parser_RNASeq = subparsers.add_parser('RNASeq',
-        help='Perform Automated V&V on data processed through the RNASeq Consensus Pipeline')
+        help='Perform Automated V&V on data processed through the GeneLab RNASeq Consensus Pipeline')
 
     parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
                         help='INI format configuration file')
@@ -66,7 +66,7 @@ def _parse_args():
 
     args = parser.parse_args()
     if args.subcommand == "Nothing":
-        print(f"No subcommand specified. Printing main program help")
+        print(f"No subcommand specified. Printing main program help menu")
         parser.print_help()
         sys.exit()
     return args
