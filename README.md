@@ -2,7 +2,7 @@
 
 ### What is this repository for? ###
 
-V-V Scripts for RNASeq raw and processed data processed through the RNASeq consensus
+V-V Scripts for RNASeq raw and processed data processed through the GeneLab RNASeq consensus
 pipeline.
 
 This project will seek to implement two kinds of V-V.  First, one that can be performed
@@ -13,8 +13,8 @@ the Nextflow implementation of the RNASeq consensus pipeline.
 
 * Summary of set up
 
-If on Oberyn, I've already installed the new release to a conda environment.
-Activate conda environment (Note: this environment is on the oberyn node)
+If on the LBL server, I've already installed the latest release of this program to a conda environment on the /data2 partition.
+Activate conda environment:
 > conda activate /data2/JO_Internship_2021/conda/rnaseq_v1.0_modify
 
 If on a different machine, you can install the program by downloading the release and running this inside the source code directory:
