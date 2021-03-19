@@ -53,3 +53,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.2] - 2021-03-17
 - First pre-release tracked on Github
+
+[0.1.3]: https://github.com/J-81/JDO_V-V/compare/0.1.2...0.1.3
