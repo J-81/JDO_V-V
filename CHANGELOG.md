@@ -7,9 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - #### Overall
-  - This changelog.  Will document user relevant changes as well as intended changes in **Unreleased** section.
-  - Added installation testing directly to setup.
-    - Uses pytest, this should ensure program runs tests before completing installation.
   - Added 'library_layout' to config.
     - 'library_layout' can be automatically detected from an ISA file.
 
@@ -47,6 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
   - Timestamped intermediate log directories
+
+## [0.1.3] - 2021-03-19
+### Added
+  - This changelog.  Will document user relevant changes as well as intended changes in **Unreleased** section.
+  - Added installation testing directly to setup.
+    - Uses pytest, this should ensure program runs tests before completing installation.
 
 ## [0.1.2] - 2021-03-17
 - First pre-release tracked on Github
