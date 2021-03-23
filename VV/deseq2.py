@@ -15,7 +15,7 @@ class Deseq2ScriptOutput():
                  counts_dir_path: Path,
                  dge_dir_path: Path,
                  flagger: Flagger,
-                 params: dict,
+                 cutoffs: dict,
                  cross_checks: dict):
         print(f"Starting VV for DESEQ2 script output")
         ##############################################################
@@ -24,13 +24,13 @@ class Deseq2ScriptOutput():
         flagger.set_script(__name__)
         flagger.set_step("DESEQ2_OUTPUT")
         self.flagger = flagger
-        self.params = params
+        self.cutoffs = cutoffs
 
         #print(f"Checking Deseq2 Normalized Counts Results")
         self.samples = samples
         self.counts_dir_path = counts_dir_path
         self.dge_dir_path = dge_dir_path
-        self.has_ERCC = params["hasERCC"]
+        self.has_ERCC = cutoffs["hasERCC"]
         self.rsem_cross_checks = cross_checks["RSEM"]
         self.samplesheet_cross_checks = cross_checks["SampleSheet"]
         self._check_counts_csv_files()
@@ -56,7 +56,7 @@ class Deseq2ScriptOutput():
             "D_0002" : self.counts_dir_path / "Unnormalized_Counts.csv",
             "D_0003" : self.counts_dir_path / "Normalized_Counts.csv",
             }
-        if self.params["hasERCC"]:
+        if self.cutoffs["hasERCC"]:
             checkID_to_file["D_0004"] = self.counts_dir_path / "ERCC_Normalized_Counts.csv"
 
         for checkID, expectedFile in checkID_to_file.items():
@@ -95,7 +95,7 @@ class Deseq2ScriptOutput():
             "D_0007" : self.dge_dir_path / "visualization_output_table.csv",
             "D_0008" : self.dge_dir_path / "visualization_PCA_table.csv",
             }
-        if self.params["hasERCC"]:
+        if self.cutoffs["hasERCC"]:
             checkID_to_file["D_0009"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_contrasts.csv"
             checkID_to_file["D_0010"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_differential_expression.csv"
             checkID_to_file["D_0011"] = self.dge_dir_path / Path("ERCC_NormDGE") / "visualization_output_table_ERCCnorm.csv"

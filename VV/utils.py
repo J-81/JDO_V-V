@@ -42,34 +42,34 @@ def load_config(config_files: list[str]):
         config.read(config_files)
     return config
 
-def load_params(parameter_file: Path = None, parameter_set: str = None):
-    """ if parameter_set is None, return all parameter sets as dictionary.
+def load_cutoffs(cutoffs_file: Path = None, cutoffs_set: str = None):
+    """ if cutoffs_set is None, return all cutoffs sets as dictionary.
 
-    By default loads the module packaged parameter file and DEFAULT parameter set from the file.
+    By default loads the module packaged cutoffs file and DEFAULT cutoffs set from the file.
 
     """
-    if parameter_file:
+    if cutoffs_file:
         from importlib import import_module
-        custom_params_module = str(Path(parameter_file).name)[:-3] # remove .py
+        custom_cutoffs_module = str(Path(cutoffs_file).name)[:-3] # remove .py
         sys.path.append(os.getcwd())
-        CUSTOM_PARAMS = import_module(custom_params_module)
-        PARAMS = CUSTOM_PARAMS.PARAMS
-        print(f"Loaded custom parameter file located at {parameter_file}")
+        CUSTOM_CUTOFFS = import_module(custom_cutoffs_module)
+        CUTOFFS = CUSTOM_CUTOFFS.CUTOFFS
+        print(f"Loaded custom cutoffs file located at {cutoffs_file}")
     else:
-        from VV import parameters
-        PARAMS = parameters.PARAMS
-        print(f"Using module's parameter file located at {parameters.__file__}")
+        from VV import cutoffs
+        CUTOFFS = cutoffs.CUTOFFS
+        print(f"Using module's cutoffs file located at {cutoffs.__file__}")
 
-    if not parameter_set:
-        return PARAMS
+    if not cutoffs_set:
+        return CUTOFFS
     else:
-        print(f"Loading parameter set '{parameter_set}'")
+        print(f"Loading cutoffs set '{cutoffs_set}'")
         try:
-            params = PARAMS[parameter_set]
+            cutoffs = CUTOFFS[cutoffs_set]
         except KeyError:
-            print(f"Could not load! Check if {parameter_set} is in {parameter_file}")
+            print(f"Could not load! Check if {cutoffs_set} is in {cutoffs_file}")
             sys.exit(-1)
-        return params
+        return cutoffs
 
 def label_file(filename: str, file_substring_mapping: dict):
     """ Given a filename.  Return the file label based on a unique substring.
@@ -141,7 +141,7 @@ def filevalues_from_mapping(file_mapping: dict,
 
     return file_value_mapping, all_values
 
-def value_based_checks(check_params: dict,
+def value_based_checks(check_cutoffs: dict,
                        value_mapping: dict,
                        all_values: list,
                        flagger: Flagger,
@@ -163,45 +163,45 @@ def value_based_checks(check_params: dict,
             entity = f"{sample}:{filelabel}"
             flagged = False
             # global maximum threshold checks
-            if check_params["max_thresholds"]:
-                for threshold in sorted(check_params["max_thresholds"], reverse=True):
+            if check_cutoffs["max_thresholds"]:
+                for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
                     if value > threshold:
                         flagger.flag(   entity = entity,
                                         message = (f"{value_alias} is over threshold of {threshold}. "
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
-                                        severity = check_params["max_thresholds"][threshold],
+                                        severity = check_cutoffs["max_thresholds"][threshold],
                                         checkID = checkID)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks)
 
             # global minimum threshold checks
-            if check_params["min_thresholds"]:
-                for threshold in sorted(check_params["min_thresholds"]).items():
+            if check_cutoffs["min_thresholds"]:
+                for threshold in sorted(check_cutoffs["min_thresholds"]).items():
                     if value < threshold:
                         flagger.flag(   entity = entity,
                                         message = (f"{value_alias} is under threshold of {threshold}. "
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
-                                        severity = check_params["min_thresholds"][threshold],
+                                        severity = check_cutoffs["min_thresholds"][threshold],
                                         checkID = checkID)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
 
             # outlier by standard deviation threshold checks
-            if check_params["outlier_thresholds"]:
+            if check_cutoffs["outlier_thresholds"]:
                 if stdev == 0:
                     deviation = 0
                 else:
                     deviation = abs(value - middlepoint)/stdev
-                for threshold in sorted(check_params["outlier_thresholds"], reverse=True):
+                for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
                     if deviation > threshold:
                         flagger.flag(   entity = entity,
                                         message = (f"{value_alias} flagged as outlier. "\
                                                   f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
                                                   f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
                                                   ),
-                                        severity = check_params["outlier_thresholds"][threshold],
+                                        severity = check_cutoffs["outlier_thresholds"][threshold],
                                         checkID = checkID)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
@@ -212,7 +212,7 @@ def value_based_checks(check_params: dict,
                              severity = 30,
                              checkID = checkID)
 
-def value_check_direct(check_params: dict,
+def value_check_direct(check_cutoffs: dict,
                        value: dict,
                        all_values: list,
                        flagger: Flagger,
@@ -233,46 +233,46 @@ def value_check_direct(check_params: dict,
 
     flagged = False
     # global maximum threshold checks
-    if check_params["max_thresholds"]:
-        for threshold in sorted(check_params["max_thresholds"], reverse=True):
+    if check_cutoffs["max_thresholds"]:
+        for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
             if value > threshold:
                 flagger.flag(   entity = entity,
                                 message = (f"<{message_prefix}> {value_alias} is over threshold of {threshold}. "
                                            f"[value: {value:.7f}][threshold: {threshold}]"
                                            ),
-                                severity = check_params["max_thresholds"][threshold],
+                                severity = check_cutoffs["max_thresholds"][threshold],
                                 checkID = checkID)
                 flagged = True
                 break # end check for this sample's filelabel (note: break here exists the threshold checks)
 
     # global minimum threshold checks
-    if check_params["min_thresholds"]:
-        ascending_thresholds = sorted(check_params["min_thresholds"])
+    if check_cutoffs["min_thresholds"]:
+        ascending_thresholds = sorted(check_cutoffs["min_thresholds"])
         for threshold in ascending_thresholds:
             if value < threshold:
                 flagger.flag(   entity = entity,
                                 message = (f"<{message_prefix}> {value_alias} is under threshold of {threshold}. "
                                            f"[value: {value:.7f}][threshold: {threshold}]"
                                            ),
-                                severity = check_params["min_thresholds"][threshold],
+                                severity = check_cutoffs["min_thresholds"][threshold],
                                 checkID = checkID)
                 flagged = True
                 break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
 
     # outlier by standard deviation threshold checks
-    if check_params["outlier_thresholds"]:
+    if check_cutoffs["outlier_thresholds"]:
         if stdev == 0:
             deviation = 0
         else:
             deviation = abs(value - middlepoint)/stdev
-        for threshold in sorted(check_params["outlier_thresholds"], reverse=True):
+        for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
             if deviation > threshold:
                 flagger.flag(   entity = entity,
                                 message = (f"<{message_prefix}> {value_alias} flagged as outlier. "\
                                           f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
                                           f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
                                           ),
-                                severity = check_params["outlier_thresholds"][threshold],
+                                severity = check_cutoffs["outlier_thresholds"][threshold],
                                 checkID = checkID)
                 flagged = True
                 break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)

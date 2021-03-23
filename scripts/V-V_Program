@@ -8,10 +8,10 @@ import sys
 import argparse
 from pathlib import Path
 
-from VV.utils import load_params, load_config
-from VV.parameters import PARAMS as MODULEPARAMS
-from VV import parameters
-DEFAULT_PARAMS_FILE = parameters.__file__
+from VV.utils import load_cutoffs, load_config
+from VV.cutoffs import CUTOFFS as MODULECUTOFFS
+from VV import cutoffs
+DEFAULT_CUTOFFS_FILE = cutoffs.__file__
 
 from VV import RNASeq_VV
 from VV import __version__
@@ -26,7 +26,7 @@ def _parse_args():
     parser = argparse.ArgumentParser(prog="V-V_Program",
         description='Perform Automated V&V on GeneLab raw and processed data.')
     parser.set_defaults(subcommand="Nothing")
-    parser.set_defaults(parameter_file=DEFAULT_PARAMS_FILE)
+    parser.set_defaults(cutoffs_file=DEFAULT_CUTOFFS_FILE)
 
     subparsers = parser.add_subparsers(help='sub-command help')
     parser_RNASeq = subparsers.add_parser('RNASeq',
@@ -35,34 +35,34 @@ def _parse_args():
     parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
                         help='INI format configuration file')
 
-    parser_RNASeq.add_argument('--parameter_file', metavar='file.py', default=None,
-                        help=f"Override parameter set with custom file. " \
+    parser_RNASeq.add_argument('--cutoffs_file', metavar='file.py', default=None,
+                        help=f"Override cutoffs set with custom file. " \
                              f"This file MUST match the format for each entry in "\
-                             f"this modules VV/parameters.py file. "\
-                             f"A copy of the default parameter set can be created "\
-                             f"with the --create_parameter_file subcommand. ")
+                             f"this modules VV/cutoffs.py file. "\
+                             f"A copy of the default cutoffs set can be created "\
+                             f"with the --create_cutoffs_file subcommand. ")
 
-    parser_RNASeq.add_argument('--parameter_set', default="DEFAULT",
+    parser_RNASeq.add_argument('--cutoffs_set', default="DEFAULT",
                         help=f"Parameter set to use. " \
-                             f"located in parameters file. "\
-                             f"Available parameter sets: {list(MODULEPARAMS.keys())}")
+                             f"located in cutoffs file. "\
+                             f"Available cutoffs sets: {list(MODULECUTOFFS.keys())}")
     parser_RNASeq.set_defaults(subcommand="RNASeq")
 
-    parser_PARAMS = subparsers.add_parser('Params',
-        help='Handle V&V parameter files to examine flagging thresholds and settings')
+    parser_CUTOFFS = subparsers.add_parser('Cutoffs',
+        help='Handle V&V cutoffs files to examine flagging thresholds and settings')
 
-    parser_PARAMS.add_argument('--copy_module_param_file', action='store_true',
-                        help=f"Creates parameter file in current directory for "\
-                             f"custom parameter sets. When using this custom "\
-                             f"parameter file.  Make sure to indicate "\
-                             f"this file using --parameter_file!")
+    parser_CUTOFFS.add_argument('--copy_module_cutoffs_file', action='store_true',
+                        help=f"Creates cutoffs file in current directory for "\
+                             f"custom cutoffs sets. When using this custom "\
+                             f"cutoffs file.  Make sure to indicate "\
+                             f"this file using --cutoffs_file!")
 
-    parser_PARAMS.add_argument('--list_parameter_sets', action="append", nargs="?",
-                        help=f"Lists parameter sets found in a parameter file " \
-                             f"If no file is specified, the module's parameter file "\
-                             f"parameter sets are listed.")
+    parser_CUTOFFS.add_argument('--list_cutoffs_sets', action="append", nargs="?",
+                        help=f"Lists cutoffs sets found in a cutoffs file " \
+                             f"If no file is specified, the module's cutoffs file "\
+                             f"cutoffs sets are listed.")
 
-    parser_PARAMS.set_defaults(subcommand="PARAMS")
+    parser_CUTOFFS.set_defaults(subcommand="CUTOFFS")
 
     args = parser.parse_args()
     if args.subcommand == "Nothing":
@@ -72,10 +72,10 @@ def _parse_args():
     return args
 
 def _create_param_file(**args):
-    from VV import parameters
+    from VV import cutoffs
     import shutil
-    copy = Path("copy_of_parameters.py")
-    original = Path(parameters.__file__)
+    copy = Path("copy_of_cutoffs.py")
+    original = Path(cutoffs.__file__)
     print(f"Creating copy of {original} -> {copy}")
     if copy.is_file():
         print(f"{copy} already exists! Canceling to avoid overwrite.")
@@ -93,20 +93,20 @@ if __name__ == '__main__':
     args = _parse_args()
     if args.subcommand == "RNASeq":
         RNASeq_VV.main(load_config(args.config),
-                       load_params(args.parameter_file, args.parameter_set))
+                       load_cutoffs(args.cutoffs_file, args.cutoffs_set))
 
-    elif args.subcommand == "PARAMS":
-        if args.copy_module_param_file:
+    elif args.subcommand == "CUTOFFS":
+        if args.copy_module_cutoffs_file:
             _create_param_file()
 
-        elif args.list_parameter_sets:
-            # Load parameters
-            if args.list_parameter_sets[0]:
-                PARAMS = load_params(args.list_parameter_sets[0])
+        elif args.list_cutoffs_sets:
+            # Load cutoffs
+            if args.list_cutoffs_sets[0]:
+                CUTOFFS = load_cutoffs(args.list_cutoffs_sets[0])
             else:
-                PARAMS = load_params()
+                CUTOFFS = load_cutoffs()
 
-            print(f"The following parameter sets were found: {list(PARAMS.keys())}")
+            print(f"The following cutoffs sets were found: {list(CUTOFFS.keys())}")
         else:
             print("Use --help to display subcommand help")
     else:

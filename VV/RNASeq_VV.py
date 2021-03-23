@@ -8,7 +8,7 @@ from pathlib import Path
 from VV import raw_reads
 from VV import trimmed_reads
 from VV import fastqc
-from VV.parameters import PARAMS as MODULEPARAMS
+from VV.cutoffs import CUTOFFS as MODULECUTOFFS
 from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.rnaseq_samplesheet import RNASeqSampleSheet
@@ -16,7 +16,7 @@ from VV.rsem import RsemCounts
 from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
 
-def main(config, params):
+def main(config, cutoffs):
     """ Calls raw and processed data V-V functions
 
     :param config: configuration object
@@ -50,12 +50,12 @@ def main(config, params):
     raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
                               samples = samples,
                               flagger = flagger,
-                              params = params
+                              cutoffs = cutoffs
                               )
     raw_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("RawMultiQCDir")) / "multiqc_data.json",
                                       samples = samples,
                                       flagger = flagger,
-                                      params = params,
+                                      cutoffs = cutoffs,
                                       outlier_comparision_point = "median")
 
 
@@ -65,12 +65,12 @@ def main(config, params):
     trimmed_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("TrimmedReadDir")),
                               samples = samples,
                               flagger = flagger,
-                              params = params
+                              cutoffs = cutoffs
                               )
     trimmed_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("TrimmedMultiQCDir")) / "multiqc_data.json",
                                       samples = samples,
                                       flagger = flagger,
-                                      params = params,
+                                      cutoffs = cutoffs,
                                       outlier_comparision_point = "median")
     ###########################################################################
     # STAR Alignment VV
@@ -78,14 +78,14 @@ def main(config, params):
     StarAlignments(samples=samples,
                    dir_path=config['Paths'].get("StarParentDir"),
                    flagger = flagger,
-                   params = params)
+                   cutoffs = cutoffs)
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################
     rsem_cross_check =   RsemCounts(samples= samples,
                                    dir_path=config['Paths'].get("RsemParentDir"),
                                    flagger = flagger,
-                                   params = params).cross_check
+                                   cutoffs = cutoffs).cross_check
     cross_checks["RSEM"] = rsem_cross_check
     ###########################################################################
     # Deseq2 Normalized Counts VV
@@ -94,7 +94,7 @@ def main(config, params):
                        counts_dir_path = Path(config['Paths'].get("Deseq2NormCountsParentDir")),
                        dge_dir_path = Path(config['Paths'].get("Deseq2DGEParentDir")),
                        flagger = flagger,
-                       params = params,
+                       cutoffs = cutoffs,
                        cross_checks = cross_checks)
 
     print(f"{'='*40}")

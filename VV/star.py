@@ -17,7 +17,7 @@ class StarAlignments():
                  samples: str,
                  dir_path: str,
                  flagger: Flagger,
-                 params: dict):
+                 cutoffs: dict):
         print(f"Starting VV for STAR alignment output")
         ##############################################################
         # SET FLAGGING OUTPUT ATTRIBUTES
@@ -25,7 +25,7 @@ class StarAlignments():
         flagger.set_script(__name__)
         flagger.set_step("STAR")
         self.flagger = flagger
-        self.params = params
+        self.cutoffs = cutoffs
         self.samples = samples
         self.dir_path = dir_path
         self.final = self._parse_log_final()
@@ -50,12 +50,12 @@ class StarAlignments():
                 value = self.final[sample][key]
                 value_check_direct(value = value,
                                    all_values = all_values,
-                                   check_params = self.params["STAR"][key],
+                                   check_cutoffs = self.cutoffs["STAR"][key],
                                    flagger = self.flagger,
                                    checkID = checkID,
                                    entity = sample,
                                    value_alias = key,
-                                   middlepoint = self.params["middlepoint"],
+                                   middlepoint = self.cutoffs["middlepoint"],
                                    message_prefix = "Sample vs Samples")
 
     def __repr__(self):
@@ -293,7 +293,7 @@ class StarAlignments():
         checkID_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
                                                      "S_0004":"mapped_to_multiple_loci-Percentage",
                                     }
-        for checkID, params_key in checkID_with_samples_proportion_threshold.items():
+        for checkID, cutoffs_key in checkID_with_samples_proportion_threshold.items():
             self.flagger.check_sample_proportions(checkID,
-                                                  self.params["STAR"][params_key],
+                                                  self.cutoffs["STAR"][cutoffs_key],
                                                   PROTOFLAG_MAP)

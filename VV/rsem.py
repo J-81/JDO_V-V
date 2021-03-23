@@ -20,7 +20,7 @@ class RsemCounts():
                  samples: str,
                  dir_path: str,
                  flagger: Flagger,
-                 params: dict
+                 cutoffs: dict
                  ):
         print(f"Starting VV for RSEM counting output")
         ##############################################################
@@ -29,7 +29,7 @@ class RsemCounts():
         flagger.set_script(__name__)
         flagger.set_step("RSEM")
         self.flagger = flagger
-        self.params = params
+        self.cutoffs = cutoffs
 
         # start data extraction and VV
         self.samples = samples
@@ -147,7 +147,7 @@ class RsemCounts():
         checkIDs_to_keys = {"M_0005":("count_of_unique_genes_expressed", counts_of_genes_expressed),
                             "M_0006":("count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
                             }
-        if self.params["hasERCC"]:
+        if self.cutoffs["hasERCC"]:
             checkIDs_to_keys["M_0007"] = ("count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected)
         for checkID, (key, df_dict) in checkIDs_to_keys.items():
             # compile all values for all file labels
@@ -161,10 +161,10 @@ class RsemCounts():
                     value = df_dict[sample]
                     value_check_direct(value = value,
                                        all_values = all_values,
-                                       check_params = params["RSEM"][key],
+                                       check_cutoffs = cutoffs["RSEM"][key],
                                        flagger = flagger,
                                        checkID = checkID,
                                        entity = entity,
                                        value_alias = key,
-                                       middlepoint = params["middlepoint"],
+                                       middlepoint = cutoffs["middlepoint"],
                                        message_prefix = "Sample vs Samples")

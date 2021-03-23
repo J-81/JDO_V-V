@@ -121,7 +121,7 @@ class Flagger():
 
     def check_sample_proportions(self,
                                  checkID: str,
-                                 check_params: dict,
+                                 check_cutoffs: dict,
                                  protoflag_map: dict):
         df = self._get_log_as_df()
         # filter by checkID
@@ -130,7 +130,7 @@ class Flagger():
         # compute proportion with proto flags
         flagged = False
         for flag_id in sorted(protoflag_map, reverse=True):
-            threshold = check_params["sample_proportion_thresholds"][flag_id]
+            threshold = check_cutoffs["sample_proportion_thresholds"][flag_id]
             valid_proto_ids = protoflag_map[flag_id]
             valid_proto_count = len(checkdf.loc[checkdf["flag_id"].isin(valid_proto_ids)])
             total_count = len(checkdf)

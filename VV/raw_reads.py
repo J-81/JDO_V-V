@@ -13,7 +13,7 @@ from VV import multiqc
 
 def validate_verify(samples: list[str],
                     raw_reads_dir: Path,
-                    params: dict,
+                    cutoffs: dict,
                     flagger: Flagger,
                     file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
                     ):
@@ -67,7 +67,7 @@ def validate_verify(samples: list[str],
     ### START R_0002 ##################################################
     # TODO: add header check (R_0002)
     checkID = "R_0002"
-    lines_to_check = params["raw_reads"]["fastq_lines_to_check"]
+    lines_to_check = cutoffs["raw_reads"]["fastq_lines_to_check"]
     for sample in samples:
         for filelabel, filename in file_mapping[sample].items():
             entity = f"{sample}:{filelabel}"
@@ -95,13 +95,13 @@ def validate_verify(samples: list[str],
     filesize_mapping, all_filesizes = filevalues_from_mapping(file_mapping, file_size)
 
     metric = "file_size"
-    value_based_checks(check_params = params["raw_reads"][metric],
+    value_based_checks(check_cutoffs = cutoffs["raw_reads"][metric],
                        value_mapping = filesize_mapping,
                        all_values = all_filesizes,
                        flagger = flagger,
                        checkID = checkID,
                        value_alias = metric,
-                       middlepoint = params["middlepoint"]
+                       middlepoint = cutoffs["middlepoint"]
                        )
     ### DONE R_0003 ###################################################
 
@@ -157,7 +157,7 @@ def _check_headers(file, count_lines_to_check: int) -> int:
 
 def validate_verify_multiqc(samples: list[str],
                             multiqc_json: Path,
-                            params: dict,
+                            cutoffs: dict,
                             flagger: Flagger,
                             file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
                             outlier_comparision_point: str = "median",
@@ -210,7 +210,7 @@ def validate_verify_multiqc(samples: list[str],
             for file_label in mqc.file_labels:
                 entity = f"{sample}:{file_label}"
                 cur_data_key = f"{file_label}-{key}"
-                for threshold, severity in check_params["outlier_thresholds"].items():
+                for threshold, severity in check_cutoffs["outlier_thresholds"].items():
                     outliers = mqc.detect_outliers(key = cur_data_key,
                                                    deviation = threshold
                                                  )
@@ -276,12 +276,12 @@ def validate_verify_multiqc(samples: list[str],
                 value = mqc.data[sample][full_key].value
                 value_check_direct(value = value,
                                    all_values = all_values,
-                                   check_params = params["raw_reads"][key],
+                                   check_cutoffs = cutoffs["raw_reads"][key],
                                    flagger = flagger,
                                    checkID = checkID,
                                    entity = entity,
                                    value_alias = key,
-                                   middlepoint = params["middlepoint"],
+                                   middlepoint = cutoffs["middlepoint"],
                                    message_prefix = "Sample:File_Label vs Samples")
 
     ### DONE R_1003 ###################################################
@@ -291,7 +291,7 @@ def validate_verify_multiqc(samples: list[str],
                         "R_1008":"fastqc_sequence_duplication_levels_plot",
                         }
     for checkID, key in checkIDs_to_keys.items():
-        check_params = params["raw_reads"][key]
+        check_cutoffs = cutoffs["raw_reads"][key]
         for sample in samples:
             for file_label in mqc.file_labels:
                 flagged = False
@@ -299,7 +299,7 @@ def validate_verify_multiqc(samples: list[str],
                 cur_data_key = f"{file_label}-{key}"
                 bin_units = mqc.data[sample][cur_data_key].bin_units
                 # iterate through thresholds in descending order (more severe first)
-                thresholds = sorted(check_params["outlier_thresholds"], reverse=True)
+                thresholds = sorted(check_cutoffs["outlier_thresholds"], reverse=True)
                 for threshold in thresholds:
                     outliers = mqc.detect_outliers(key = cur_data_key,
                                                    deviation = threshold
@@ -312,7 +312,7 @@ def validate_verify_multiqc(samples: list[str],
                                               f"distribution may vary by sample. "
                                               f"See the following x-indices in {key} "
                                               f"{outliers_for_sample}"),
-                                     severity = check_params["outlier_thresholds"][threshold],
+                                     severity = check_cutoffs["outlier_thresholds"][threshold],
                                      checkID = checkID)
                         flagged = True
                 # log passes
@@ -326,12 +326,12 @@ def validate_verify_multiqc(samples: list[str],
     # Checks that are performed across an aggregate value for indexed positions
     # for each file label
     #
-    # format: { checkID: (key, aggregation_function, parameters_subkey)
+    # format: { checkID: (key, aggregation_function, cutoffs_subkey)
     checkIDs_to_keys = {"R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
                         "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
                         }
-    for checkID, (key, aggregator, params_key) in checkIDs_to_keys.items():
-        check_params = params["raw_reads"][key][params_key]
+    for checkID, (key, aggregator, cutoffs_key) in checkIDs_to_keys.items():
+        check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key]
         for sample in samples:
             for file_label in mqc.file_labels:
                 entity = f"{sample}:{file_label}"
@@ -347,12 +347,12 @@ def validate_verify_multiqc(samples: list[str],
                 value = float(value[0]) # an error here may indicate an issue generating a single value from the compile subset arg
                 value_check_direct(value = value,
                                    all_values = all_values,
-                                   check_params = check_params,
+                                   check_cutoffs = check_cutoffs,
                                    flagger = flagger,
                                    checkID = checkID,
                                    entity = entity,
-                                   value_alias = f"{key}-aggregated by {params_key}",
-                                   middlepoint = params["middlepoint"],
+                                   value_alias = f"{key}-aggregated by {cutoffs_key}",
+                                   middlepoint = cutoffs["middlepoint"],
                                    message_prefix = "Sample:File_Label vs Samples")
     ### DONE R_1003 ###################################################
     # maps which codes to consider for assessing realized flags
@@ -365,7 +365,7 @@ def validate_verify_multiqc(samples: list[str],
     checkID_with_samples_proportion_threshold = {"R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
-    for checkID, params_key in checkID_with_samples_proportion_threshold.items():
+    for checkID, cutoffs_key in checkID_with_samples_proportion_threshold.items():
         flagger.check_sample_proportions(checkID,
-                                         params["raw_reads"][params_key],
+                                         cutoffs["raw_reads"][cutoffs_key],
                                          PROTOFLAG_MAP)

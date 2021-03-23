@@ -1,11 +1,11 @@
-""" Stores configuration parameters for VV in python
+""" Stores configuration cutoffs for VV in python
 
-    Top level objects should include all parameters for an entire VV process
-    Final parameters must be in the following format: {value: FLAG_LEVEL}
+    Top level objects should include all cutoffs for an entire VV process
+    Final cutoffs must be in the following format: {value: FLAG_LEVEL}
     Empty dicts should be used to explicitly indicate no checks
 """
-# TOP LEVEL MUST BE NAMED PARAMS
-PARAMS = \
+# TOP LEVEL MUST BE NAMED CUTOFFS
+CUTOFFS = \
 {
     "DEFAULT" : {
         "middlepoint": "median",
