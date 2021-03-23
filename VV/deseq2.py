@@ -108,6 +108,9 @@ class Deseq2ScriptOutput():
                 if expectedFile.name in ["contrasts.csv","ERCCnorm_contrasts.csv"]:
                     self._check_contrasts(expectedFile, checkID = checkID, entity = entity)
 
+                elif expectedFile.name in ["differential_expression.csv","ERCCnorm_differential_expression.csv"]:
+                    self._check_dge_table(expectedFile, checkID = checkID, entity = entity)
+
                 # no file specific checks needed
                 else:
                     message = f"{expectedFile.name} exists. No other filespecific checks requested."
@@ -120,6 +123,42 @@ class Deseq2ScriptOutput():
                 message = f"{expectedFile.name} does not exist"
                 self.flagger.flag(message=(f"Missing {expectedFile}"),
                               severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+    def _check_dge_table(self, expectedFile, checkID, entity):
+        dge_df = pd.read_csv(expectedFile, index_col=0)
+        flagged = False
+        # check all samples have a column
+        missing_sample_cols = set(self.samples) - set(dge_df.columns)
+        if missing_sample_cols:
+            flagged = True
+            message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        # check expected columns based on groups and groups_versus
+        expected_cols = [f"Group.Mean_{factor_group}" for factor_group in self.factor_groups] + \
+                        [f"Group.Stdev_{factor_group}" for factor_group in self.factor_groups] + \
+                        [f"Log2fc_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus]
+        expected_cols = set(expected_cols)
+        missing_cols = expected_cols - set(dge_df.columns)
+        if missing_cols:
+            flagged = True
+            message = f"{expectedFile.name} exists but missing columns ({missing_mean_cols})"
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        if not flagged:
+            message = f"{expectedFile.name} exists and expected columns found"
+            self.flagger.flag(message=message,
+                              severity=30,
                               checkID=checkID,
                               entity = entity)
 
@@ -147,8 +186,6 @@ class Deseq2ScriptOutput():
                                   checkID=checkID,
                                   entity = entity)
 
-
-
     def _check_samples_match(self, expectedFile, checkID, entity):
         """ Checks that sample names match
         """
@@ -171,9 +208,17 @@ class Deseq2ScriptOutput():
                               entity = entity)
 
     def _check_contrasts(self, contrasts_file, checkID, entity):
-       """ Performs a check that appropriate number of contrasts generated
+       """ Performs a check that appropriate number of contrasts generated.
+
+       Also sets contrast groups
        """
        contrasts_df = pd.read_csv(contrasts_file, index_col=0)
+       self.factor_groups_versus = set(contrasts_df.columns)
+       self.factor_groups = list()
+       parsed_factor_groups = [group_versus.split("v") for group_versus in self.factor_groups_versus.copy()]
+       for factor_group in parsed_factor_groups:
+           self.factor_groups.extend(factor_group)
+       self.factor_groups = set(self.factor_groups)
 
        count_contrasts_from_deseq2 = len(contrasts_df.columns)
 

@@ -262,6 +262,7 @@
 
 - D_0006 (Implemented)
   - Check that differential_expression.csv exists
+    - Also check that the file contains count data for each sample, averages and standard deviations for all groups, log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons.
 
 - D_0007 (Implemented)
   - Check that visualization_output_table.csv exists
@@ -275,6 +276,7 @@
 
 - D_0010 (Implemented) (ERCC_ONLY)
   - Check that ERCCnorm_differential_expression.csv exists
+    - Also check that the file contains count data for each sample, averages and standard deviations for all groups, log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons.
 
 - D_0011 (Implemented) (ERCC_ONLY)
   - Check that visualization_output_table_ERCCnorm.csv exists
