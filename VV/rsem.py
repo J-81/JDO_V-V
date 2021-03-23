@@ -37,6 +37,11 @@ class RsemCounts():
 
         self.gene_counts = dict()
         self.isoform_counts = dict()
+
+        # cross_check
+        # a dictionary of results to pass to other processes for crossing checking steps
+        self.cross_check = dict()
+
         for sample in samples:
             gene_count_path = self.dir_path / sample / f"{sample}.genes.results"
             isoform_count_path = self.dir_path / sample / f"{sample}.isoforms.results"
@@ -72,6 +77,8 @@ class RsemCounts():
         counts_of_NonERCC_genes_expressed = dict()
         counts_of_genes_expressed = dict()
         counts_of_ERCC_genes_detected = dict()
+        # extract counts of genes
+        # i.e. how many unique genes found (those with counts greater than zero)
         for sample, df in self.gene_counts.items():
             isExpressed = df["expected_count"] > 0
             notERCC = ~df["gene_id"].str.startswith("ERCC-")
@@ -79,6 +86,14 @@ class RsemCounts():
             counts_of_NonERCC_genes_expressed[sample] = len(df.loc[full_mask])
             counts_of_genes_expressed[sample] = len(df.loc[isExpressed])
             counts_of_ERCC_genes_detected[sample] = len(df.loc[~notERCC & isExpressed])
+
+        # extract summed counts
+        # i.e. for each sample, what was the sum of the gene counts
+        summed_gene_counts = dict()
+        for sample, df in self.gene_counts.items():
+            summed_gene_counts[sample] = sum(df["expected_count"])
+
+        self.cross_check["bySample_summed_gene_counts"] = summed_gene_counts
 
         # vv related to isoforms
         counts_of_NonERCC_isoforms_expressed = dict()

@@ -11,6 +11,7 @@ from VV import fastqc
 from VV.parameters import PARAMS as MODULEPARAMS
 from VV.star import StarAlignments
 from VV.data import Dataset
+from VV.rnaseq_samplesheet import RNASeqSampleSheet
 from VV.rsem import RsemCounts
 from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
@@ -36,6 +37,13 @@ def main(config, params):
                   entity = f"GLDS-{config['GLDS'].get('Number')}")
     isa.validate_verify(vv_for = "RNASeq")
     samples = isa.get_sample_names(assay_name = "transcription profiling by RNASeq")
+    ########################################################################
+    # RNASeqSampleSheet Parsing
+    ########################################################################
+    cross_checks = dict()
+    samplesheet_path = Path(config["Paths"].get("SampleSheetPath"))
+    samplesheet_cross_check = RNASeqSampleSheet(samplesheet = samplesheet_path).cross_check
+    cross_checks["SampleSheet"] = samplesheet_cross_check
     ########################################################################
     # Raw Read VV
     ########################################################################
@@ -74,10 +82,11 @@ def main(config, params):
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################
-    RsemCounts(samples= samples,
-               dir_path=config['Paths'].get("RsemParentDir"),
-               flagger = flagger,
-               params = params)
+    rsem_cross_check =   RsemCounts(samples= samples,
+                                   dir_path=config['Paths'].get("RsemParentDir"),
+                                   flagger = flagger,
+                                   params = params).cross_check
+    cross_checks["RSEM"] = rsem_cross_check
     ###########################################################################
     # Deseq2 Normalized Counts VV
     ###########################################################################
@@ -85,7 +94,8 @@ def main(config, params):
                        counts_dir_path = Path(config['Paths'].get("Deseq2NormCountsParentDir")),
                        dge_dir_path = Path(config['Paths'].get("Deseq2DGEParentDir")),
                        flagger = flagger,
-                       params = params)
+                       params = params,
+                       cross_checks = cross_checks)
 
     print(f"{'='*40}")
     print(f"VV complete: Full Results Saved To {flagger._log_file}")

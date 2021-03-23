@@ -252,3 +252,44 @@
 
 - D_0004 (Implemented)
   - Check that ERCC_Normalized_Counts.csv file exists and samples match what is expected (likely as parsed from the ISA files)
+
+- D_0005 (Implemented)
+  - Check that contrasts.csv exists and the number of contrasts is as follows
+    - Let 1..j be the number of factors
+    - Let n_j be the number of possibilities for a factor j
+    - Let u be the unique combinations, computed : for all factors, {1..j}, multiply together the n_j
+    - number of contrasts = u*(u-1), all factor combinations vs all factor combinations except the mirror combinations
+
+- D_0006 (Implemented)
+  - Check that differential_expression.csv exists
+
+- D_0007 (Implemented)
+  - Check that visualization_output_table.csv exists
+
+- D_0008 (Implemented)
+  - Check that visualization_PCA_table.csv exists
+
+- D_0009 (Implemented) (ERCC_ONLY)
+  - Check that ERCCnorm_contrasts.csv exists
+
+- D_0010 (Implemented) (ERCC_ONLY)
+  - Check that ERCCnorm_differential_expression.csv exists
+
+- D_0011 (Implemented) (ERCC_ONLY)
+  - Check that visualization_output_table_ERCCnorm.csv exists
+
+- D_0012 (Implemented) (ERCC_ONLY)
+  - Check that visualization_PCA_table_ERCCnorm.csv exists
+
+- D_0006 (TBStaged)
+  - Check the Unnormalized_Counts.csv file and make sure the raw counts reported for each sample match the raw counts in the respective $sample.genes.results file generated from RSEM.
+    - Checked by summing counts for each sample
+
+- D_0007 (TBStaged)
+  - Check that all possible contrasts are shown in the contrasts.csv file(s).
+
+- D_0008 (TBStaged)
+  - Check that the differential_expression.csv file(s) contain count data for each sample, averages and standard deviations for all groups, log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons.
+
+- D_0009 (TBStaged)
+  - Check that the visualization tables contain all the info found in the differential_expression.csv file(s) and additional columns for visualization (Updown columns for each comparison, Sig.1 and Sig.05 for each comparison, Log2_P.value and Log2_Adj.p.value for each comparison).
