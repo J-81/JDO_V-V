@@ -63,9 +63,8 @@ class Deseq2ScriptOutput():
             # check file existence
             if expectedFile.is_file():
                 self._check_samples_match(expectedFile, checkID, entity)
-                if expectedFile in ["Unnormalized_Counts.csv"]:
-                    self._check_counts_match_gene_results(expectedFile, checkID, entity)
-
+                if expectedFile.name in ["Unnormalized_Counts.csv"]:
+                    self._check_counts_match_gene_results(expectedFile, checkID)
 
             else:
                 message = f"{expectedFile.name} does not exist"
@@ -124,8 +123,31 @@ class Deseq2ScriptOutput():
                               checkID=checkID,
                               entity = entity)
 
-    def _check_contrasts(self, _file, checkID, entity):
-        pass
+    def _check_counts_match_gene_results(self, unnorm_counts_file, checkID):
+        """ Checks that the gene counts match on a per sample basis """
+        # get by sample counts (from RSEM)
+        bySample_summed_gene_counts = self.rsem_cross_checks["bySample_summed_gene_counts"]
+
+        unnorm_df = pd.read_csv(unnorm_counts_file, index_col=0)
+
+        for col in unnorm_df.columns:
+            sample = col
+            entity = sample
+            unnorm_sum_of_counts = sum(unnorm_df[sample])
+            rsem_sum_of_counts = bySample_summed_gene_counts[sample]
+
+            if unnorm_sum_of_counts == rsem_sum_of_counts:
+                self.flagger.flag(message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts}) matches counts from RSEM ({rsem_sum_of_counts})"),
+                                  severity=30,
+                                  checkID=checkID,
+                                  entity = entity)
+            else:
+                self.flagger.flag(message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts})  DOES NOT match counts from RSEM ({rsem_sum_of_counts})"),
+                                  severity=90,
+                                  checkID=checkID,
+                                  entity = entity)
+
+
 
     def _check_samples_match(self, expectedFile, checkID, entity):
         """ Checks that sample names match
@@ -147,7 +169,6 @@ class Deseq2ScriptOutput():
                               severity = 90,
                               checkID = checkID,
                               entity = entity)
-
 
     def _check_contrasts(self, contrasts_file, checkID, entity):
        """ Performs a check that appropriate number of contrasts generated
