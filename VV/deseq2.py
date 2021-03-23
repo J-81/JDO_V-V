@@ -127,7 +127,7 @@ class Deseq2ScriptOutput():
                               entity = entity)
 
     def _check_dge_table(self, expectedFile, checkID, entity):
-        dge_df = pd.read_csv(expectedFile, index_col=0)
+        dge_df = pd.read_csv(expectedFile, index_col=None)
         flagged = False
         # check all samples have a column
         missing_sample_cols = set(self.samples) - set(dge_df.columns)
@@ -144,19 +144,36 @@ class Deseq2ScriptOutput():
                         [f"Group.Stdev_{factor_group}" for factor_group in self.factor_groups] + \
                         [f"Log2fc_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
-                        [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus]
+                        [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        ["All.mean","All.stdev"] + \
+                        ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
         expected_cols = set(expected_cols)
         missing_cols = expected_cols - set(dge_df.columns)
         if missing_cols:
             flagged = True
-            message = f"{expectedFile.name} exists but missing columns ({missing_mean_cols})"
+            message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        non_negative_cols = [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                            [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus]
+        has_negative_values = list()
+        for non_negative_col in non_negative_cols:
+            has_negative = (dge_df[non_negative_cols] < 0).values.any()
+            if has_negative:
+                has_negative_values.append(non_negative_cols)
+        if has_negative_values:
+            flagged = True
+            message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
             self.flagger.flag(message=message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
 
         if not flagged:
-            message = f"{expectedFile.name} exists and expected columns found"
+            message = f"{expectedFile.name} exists, expected columns found, p.values and adj.p.values were non-negative"
             self.flagger.flag(message=message,
                               severity=30,
                               checkID=checkID,
