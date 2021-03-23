@@ -269,6 +269,7 @@
 
 - D_0008 (Implemented)
   - Check that visualization_PCA_table.csv exists
+    - Also checks for expected columns from differential_expression.csv table as well additional columns for visualization (Updown columns for each comparison, Sig.1 and Sig.05 for each comparison, Log2_P.value and Log2_Adj.p.value for each comparison).  Checks that Sig.1 and Sig.05 are booleans.
 
 - D_0009 (Implemented) (ERCC_ONLY)
   - Check that ERCCnorm_contrasts.csv exists
@@ -280,19 +281,7 @@
 
 - D_0011 (Implemented) (ERCC_ONLY)
   - Check that visualization_output_table_ERCCnorm.csv exists
+    - Also checks for expected columns from ERCCnorm_differential_expression.csv table as well additional columns for visualization (Updown columns for each comparison, Sig.1 and Sig.05 for each comparison, Log2_P.value and Log2_Adj.p.value for each comparison).  Checks that Sig.1 and Sig.05 are booleans.
 
 - D_0012 (Implemented) (ERCC_ONLY)
   - Check that visualization_PCA_table_ERCCnorm.csv exists
-
-- D_0006 (TBStaged)
-  - Check the Unnormalized_Counts.csv file and make sure the raw counts reported for each sample match the raw counts in the respective $sample.genes.results file generated from RSEM.
-    - Checked by summing counts for each sample
-
-- D_0007 (TBStaged)
-  - Check that all possible contrasts are shown in the contrasts.csv file(s).
-
-- D_0008 (TBStaged)
-  - Check that the differential_expression.csv file(s) contain count data for each sample, averages and standard deviations for all groups, log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons.
-
-- D_0009 (TBStaged)
-  - Check that the visualization tables contain all the info found in the differential_expression.csv file(s) and additional columns for visualization (Updown columns for each comparison, Sig.1 and Sig.05 for each comparison, Log2_P.value and Log2_Adj.p.value for each comparison).

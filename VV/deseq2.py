@@ -111,6 +111,9 @@ class Deseq2ScriptOutput():
                 elif expectedFile.name in ["differential_expression.csv","ERCCnorm_differential_expression.csv"]:
                     self._check_dge_table(expectedFile, checkID = checkID, entity = entity)
 
+                elif expectedFile.name in ["visualization_output_table.csv","visualization_output_table_ERCCnorm.csv"]:
+                    self._check_visualization_table(expectedFile, checkID = checkID, entity = entity)
+
                 # no file specific checks needed
                 else:
                     message = f"{expectedFile.name} exists. No other filespecific checks requested."
@@ -174,6 +177,64 @@ class Deseq2ScriptOutput():
 
         if not flagged:
             message = f"{expectedFile.name} exists, expected columns found, p.values and adj.p.values were non-negative"
+            self.flagger.flag(message=message,
+                              severity=30,
+                              checkID=checkID,
+                              entity = entity)
+
+    def _check_visualization_table(self, expectedFile, checkID, entity):
+        visualization_df = pd.read_csv(expectedFile, index_col=None)
+        flagged = False
+        # check all samples have a column
+        missing_sample_cols = set(self.samples) - set(visualization_df.columns)
+        if missing_sample_cols:
+            flagged = True
+            message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        # check expected columns based on groups and groups_versus
+        expected_cols = [f"Group.Mean_{factor_group}" for factor_group in self.factor_groups] + \
+                        [f"Group.Stdev_{factor_group}" for factor_group in self.factor_groups] + \
+                        [f"Log2fc_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Updown_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Sig.05_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Sig.1_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        [f"Log2_P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                        ["All.mean","stdev"] + \
+                        ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
+        expected_cols = set(expected_cols)
+        missing_cols = expected_cols - set(visualization_df.columns)
+        if missing_cols:
+            flagged = True
+            message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        non_negative_cols = [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
+                            [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus]
+
+        has_negative_values = list()
+        for non_negative_col in non_negative_cols:
+            has_negative = (visualization_df[non_negative_cols] < 0).values.any()
+            if has_negative:
+                has_negative_values.append(non_negative_cols)
+        if has_negative_values:
+            flagged = True
+            message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
+            self.flagger.flag(message=message,
+                              severity=90,
+                              checkID=checkID,
+                              entity = entity)
+
+        if not flagged:
+            message = f"{expectedFile.name} exists, expected columns found, columns datatypes were within constraints"
             self.flagger.flag(message=message,
                               severity=30,
                               checkID=checkID,
