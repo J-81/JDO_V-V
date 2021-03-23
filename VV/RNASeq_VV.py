@@ -12,7 +12,7 @@ from VV.parameters import PARAMS as MODULEPARAMS
 from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.rsem import RsemCounts
-from VV.deseq2 import Deseq2NormalizedCounts
+from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
 
 def main(config, params):
@@ -81,10 +81,12 @@ def main(config, params):
     ###########################################################################
     # Deseq2 Normalized Counts VV
     ###########################################################################
-    Deseq2NormalizedCounts(samples = samples,
-                           dir_path = config['Paths'].get("Deseq2ParentDir"),
-                           flagger = flagger,
-                           params = params)
+    Deseq2ScriptOutput(samples = samples,
+                       counts_dir_path = Path(config['Paths'].get("Deseq2NormCountsParentDir")),
+                       dge_dir_path = Path(config['Paths'].get("Deseq2DGEParentDir")),
+                       flagger = flagger,
+                       params = params)
+
     print(f"{'='*40}")
     print(f"VV complete: Full Results Saved To {flagger._log_file}")
 

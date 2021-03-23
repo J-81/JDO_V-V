@@ -7,12 +7,13 @@ from VV.flagging import Flagger
 
 import pandas as pd
 
-class Deseq2NormalizedCounts():
+class Deseq2ScriptOutput():
     """ Representation of the output from Deseq2
     """
     def __init__(self,
                  samples: str,
-                 dir_path: str,
+                 counts_dir_path: Path,
+                 dge_dir_path: Path,
                  flagger: Flagger,
                  params: dict):
         print(f"Starting VV for DESEQ2 script output")
@@ -26,7 +27,7 @@ class Deseq2NormalizedCounts():
 
         #print(f"Checking Deseq2 Normalized Counts Results")
         self.samples = samples
-        self.dir_path = Path(dir_path)
+        self.counts_dir_path = counts_dir_path
         self.has_ERCC = params["hasERCC"]
         self._check_csv_files()
 
@@ -46,12 +47,12 @@ class Deseq2NormalizedCounts():
         # SampleTable.csv Check
         entity = "FULL_DATASET"
         checkID_to_file = {
-            "D_0001" : self.dir_path / "SampleTable.csv",
-            "D_0002" : self.dir_path / "Unnormalized_Counts.csv",
-            "D_0003" : self.dir_path / "Normalized_Counts.csv",
+            "D_0001" : self.counts_dir_path / "SampleTable.csv",
+            "D_0002" : self.counts_dir_path / "Unnormalized_Counts.csv",
+            "D_0003" : self.counts_dir_path / "Normalized_Counts.csv",
             }
         if self.params["hasERCC"]:
-            checkID_to_file["D_0004"] = self.dir_path / "ERCC_Normalized_Counts.csv"
+            checkID_to_file["D_0004"] = self.counts_dir_path / "ERCC_Normalized_Counts.csv"
 
         for checkID, expectedFile in checkID_to_file.items():
             # check file existence
