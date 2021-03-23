@@ -119,7 +119,7 @@ class Deseq2ScriptOutput():
             # check file existence
             if expectedFile.is_file():
                 # file specific checks
-                if expectedFile.name == "contrasts.csv":
+                if expectedFile.name in ["contrasts.csv","ERCCnorm_contrasts.csv"]:
                     self._check_contrasts(expectedFile, checkID = checkID, entity = entity)
 
                 # no file specific checks needed
@@ -159,12 +159,12 @@ class Deseq2ScriptOutput():
        print(f"EXPECTED: {expected_contrasts}")
 
        if count_contrasts_from_deseq2 == expected_contrasts:
-           self.flagger.flag(message=(f"Contrasts.csv contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),
+           self.flagger.flag(message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=30,
                              checkID=checkID,
                              entity = entity)
        else:
-           self.flagger.flag(message=(f"Contrasts.csv contrasts ({count_contrasts_from_deseq2})  DOES NOT match expected contrasts based on SampleSheet ({expected_contrasts})"),
+           self.flagger.flag(message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2})  DOES NOT match expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=90,
                              checkID=checkID,
                              entity = entity)

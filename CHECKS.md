@@ -271,6 +271,7 @@
 
 - D_0009 (Implemented) (ERCC_ONLY)
   - Check that ERCCnorm_contrasts.csv exists
+    - Same contrasts number check as D_0005
 
 - D_0010 (Implemented) (ERCC_ONLY)
   - Check that ERCCnorm_differential_expression.csv exists
