@@ -62,23 +62,10 @@ class Deseq2ScriptOutput():
         for checkID, expectedFile in checkID_to_file.items():
             # check file existence
             if expectedFile.is_file():
-                # check if samples match expectation
-                df = pd.read_csv(expectedFile, header=0)
-                # in counts tables, samples are columns (excluing first column)
-                # in samples table, samples are rows
-                samples_in_file = list(df.columns[1:]) if checkID != "D_0001" else list(df.iloc[:,0])
-                if set(samples_in_file) == set(self.samples):
-                    message = f"{expectedFile.name} exists and samples are correct"
-                    self.flagger.flag(message = message,
-                                      severity = 30,
-                                      checkID = checkID,
-                                      entity = entity)
-                else:
-                    message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
-                    self.flagger.flag(message = message,
-                                      severity = 90,
-                                      checkID = checkID,
-                                      entity = entity)
+                self._check_samples_match(expectedFile, checkID, entity)
+                if expectedFile in ["Unnormalized_Counts.csv"]:
+                    self._check_counts_match_gene_results(expectedFile, checkID, entity)
+
 
             else:
                 message = f"{expectedFile.name} does not exist"
@@ -136,6 +123,31 @@ class Deseq2ScriptOutput():
                               severity=90,
                               checkID=checkID,
                               entity = entity)
+
+    def _check_contrasts(self, _file, checkID, entity):
+        pass
+
+    def _check_samples_match(self, expectedFile, checkID, entity):
+        """ Checks that sample names match
+        """
+        # check if samples match expectation
+        df = pd.read_csv(expectedFile, header=0)
+        # in counts tables, samples are columns (excluing first column)
+        # in samples table, samples are rows
+        samples_in_file = list(df.columns[1:]) if checkID != "D_0001" else list(df.iloc[:,0])
+        if set(samples_in_file) == set(self.samples):
+            message = f"{expectedFile.name} exists and samples are correct"
+            self.flagger.flag(message = message,
+                              severity = 30,
+                              checkID = checkID,
+                              entity = entity)
+        else:
+            message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
+            self.flagger.flag(message = message,
+                              severity = 90,
+                              checkID = checkID,
+                              entity = entity)
+
 
     def _check_contrasts(self, contrasts_file, checkID, entity):
        """ Performs a check that appropriate number of contrasts generated
