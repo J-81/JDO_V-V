@@ -88,23 +88,33 @@ class Flagger():
 
     def flag(self,
              entity: str,
-             message: str,
+             debug_message: str,
              severity: int,
              checkID: str,
-             preprocess_messages: bool = True):
-        """ Given an issue, logs a flag, prints human readable message
+             preprocess_debug_messages: bool = True,
+             full_path: str = "",
+             relative_path: str = "",
+             indices: list = [],
+             entity_value: float = "NAN",
+             max_thresholds: list = [],
+             min_thresholds: list = [],
+             outlier_thresholds: list = [],
+             unique_criteria_results: str = "",
+             check_function: str = "",
+             ):
+        """ Given an issue, logs a flag, prints human readable debug_message
         """
         self._flag_count += 1
-        # not required but provides some quality of life improvements in the log messages
-        if preprocess_messages:
+        # not required but provides some quality of life improvements in the log debug_messages
+        if preprocess_debug_messages:
             # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
-            message = message.replace("][","] [")
+            debug_message = debug_message.replace("][","] [")
             # significant figure rounding for non-indice related flags
-            if "indices" not in message:
-                message = self._parse_message_and_round_values_to_sigfig(message)
+            if "indices" not in debug_message:
+                debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{message}\t{checkID}"
+        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
         #print(report)
         with open(self._log_file, "a") as f:
             f.write(report + "\n")
@@ -117,7 +127,8 @@ class Flagger():
         return pd.read_csv(self._log_file,
                            sep="\t",
                            comment="#",
-                           names=["severity","flag_id","step","script","entity","message","checkID"])
+                           names=["severity","flag_id","step","script","entity","debug_message","checkID","full_path","relative_path","indices","entity_value","max_thresholds","min_thresholds","outlier_thresholds","unique_critera_results","check_function"]
+                           )
 
     def check_sample_proportions(self,
                                  checkID: str,
@@ -138,7 +149,7 @@ class Flagger():
             # check if exceeds threshold
             if proportion > threshold:
                 self.flag(entity = "FULL_DATASET",
-                          message = (f"{proportion*100}% of samples:files "
+                          debug_message = (f"{proportion*100}% of samples:files "
                                     f"({valid_proto_count} of {total_count}) "
                                     f"meet criteria for flagging. [threshold: {threshold*100}%]"
                                     ),
@@ -148,7 +159,7 @@ class Flagger():
                 break
         if not flagged:
             self.flag(entity = "FULL_DATASET",
-                      message = (f"{proportion*100}% of samples:files "
+                      debug_message = (f"{proportion*100}% of samples:files "
                                 f"({valid_proto_count} of {total_count}) "
                                 f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
                                 ),
@@ -163,7 +174,10 @@ class Flagger():
             filter_out = [severity for flag_code, severity
                           in FLAG_LEVELS.items()
                           if flag_code <= 30]
+            # remove non-issue rows
             derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
+            # remove columns
+            derived_df = derived_df.drop(["full_path"], axis=1)
             derived_df.to_csv(self._log_folder / output, index=False, sep="\t")
             print(f">>> Created {output}: Derived from {self._log_file}")
         elif log_type == "by-sample":
@@ -188,8 +202,8 @@ class Flagger():
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
 
-    def _parse_message_and_round_values_to_sigfig(self,
-                                                  message,
+    def _parse_debug_message_and_round_values_to_sigfig(self,
+                                                  debug_message,
                                                   sigfigs = 2,
                                                   ignore_ints = True):
         def is_number(x):
@@ -198,8 +212,8 @@ class Flagger():
                 return True
             except ValueError:
                 return False
-        words = message.split()
-        new_message = list()
+        words = debug_message.split()
+        new_debug_message = list()
         for i, word in enumerate(words):
             # also catch values that look like this
             # [value: 52.0000000] <- notice the trailing square bracket!
@@ -219,5 +233,5 @@ class Flagger():
             # add back square bracket if removed
             if hasTrailingBracket:
                 word += "]"
-            new_message.append(word)
-        return " ".join(new_message)
+            new_debug_message.append(word)
+        return " ".join(new_debug_message)

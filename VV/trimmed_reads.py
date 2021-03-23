@@ -54,12 +54,12 @@ def validate_verify(samples: list[str],
                 missing_file.append(file_label)
         if len(missing_files) != 0:
             flagger.flag(entity = sample,
-                         message = f"Missing expected files for {missing_files}",
+                         debug_message = f"Missing expected files for {missing_files}",
                          severity = 90,
                          checkID = checkID)
         else:
             flagger.flag(entity = sample,
-                         message = f"All expected files present: {expected_file_lables}",
+                         debug_message = f"All expected files present: {expected_file_lables}",
                          severity = 30,
                          checkID = checkID)
     ### DONE R_0001 ###################################################
@@ -75,12 +75,12 @@ def validate_verify(samples: list[str],
                                              count_lines_to_check = lines_to_check)
             if passed:
                 flagger.flag(entity = entity,
-                             message = f"File headers appear fine up to line {lines_to_check}",
+                             debug_message = f"File headers appear fine up to line {lines_to_check}",
                              severity = 30,
                              checkID = checkID)
             else:
                 flagger.flag(entity = entity,
-                             message = f"File headers not detected for {details}",
+                             debug_message = f"File headers not detected for {details}",
                              severity = 60,
                              checkID = checkID)
     ### DONE R_0002 ###################################################
@@ -127,7 +127,7 @@ def _check_headers(file, count_lines_to_check: int) -> int:
     lines_with_issues = list()
 
     passes = True
-    message = ""
+    debug_message = ""
     with gzip.open(file, "rb") as f:
         for i, line in enumerate(f):
             # checks if lines counted equals the limit input
@@ -150,10 +150,10 @@ def _check_headers(file, count_lines_to_check: int) -> int:
                 pass
     if len(lines_with_issues) != 0:
         passes = False
-        message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
+        debug_message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
     else:
-        message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
-    return (passes, message)
+        debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
+    return (passes, debug_message)
 
 def validate_verify_multiqc(samples: list[str],
                             multiqc_json: Path,
@@ -190,12 +190,12 @@ def validate_verify_multiqc(samples: list[str],
             pairs_match = forward_count == reverse_count
             if pairs_match:
                 flagger.flag(entity = entity,
-                             message = f"Total Count of reads matches between pairs.",
+                             debug_message = f"Total Count of reads matches between pairs.",
                              severity = 30,
                              checkID = checkID)
             else:
                 flagger.flag(entity = entity,
-                             message = f"Total Count of reads does NOT matches between pairs.",
+                             debug_message = f"Total Count of reads does NOT matches between pairs.",
                              severity = 90,
                              checkID = checkID)
     ### DONE T_1001 ###################################################
@@ -221,7 +221,7 @@ def validate_verify_multiqc(samples: list[str],
                     outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
                     if len(outliers_for_sample) != 0:
                         flagger.flag(entity = entity,
-                                     message = (f"Outliers detected by sequence "
+                                     debug_message = (f"Outliers detected by sequence "
                                                f"length bin. This indicates sequence length "
                                                f"distribution may vary by sample. "
                                                f"See the following x-indices "
@@ -232,7 +232,7 @@ def validate_verify_multiqc(samples: list[str],
                         break
                 if not flagged:
                     flagger.flag(entity = entity,
-                                 message = (f"Sequence length varies "
+                                 debug_message = (f"Sequence length varies "
                                             f"across samples; however, "
                                             f"no outliers detected by "
                                             f"sequence length bin [deviation > {threshold}]."),
@@ -246,10 +246,10 @@ def validate_verify_multiqc(samples: list[str],
         for sample in samples:
             entity = sample
             flagger.flag(entity = entity,
-                         message = ("Average sequence lengths across all samples matches. "\
+                         debug_message = ("Average sequence lengths across all samples matches. "\
                                    "Reason: MultiQC did not graph average sequence "\
                                    "lengths.  This happens when the graph is replace "\
-                                   "with a message indicating 'All samples have "\
+                                   "with a debug_message indicating 'All samples have "\
                                    "sequences of a single length'"),
                          severity = 30,
                          checkID = checkID)
@@ -288,7 +288,7 @@ def validate_verify_multiqc(samples: list[str],
                                    entity = entity,
                                    value_alias = key,
                                    middlepoint = cutoffs["middlepoint"],
-                                   message_prefix = "Sample:File_Label vs Samples")
+                                   debug_message_prefix = "Sample:File_Label vs Samples")
 
     #######################################################
     # Checks against index values
@@ -315,7 +315,7 @@ def validate_verify_multiqc(samples: list[str],
                     outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
                     if len(outliers_for_sample) != 0:
                         flagger.flag(entity = entity,
-                                     message = (f"<Sample:Filelabel:bin vs AllSamples:Filelabel:bin> Outliers detected by {bin_units} "
+                                     debug_message = (f"<Sample:Filelabel:bin vs AllSamples:Filelabel:bin> Outliers detected by {bin_units} "
                                               f" bin. This indicates {bin_units} "
                                               f"distribution may vary by sample. "
                                               f"See the following x-indices in {key} "
@@ -326,7 +326,7 @@ def validate_verify_multiqc(samples: list[str],
                 # log passes
                 if not flagged:
                     flagger.flag(entity = entity,
-                                 message = (f"No outliers detected for {key} [deviation > {threshold}]."),
+                                 debug_message = (f"No outliers detected for {key} [deviation > {threshold}]."),
                                  severity = 30,
                                  checkID = checkID)
 
@@ -358,7 +358,7 @@ def validate_verify_multiqc(samples: list[str],
                                    entity = entity,
                                    value_alias = f"{key}-aggregated by {cutoffs_key}",
                                    middlepoint = cutoffs["middlepoint"],
-                                   message_prefix = "Sample:File_Label vs Samples")
+                                   debug_message_prefix = "Sample:File_Label vs Samples")
 
 
     ### START T_1002 ##################################################
@@ -369,10 +369,10 @@ def validate_verify_multiqc(samples: list[str],
     try:
         mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
         flagger.flag(entity = "FULL_DATASET",
-                     message = ("Adaptor content across all samples is neglible (< 0.1%). "
+                     debug_message = ("Adaptor content across all samples is neglible (< 0.1%). "
                                "Reason: MultiQC did not Adaptor content. "
                                "This happens when the graph is replace "
-                               "with a message indicating 'No samples found "
+                               "with a debug_message indicating 'No samples found "
                                "with any adapter contamination > 0.1%'"),
                      severity = 60,
                      checkID = checkID)
@@ -382,10 +382,10 @@ def validate_verify_multiqc(samples: list[str],
         # this happens when neglible adaptor content is found.
         # therefore this is a pass condition for the check
         flagger.flag(entity = "FULL_DATASET",
-                     message = ("Adaptor content across all samples is neglible (< 0.1%). "
+                     debug_message = ("Adaptor content across all samples is neglible (< 0.1%). "
                                "Reason: MultiQC did not Adaptor content. "
                                "This happens when the graph is replace "
-                               "with a message indicating 'No samples found "
+                               "with a debug_message indicating 'No samples found "
                                "with any adapter contamination > 0.1%'"),
                      severity = 30,
                      checkID = checkID)

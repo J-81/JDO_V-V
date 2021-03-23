@@ -194,13 +194,17 @@ class Dataset():
         checkID = "I_0001"
         if self.isa_zip_path.is_file():
             self.flagger.flag(entity = self.entity,
-                         message = f"Found ISA zip file: {self.isa_zip_path}",
+                         debug_message = f"Found ISA zip file",
+                         full_path = self.isa_zip_path.resolve(),
+                         relative_path = self.isa_zip_path.name,
                          severity = 30,
                          checkID = checkID
                         )
         else:
             self.flagger.flag(entity = self.entity,
-                         message = f"Missing ISA zip file: {self.isa_zip_path}",
+                         debug_message = f"Missing ISA zip file",
+                         full_path = self.isa_zip_path.resolve(),
+                         relative_path = self.isa_zip_path.name,
                          severity = 90,
                          checkID = checkID
                         )
@@ -212,13 +216,13 @@ class Dataset():
             checkID = "I_0002"
             if assay_name in self.assays.keys():
                 self.flagger.flag(entity = self.entity,
-                                  message = f"Expected assay ({assay_name}) was found in ISA file as parsed.",
+                                  debug_message = f"Expected assay ({assay_name}) was found in ISA file as parsed.",
                                   severity = 30,
                                   checkID = checkID
                                  )
             else:
                 self.flagger.flag(entity = self.entity,
-                                  message = f"Expected assay ({assay_name}) not found in ISA file as parsed.",
+                                  debug_message = f"Expected assay ({assay_name}) not found in ISA file as parsed.",
                                   severity = 90,
                                   checkID = checkID
                                   )

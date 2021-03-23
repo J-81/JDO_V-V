@@ -56,7 +56,7 @@ class StarAlignments():
                                    entity = sample,
                                    value_alias = key,
                                    middlepoint = self.cutoffs["middlepoint"],
-                                   message_prefix = "Sample vs Samples")
+                                   debug_message_prefix = "Sample vs Samples")
 
     def __repr__(self):
         return f"Star Alignment Results: <{self.samples}>"
@@ -110,16 +110,16 @@ class StarAlignments():
             file_path = os.path.join(self.dir_path,sample,f"{sample}_Log.final.out")
             checkID = "S_0001"
             if not os.path.isfile(file_path):
-                message = f"Could not find {file_path}"
+                debug_message = f"Could not find {file_path}"
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 90,
                                   checkID = checkID)
                 continue
             else:
-                message = f"Found {file_path}"
+                debug_message = f"Found {file_path}"
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 30,
                                   checkID = checkID)
             with open(file_path, "r") as f:
@@ -186,16 +186,16 @@ class StarAlignments():
             # flag if errors found
             checkID = "S_0002"
             if error:
-                message = f"{log_out_file} has issue: {error}"
+                debug_message = f"{log_out_file} has issue: {error}"
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 90,
                                   checkID = checkID)
                 continue
             else:
-                message = f"{log_out_file}, no issues found"
+                debug_message = f"{log_out_file}, no issues found"
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 30,
                                   checkID = checkID)
 
@@ -240,12 +240,12 @@ class StarAlignments():
         """
         checkID = "S_0005"
         for sample in self.samples:
-            error_message = ""
+            error_debug_message = ""
             coord_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.sortedByCoord.out.bam")
             if not os.path.isfile(coord_file):
-                error_message += (f"*_Aligned.sortedByCoord.out.bam file missing")
+                error_debug_message += (f"*_Aligned.sortedByCoord.out.bam file missing")
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],
@@ -253,14 +253,14 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                error_message += (f"FAIL: samtools quick checkout output for on {coord_file}: {stdout}")
+                error_debug_message += (f"FAIL: samtools quick checkout output for on {coord_file}: {stdout}")
 
             # check transcriptome alignment file
             transcript_file = os.path.join(self.dir_path,
                                       sample,
                                       f"{sample}_Aligned.toTranscriptome.out.bam")
             if not os.path.isfile(transcript_file):
-                error_message += (f"*_Aligned.toTranscriptome.out.bam file missing")
+                error_debug_message += (f"*_Aligned.toTranscriptome.out.bam file missing")
 
                 continue
             # check with coord file with samtools
@@ -269,17 +269,17 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                error_message += (f"FAIL: samtools quick checkout output for on {transcript_file}: {stdout}")
+                error_debug_message += (f"FAIL: samtools quick checkout output for on {transcript_file}: {stdout}")
 
-            if error_message:
+            if error_debug_message:
                 self.flagger.flag(entity = sample,
-                                  message = error_message,
+                                  debug_message = error_debug_message,
                                   severity = 90,
                                   checkID = checkID
                                   )
             else:
                 self.flagger.flag(entity = sample,
-                                  message = "Both bam files exist and raise no issues with samtools quickcheck",
+                                  debug_message = "Both bam files exist and raise no issues with samtools quickcheck",
                                   severity=30,
                                   checkID = checkID
                                   )

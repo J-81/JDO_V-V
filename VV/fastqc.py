@@ -25,12 +25,12 @@ def validate_verify(samples: [str],
         html_file_exists = os.path.isfile(expected_html_file)
         zip_file_exists = os.path.isfile(expected_zip_file)
         if not html_file_exists or not zip_file_exists:
-            Flagger.flag(message=f"Missing {expected_html_file} and/or {expected_zip_file}",
+            Flagger.flag(debug_message=f"Missing {expected_html_file} and/or {expected_zip_file}",
                          entity=sample,
                          severity=90,
                          checkID="F_0001")
         else:
-            Flagger.flag(message=f"Missing {expected_html_file} and/or {expected_zip_file}",
+            Flagger.flag(debug_message=f"Missing {expected_html_file} and/or {expected_zip_file}",
                          entity=sample,
                          severity=30,
                          checkID="F_0001")

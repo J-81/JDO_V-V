@@ -49,25 +49,25 @@ class RsemCounts():
             # check if file exists
             checkID = "M_0001"
             if gene_count_path.is_file():
-                message = f"Gene counts file found. {gene_count_path}"
-                self.flagger.flag(entity = sample, message = message,
+                debug_message = f"Gene counts file found. {gene_count_path}"
+                self.flagger.flag(entity = sample, debug_message = debug_message,
                                   severity = 30, checkID = checkID
                                 )
             else:
-                message = f"Gene counts file NOT found. {gene_count_path}"
-                self.flagger.flag(entity = sample, message = message,
+                debug_message = f"Gene counts file NOT found. {gene_count_path}"
+                self.flagger.flag(entity = sample, debug_message = debug_message,
                                   severity = 90, checkID = checkID
                                 )
             # check if file exists
             checkID = "M_0002"
             if isoform_count_path.is_file():
-                message = f"Isoform counts file found. {isoform_count_path}"
-                self.flagger.flag(entity = sample, message = message,
+                debug_message = f"Isoform counts file found. {isoform_count_path}"
+                self.flagger.flag(entity = sample, debug_message = debug_message,
                                   severity = 30, checkID = checkID
                                 )
             else:
-                message = f"Isoform counts file NOT found. {isoform_count_path}"
-                self.flagger.flag(entity = sample, message = message,
+                debug_message = f"Isoform counts file NOT found. {isoform_count_path}"
+                self.flagger.flag(entity = sample, debug_message = debug_message,
                                   severity = 90, checkID = checkID
                                 )
             self.gene_counts[sample] = pd.read_csv(gene_count_path ,sep="\t")
@@ -110,16 +110,16 @@ class RsemCounts():
         mean_count = statistics.mean(counts_of_NonERCC_genes_expressed.values())
         for sample, count in counts_of_NonERCC_genes_expressed.items():
             if count < mean_count:
-                message = "Gene counts are less than the average."
+                debug_message = "Gene counts are less than the average."
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 50,
                                   checkID = checkID
                                 )
             else:
-                message = "Gene counts are not less than the average."
+                debug_message = "Gene counts are not less than the average."
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 30,
                                   checkID = checkID
                                 )
@@ -128,16 +128,16 @@ class RsemCounts():
         mean_count = statistics.mean(counts_of_NonERCC_isoforms_expressed.values())
         for sample, count in counts_of_NonERCC_isoforms_expressed.items():
             if count < mean_count:
-                message = "Isoform counts are less than the average."
+                debug_message = "Isoform counts are less than the average."
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 50,
                                   checkID = checkID
                                 )
             else:
-                message = "Isoform counts are not less than the average."
+                debug_message = "Isoform counts are not less than the average."
                 self.flagger.flag(entity = sample,
-                                  message = message,
+                                  debug_message = debug_message,
                                   severity = 30,
                                   checkID = checkID
                                 )
@@ -167,4 +167,4 @@ class RsemCounts():
                                        entity = entity,
                                        value_alias = key,
                                        middlepoint = cutoffs["middlepoint"],
-                                       message_prefix = "Sample vs Samples")
+                                       debug_message_prefix = "Sample vs Samples")

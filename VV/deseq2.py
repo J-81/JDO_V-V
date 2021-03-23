@@ -67,8 +67,8 @@ class Deseq2ScriptOutput():
                     self._check_counts_match_gene_results(expectedFile, checkID)
 
             else:
-                message = f"{expectedFile.name} does not exist"
-                self.flagger.flag(message=(f"Missing {expectedFile}"),
+                debug_message = f"{expectedFile.name} does not exist"
+                self.flagger.flag(debug_message=(f"Missing {expectedFile}"),
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -116,15 +116,15 @@ class Deseq2ScriptOutput():
 
                 # no file specific checks needed
                 else:
-                    message = f"{expectedFile.name} exists. No other filespecific checks requested."
-                    self.flagger.flag(message = message,
+                    debug_message = f"{expectedFile.name} exists. No other filespecific checks requested."
+                    self.flagger.flag(debug_message = debug_message,
                                       severity = 30,
                                       checkID = checkID,
                                       entity = entity)
 
             else:
-                message = f"{expectedFile.name} does not exist"
-                self.flagger.flag(message=(f"Missing {expectedFile}"),
+                debug_message = f"{expectedFile.name} does not exist"
+                self.flagger.flag(debug_message=(f"Missing {expectedFile}"),
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -136,8 +136,8 @@ class Deseq2ScriptOutput():
         missing_sample_cols = set(self.samples) - set(dge_df.columns)
         if missing_sample_cols:
             flagged = True
-            message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -154,8 +154,8 @@ class Deseq2ScriptOutput():
         missing_cols = expected_cols - set(dge_df.columns)
         if missing_cols:
             flagged = True
-            message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -169,15 +169,15 @@ class Deseq2ScriptOutput():
                 has_negative_values.append(non_negative_cols)
         if has_negative_values:
             flagged = True
-            message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
 
         if not flagged:
-            message = f"{expectedFile.name} exists, expected columns found, p.values and adj.p.values were non-negative"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists, expected columns found, p.values and adj.p.values were non-negative"
+            self.flagger.flag(debug_message=debug_message,
                               severity=30,
                               checkID=checkID,
                               entity = entity)
@@ -189,8 +189,8 @@ class Deseq2ScriptOutput():
         missing_sample_cols = set(self.samples) - set(visualization_df.columns)
         if missing_sample_cols:
             flagged = True
-            message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -211,8 +211,8 @@ class Deseq2ScriptOutput():
         missing_cols = expected_cols - set(visualization_df.columns)
         if missing_cols:
             flagged = True
-            message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
@@ -227,15 +227,15 @@ class Deseq2ScriptOutput():
                 has_negative_values.append(non_negative_cols)
         if has_negative_values:
             flagged = True
-            message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
+            self.flagger.flag(debug_message=debug_message,
                               severity=90,
                               checkID=checkID,
                               entity = entity)
 
         if not flagged:
-            message = f"{expectedFile.name} exists, expected columns found, columns datatypes were within constraints"
-            self.flagger.flag(message=message,
+            debug_message = f"{expectedFile.name} exists, expected columns found, columns datatypes were within constraints"
+            self.flagger.flag(debug_message=debug_message,
                               severity=30,
                               checkID=checkID,
                               entity = entity)
@@ -254,12 +254,12 @@ class Deseq2ScriptOutput():
             rsem_sum_of_counts = bySample_summed_gene_counts[sample]
 
             if unnorm_sum_of_counts == rsem_sum_of_counts:
-                self.flagger.flag(message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts}) matches counts from RSEM ({rsem_sum_of_counts})"),
+                self.flagger.flag(debug_message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts}) matches counts from RSEM ({rsem_sum_of_counts})"),
                                   severity=30,
                                   checkID=checkID,
                                   entity = entity)
             else:
-                self.flagger.flag(message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts})  DOES NOT match counts from RSEM ({rsem_sum_of_counts})"),
+                self.flagger.flag(debug_message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts})  DOES NOT match counts from RSEM ({rsem_sum_of_counts})"),
                                   severity=90,
                                   checkID=checkID,
                                   entity = entity)
@@ -273,14 +273,14 @@ class Deseq2ScriptOutput():
         # in samples table, samples are rows
         samples_in_file = list(df.columns[1:]) if checkID != "D_0001" else list(df.iloc[:,0])
         if set(samples_in_file) == set(self.samples):
-            message = f"{expectedFile.name} exists and samples are correct"
-            self.flagger.flag(message = message,
+            debug_message = f"{expectedFile.name} exists and samples are correct"
+            self.flagger.flag(debug_message = debug_message,
                               severity = 30,
                               checkID = checkID,
                               entity = entity)
         else:
-            message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
-            self.flagger.flag(message = message,
+            debug_message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
+            self.flagger.flag(debug_message = debug_message,
                               severity = 90,
                               checkID = checkID,
                               entity = entity)
@@ -315,12 +315,12 @@ class Deseq2ScriptOutput():
        print(f"EXPECTED: {expected_contrasts}")
 
        if count_contrasts_from_deseq2 == expected_contrasts:
-           self.flagger.flag(message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),
+           self.flagger.flag(debug_message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=30,
                              checkID=checkID,
                              entity = entity)
        else:
-           self.flagger.flag(message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2})  DOES NOT match expected contrasts based on SampleSheet ({expected_contrasts})"),
+           self.flagger.flag(debug_message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2})  DOES NOT match expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=90,
                              checkID=checkID,
                              entity = entity)

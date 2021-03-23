@@ -167,7 +167,7 @@ def value_based_checks(check_cutoffs: dict,
                 for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
                     if value > threshold:
                         flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} is over threshold of {threshold}. "
+                                        debug_message = (f"{value_alias} is over threshold of {threshold}. "
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
                                         severity = check_cutoffs["max_thresholds"][threshold],
@@ -180,7 +180,7 @@ def value_based_checks(check_cutoffs: dict,
                 for threshold in sorted(check_cutoffs["min_thresholds"]).items():
                     if value < threshold:
                         flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} is under threshold of {threshold}. "
+                                        debug_message = (f"{value_alias} is under threshold of {threshold}. "
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
                                         severity = check_cutoffs["min_thresholds"][threshold],
@@ -197,7 +197,7 @@ def value_based_checks(check_cutoffs: dict,
                 for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
                     if deviation > threshold:
                         flagger.flag(   entity = entity,
-                                        message = (f"{value_alias} flagged as outlier. "\
+                                        debug_message = (f"{value_alias} flagged as outlier. "\
                                                   f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
                                                   f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
                                                   ),
@@ -208,7 +208,7 @@ def value_based_checks(check_cutoffs: dict,
 
             if not flagged:
                 flagger.flag(entity = entity,
-                             message = f"No issues with {value_alias}. [value: {value:.7f}]",
+                             debug_message = f"No issues with {value_alias}. [value: {value:.7f}]",
                              severity = 30,
                              checkID = checkID)
 
@@ -220,7 +220,7 @@ def value_check_direct(check_cutoffs: dict,
                        entity: str,
                        value_alias: str,
                        middlepoint: str,
-                       message_prefix: str = None):
+                       debug_message_prefix: str = None):
     """ Performs checks and sends appropriate flag calls for a value.
     """
     # calculate middlepoint and standard deviation
@@ -237,7 +237,7 @@ def value_check_direct(check_cutoffs: dict,
         for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
             if value > threshold:
                 flagger.flag(   entity = entity,
-                                message = (f"<{message_prefix}> {value_alias} is over threshold of {threshold}. "
+                                debug_message = (f"<{debug_message_prefix}> {value_alias} is over threshold of {threshold}. "
                                            f"[value: {value:.7f}][threshold: {threshold}]"
                                            ),
                                 severity = check_cutoffs["max_thresholds"][threshold],
@@ -251,7 +251,7 @@ def value_check_direct(check_cutoffs: dict,
         for threshold in ascending_thresholds:
             if value < threshold:
                 flagger.flag(   entity = entity,
-                                message = (f"<{message_prefix}> {value_alias} is under threshold of {threshold}. "
+                                debug_message = (f"<{debug_message_prefix}> {value_alias} is under threshold of {threshold}. "
                                            f"[value: {value:.7f}][threshold: {threshold}]"
                                            ),
                                 severity = check_cutoffs["min_thresholds"][threshold],
@@ -268,7 +268,7 @@ def value_check_direct(check_cutoffs: dict,
         for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
             if deviation > threshold:
                 flagger.flag(   entity = entity,
-                                message = (f"<{message_prefix}> {value_alias} flagged as outlier. "\
+                                debug_message = (f"<{debug_message_prefix}> {value_alias} flagged as outlier. "\
                                           f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
                                           f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
                                           ),
@@ -279,7 +279,7 @@ def value_check_direct(check_cutoffs: dict,
 
     if not flagged:
         flagger.flag(entity = entity,
-                     message = f"<{message_prefix}> No issues with {value_alias}. [value: {value:.7f}]",
+                     debug_message = f"<{debug_message_prefix}> No issues with {value_alias}. [value: {value:.7f}]",
                      severity = 30,
                      checkID = checkID)
 
