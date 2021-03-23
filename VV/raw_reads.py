@@ -294,6 +294,7 @@ def validate_verify_multiqc(samples: list[str],
         check_params = params["raw_reads"][key]
         for sample in samples:
             for file_label in mqc.file_labels:
+                flagged = False
                 entity = f"{sample}:{file_label}"
                 cur_data_key = f"{file_label}-{key}"
                 bin_units = mqc.data[sample][cur_data_key].bin_units
