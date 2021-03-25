@@ -11,13 +11,15 @@ from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_b
 from VV.flagging import Flagger
 from VV import multiqc
 
-def validate_verify(samples: list[str],
-                    raw_reads_dir: Path,
+def validate_verify(file_mapping: dict,
                     cutoffs: dict,
                     flagger: Flagger,
-                    file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
                     ):
     """ Performs VV for raw reads for checks involving raw reads files directly
+
+    :param file_mapping: A mapping of samples to raw read file. E.g. {sample1 : {forward : sample1_R1.fastq.gz, reverse : sample1_R2.fastq.gz }}
+    :param cutoffs: A dictionary for VV cutoffs.  Based on 'cutoffs.py' in package.
+    :param flagger: Object that handles converting the flag results into a log.
     """
     print(f"Starting VV for Raw Reads based on fastq.gz files")
     ##############################################################
@@ -25,20 +27,6 @@ def validate_verify(samples: list[str],
     ##############################################################
     flagger.set_script(__name__)
     flagger.set_step("Raw Reads")
-    ##############################################################
-    # GENERATE SAMPLE TO FILE MAPPING
-    ##############################################################
-    file_mapping = dict()
-    for sample in samples:
-
-        # set up each sample entry as a dictionary
-        file_mapping[sample] = dict()
-
-        for filename in raw_reads_dir.glob(f"{sample}*.fastq.gz"):
-            file_label = label_file(str(filename), file_mapping_substrings)
-            # file patterns for paired end studies
-            # note: this may be replaced in the future using expected filenames specified in the ISA
-            file_mapping[sample][file_label] = filename
 
     ###################################################################
     # PERFROM CHECKS
@@ -46,8 +34,9 @@ def validate_verify(samples: list[str],
 
     ### START R_0001 ##################################################
     checkID = "R_0001"
-    expected_file_lables = list(file_mapping_substrings.values())
-    for sample in samples:
+    missing_file = list()
+    for sample in file_mapping.keys():
+        expected_file_lables = list(file_mapping[sample].keys())
         missing_files = list()
         for file_label in expected_file_lables:
             if not file_label in file_mapping[sample].keys():
@@ -68,7 +57,7 @@ def validate_verify(samples: list[str],
     # TODO: add header check (R_0002)
     checkID = "R_0002"
     lines_to_check = cutoffs["raw_reads"]["fastq_lines_to_check"]
-    for sample in samples:
+    for sample in file_mapping.keys():
         for filelabel, filename in file_mapping[sample].items():
             entity = f"{sample}:{filelabel}"
             passed, details = _check_headers(filename,
