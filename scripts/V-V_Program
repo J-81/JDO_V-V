@@ -35,6 +35,9 @@ def _parse_args():
     parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
                         help='INI format configuration file')
 
+    parser_RNASeq.add_argument('--sample-sheet', metavar='file.csv', required=True,
+                        help='RNASeq Sample Sheet')
+
     parser_RNASeq.add_argument('--cutoffs_file', metavar='file.py', default=None,
                         help=f"Override cutoffs set with custom file. " \
                              f"This file MUST match the format for each entry in "\
@@ -93,6 +96,7 @@ if __name__ == '__main__':
     args = _parse_args()
     if args.subcommand == "RNASeq":
         RNASeq_VV.main(load_config(args.config),
+                       Path(args.sample_sheet),
                        load_cutoffs(args.cutoffs_file, args.cutoffs_set))
 
     elif args.subcommand == "CUTOFFS":

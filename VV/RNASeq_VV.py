@@ -16,7 +16,7 @@ from VV.rsem import RsemCounts
 from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
 
-def main(config, cutoffs):
+def main(config, sample_sheet_path, cutoffs):
     """ Calls raw and processed data V-V functions
 
     :param config: configuration object
@@ -29,21 +29,10 @@ def main(config, cutoffs):
     flagger = Flagger(__file__,
                       halt_level = config["Logging"].getint("HaltSeverity"))
     ########################################################################
-    # ISA File parsing
-    ########################################################################
-    isa_zip_path = Path(config["Paths"].get("ISAZip"))
-    isa = Dataset(isa_zip_path = isa_zip_path,
-                  flagger = flagger,
-                  entity = f"GLDS-{config['GLDS'].get('Number')}")
-    isa.validate_verify(vv_for = "RNASeq")
-    samples = isa.get_sample_names(assay_name = "transcription profiling by RNASeq")
-    ########################################################################
     # RNASeqSampleSheet Parsing
     ########################################################################
     cross_checks = dict()
-    samplesheet_path = Path(config["Paths"].get("SampleSheetPath"))
-    samplesheet_cross_check = RNASeqSampleSheet(samplesheet = samplesheet_path).cross_check
-    cross_checks["SampleSheet"] = samplesheet_cross_check
+    sample_sheet = RNASeqSampleSheet(sample_sheet = sample_sheet_path).df
     ########################################################################
     # Raw Read VV
     ########################################################################

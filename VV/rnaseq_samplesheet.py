@@ -8,11 +8,8 @@ class RNASeqSampleSheet():
     """ Holds data for RNASeq samplesheet
     """
     def __init__(self,
-                 samplesheet: Path):
+                 sample_sheet: Path):
 
-        self.samplesheet_path = samplesheet
+        self.sample_sheet_path = sample_sheet
 
-        self.df = pd.read_csv(self.samplesheet_path)
-
-        self.cross_check = dict()
-        self.cross_check["DF"] = self.df
+        self.df = pd.read_csv(self.sample_sheet_path)
