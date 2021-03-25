@@ -4,6 +4,7 @@
 Called by V-V_Program.  Not intended for direct use.
 """
 from pathlib import Path
+import os
 
 from VV import raw_reads
 from VV import trimmed_reads
@@ -32,17 +33,21 @@ def main(config, sample_sheet_path, cutoffs):
     # RNASeqSampleSheet Parsing
     ########################################################################
     cross_checks = dict()
-    sample_sheet = RNASeqSampleSheet(sample_sheet = sample_sheet_path).df
+    sample_sheet = RNASeqSampleSheet(sample_sheet = sample_sheet_path)
+    # switch working directory to where data is located
+    if config["Paths"].get("DataPath"):
+        print(f"Changing working directory to {config['Paths'].get('DataPath')}")
+        os.chdir(Path(config["Paths"].get("DataPath")))
     ########################################################################
     # Raw Read VV
     ########################################################################
-    raw_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("RawReadDir")),
-                              samples = samples,
+    raw_reads.validate_verify(raw_reads_dir = sample_sheet.raw_reads_dir,
+                              samples = sample_sheet.samples,
                               flagger = flagger,
                               cutoffs = cutoffs
                               )
-    raw_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("RawMultiQCDir")) / "multiqc_data.json",
-                                      samples = samples,
+    raw_reads.validate_verify_multiqc(multiqc_json = Path(sample_sheet.raw_read_multiqc),
+                                      samples = sample_sheet.samples,
                                       flagger = flagger,
                                       cutoffs = cutoffs,
                                       outlier_comparision_point = "median")
@@ -51,16 +56,17 @@ def main(config, sample_sheet_path, cutoffs):
     ########################################################################
     # Trimmed Read VV
     ########################################################################
-    trimmed_reads.validate_verify(raw_reads_dir = Path(config["Paths"].get("TrimmedReadDir")),
-                              samples = samples,
-                              flagger = flagger,
-                              cutoffs = cutoffs
-                              )
-    trimmed_reads.validate_verify_multiqc(multiqc_json = Path(config["Paths"].get("TrimmedMultiQCDir")) / "multiqc_data.json",
-                                      samples = samples,
-                                      flagger = flagger,
-                                      cutoffs = cutoffs,
-                                      outlier_comparision_point = "median")
+    trimmed_reads.validate_verify(raw_reads_dir = sample_sheet.trimmed_reads_dir,
+                                  samples = sample_sheet.samples,
+                                  flagger = flagger,
+                                  cutoffs = cutoffs
+                                  )
+    trimmed_reads.validate_verify_multiqc(multiqc_json = Path(sample_sheet.trimmed_read_multiqc),
+                                          samples = sample_sheet.samples,
+                                          flagger = flagger,
+                                          cutoffs = cutoffs,
+                                          outlier_comparision_point = "median")
+    1/0
     ###########################################################################
     # STAR Alignment VV
     ###########################################################################
