@@ -23,9 +23,9 @@ class RNASeqSampleSheet():
 
         # setup filemappings
         if self.paired_end:
-            self.raw_reads = {sample:{"forward":df["raw_read1"][i], "forward":df["raw_read2"][i]} for i,sample in enumerate(self.samples)}
+            self.raw_reads = {sample:{"forward":Path(df["raw_read1"][i]), "reverse":Path(df["raw_read2"][i])} for i,sample in enumerate(self.samples)}
         else:
-            self.raw_reads = {sample:{"read":df["raw_read1"][i]} for i,sample in enumerate(self.samples)}
+            self.raw_reads = {sample:{"read":Path(df["raw_read1"][i])} for i,sample in enumerate(self.samples)}
         # somewhat patchy, depracated in favor of VV using mapping as arg instead of doing it within the process
         self.raw_reads_dir = Path(df["raw_read1"][0]).parent
         self.trimmed_reads_dir = Path(df["trimmed_read1"][0]).parent
