@@ -44,28 +44,30 @@ class Flagger():
 
         # if a file is supplied
         if log_to:
+            # use absolute path
+            log_to = log_to.resolve()
             # if the file already exists (we are appending results to it)
             if log_to.is_file():
                 log_to_relative_to_cwd = log_to.absolute().relative_to(Path.cwd())
                 print(f"Supplied Existing VV flag log: flag output going into {str(log_to_relative_to_cwd)}")
-                self._log_file = Path(log_to)
+                self._log_file = log_to
                 self._log_folder = self._log_file.parent
                 with open(self._log_file, "a+") as f:
                     f.write(f"#Next Python Command: {' '.join(sys.argv)}\n")
             # if the file does not exist, we want to start the file
             else:
                 print(f"Could not find existing log file: {str(log_to)}")
-                self._log_file = Path(log_to)
+                self._log_file = log_to
                 self._log_folder = self._log_file.parent
                 self._start_log_file()
         else:
             print("No existing log file given, starting new log file")
-            self._set_timestamped_logfile()
+            self._start_logfile()
             self._start_log_file()
 
-    def _set_timestamped_logfile(self):
+    def _start_logfile(self):
         """ sets log file and log folder """
-        self._log_folder = Path("VV_output") / Path(self.timestamp)
+        self._log_folder = Path("VV_output").resolve()
         self._log_folder.mkdir(exist_ok=True, parents=True)
         log_filename = f"VV-Results.tsv"
         self._log_file  = self._log_folder / log_filename
@@ -73,7 +75,7 @@ class Flagger():
     def _start_log_file(self):
         """ Starts a new full log file with a comment header
         """
-        print(f"Starting new log file: {self._log_file}")
+        print(f"Starting new log file: {self._log_file.relative_to(Path.cwd())}")
         with open(self._log_file, "w") as f:
             f.write("#START OF VV RUN:\n")
             f.write(f"#Time started: {self.timestamp}\n")
