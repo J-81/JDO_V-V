@@ -159,7 +159,7 @@ CUTOFFS = \
             "percent_duplicates" :{
                 "max_thresholds" : {
                     60 : 60,
-                    50 : 40,
+                    40 : 50,
                 },
                 "min_thresholds" : {},
                 "outlier_thresholds" : {
