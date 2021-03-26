@@ -207,7 +207,7 @@ class Flagger():
                     f.write(f"ENTITY: {entity}\n")
                     for _, row in entity_df.iterrows():
                         message = row['user_message'] if not math.isnan(row['user_message']) else row['debug_message']
-                        report_line = f"Issue: {message}\tSeverity: {row['flag_id']}\tCheckID: {row['checkID']}"
+                        report_line = f"Issue: {message}\tSeverity: {FLAG_LEVELS[row['flag_id']]} ({row['flag_id']})\tCheckID: {row['checkID']}"
                         f.write(f"\t{report_line}\n")
 
             print(f">>> Created {output}: Derived from {self._log_file}")
