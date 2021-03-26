@@ -80,6 +80,7 @@ def main(config, sample_sheet_path, cutoffs):
     rsem_cross_check =   RsemCounts(samples= sample_sheet.samples,
                                    dir_path= sample_sheet.RSEM_Counts_dir,
                                    flagger = flagger,
+                                   has_ERCC = sample_sheet.has_ERCC,
                                    cutoffs = cutoffs).cross_check
     cross_checks["RSEM"] = rsem_cross_check
     ###########################################################################
@@ -90,6 +91,7 @@ def main(config, sample_sheet_path, cutoffs):
                        dge_dir_path = sample_sheet.DESeq2_DGE,
                        flagger = flagger,
                        cutoffs = cutoffs,
+                       has_ERCC = sample_sheet.has_ERCC,
                        cross_checks = cross_checks)
 
     print(f"{'='*40}")

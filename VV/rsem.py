@@ -20,7 +20,8 @@ class RsemCounts():
                  samples: str,
                  dir_path: str,
                  flagger: Flagger,
-                 cutoffs: dict
+                 cutoffs: dict,
+                 has_ERCC: bool
                  ):
         print(f"Starting VV for RSEM counting output")
         ##############################################################
@@ -30,6 +31,7 @@ class RsemCounts():
         flagger.set_step("RSEM")
         self.flagger = flagger
         self.cutoffs = cutoffs
+        self.has_ERCC = has_ERCC
 
         # start data extraction and VV
         self.samples = samples
@@ -147,7 +149,7 @@ class RsemCounts():
         checkIDs_to_keys = {"M_0005":("count_of_unique_genes_expressed", counts_of_genes_expressed),
                             "M_0006":("count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
                             }
-        if self.cutoffs["hasERCC"]:
+        if self.has_ERCC:
             checkIDs_to_keys["M_0007"] = ("count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected)
         for checkID, (key, df_dict) in checkIDs_to_keys.items():
             # compile all values for all file labels

@@ -9,7 +9,6 @@ CUTOFFS = \
 {
     "DEFAULT" : {
         "middlepoint": "median",
-        "hasERCC": True,
         "raw_reads": {
             "fastq_lines_to_check" : 10000,
             "sequence_length" : {
