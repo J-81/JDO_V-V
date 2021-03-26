@@ -162,7 +162,7 @@ class MultiQC():
             for filelabel, search_file in file_map.items():
                 # search_file: # has extension and parent paths, these are removed when comparing
                 # query_filename: sample1_R1 # notice no extension
-                if search_file.with_suffix("").with_suffix("").name ==  query_filename:
+                if query_filename in search_file:
                     if not matched:
                         matched = (sample, filelabel)
                     else:
