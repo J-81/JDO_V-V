@@ -45,8 +45,8 @@ class RsemCounts():
         self.cross_check = dict()
 
         for sample in samples:
-            gene_count_path = self.dir_path / sample / f"{sample}.genes.results"
-            isoform_count_path = self.dir_path / sample / f"{sample}.isoforms.results"
+            gene_count_path = self.dir_path  / f"{sample}.genes.results"
+            isoform_count_path = self.dir_path  / f"{sample}.isoforms.results"
 
             # check if file exists
             checkID = "M_0001"
