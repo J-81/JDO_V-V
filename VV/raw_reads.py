@@ -35,20 +35,23 @@ def validate_verify(file_mapping: dict,
     ### START R_0001 ##################################################
     checkID = "R_0001"
     missing_file = list()
-    for sample in file_mapping.keys():
-        expected_file_lables = list(file_mapping[sample].keys())
+    for sample, file_map in file_mapping.items():
         missing_files = list()
-        for file_label in expected_file_lables:
-            if not file_label in file_mapping[sample].keys():
-                missing_file.append(file_label)
+        for filelabel, file in file_map.items():
+            if not file.is_file():
+                missing_files.append(file)
         if len(missing_files) != 0:
             flagger.flag(entity = sample,
-                         debug_message = f"Missing expected files for {missing_files}",
+                         user_message = "Raw read files missing",
+                         debug_message = f"Missing files. See full_path and/or relative_path.",
+                         full_path = " ".join([str(missing.resolve()) for missing in missing_files]),
+                         relative_path = " ".join([missing.name for missing in missing_files]),
                          severity = 90,
                          checkID = checkID)
         else:
             flagger.flag(entity = sample,
-                         debug_message = f"All expected files present: {expected_file_lables}",
+                         user_message = "Raw read files exist.",
+                         debug_message = "Raw read files exist.",
                          severity = 30,
                          checkID = checkID)
     ### DONE R_0001 ###################################################
