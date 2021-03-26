@@ -81,6 +81,7 @@ class Flagger():
              debug_message: str,
              severity: int,
              checkID: str,
+             user_message: str = "",
              preprocess_debug_messages: bool = True,
              full_path: str = "",
              relative_path: str = "",
@@ -104,7 +105,7 @@ class Flagger():
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
+        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{user_message}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
         #print(report)
         with open(self._log_file, "a") as f:
             f.write(report + "\n")
@@ -117,7 +118,7 @@ class Flagger():
         return pd.read_csv(self._log_file,
                            sep="\t",
                            comment="#",
-                           names=["severity","flag_id","step","script","entity","debug_message","checkID","full_path","relative_path","indices","entity_value","max_thresholds","min_thresholds","outlier_thresholds","unique_critera_results","check_function"]
+                           names=["severity","flag_id","step","script","entity","user_message","debug_message","checkID","full_path","relative_path","indices","entity_value","max_thresholds","min_thresholds","outlier_thresholds","unique_critera_results","check_function"]
                            )
 
     def check_sample_proportions(self,
