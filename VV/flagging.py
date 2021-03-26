@@ -185,7 +185,7 @@ class Flagger():
         elif log_type == "by-sample":
             full_df = self._get_log_as_df()
             parent_dir = self._log_folder / Path("bySample")
-            parent_dir.mkdir()
+            parent_dir.mkdir(exist_ok=True)
             for sample in samples:
                 output = parent_dir / f"{sample}__{self._log_file.name}"
                 derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
@@ -194,7 +194,7 @@ class Flagger():
         elif log_type == "by-step":
             full_df = self._get_log_as_df()
             parent_dir = self._log_folder / Path("byStep")
-            parent_dir.mkdir()
+            parent_dir.mkdir(exist_ok=True)
             for step in full_df["step"].unique():
                 # remove spaces in step for filename
                 output = parent_dir / f"{step.replace(' ', '_')}__{self._log_file.name}"
