@@ -41,7 +41,7 @@ def _parse_args():
                         help=f"The minimum level of severity that will raise a V&V based program halt.  Levels are defined as follows: {FLAG_LEVELS}")
 
     parser_RNASeq.add_argument('--output', metavar='VV_log.tsv', default="VV_Log/VV_log.tsv",
-                        help='Output path for VV_log.tsv')
+                        help='Output path for log files. Derivate log files will also be generated in the same directory as the full log file.')
 
     parser_RNASeq.add_argument('--overwrite', action='store_true', default=False,
                         help='Allows the program to overwrite an existing log at the log output path')
