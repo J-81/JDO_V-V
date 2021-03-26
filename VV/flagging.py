@@ -30,8 +30,8 @@ class Flagger():
     def __init__(self,
                  script: str,
                  halt_level: int,
-                 step: str = "General VV",
-                 log_to: Path = None):
+                 log_to: Path,
+                 step: str = "General VV"):
         self._script = script # location of flagging script
         self._step = step # location of flagging script
         self._severity = FLAG_LEVELS
@@ -42,35 +42,23 @@ class Flagger():
         # timestamp only used for new logs
         self.timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
 
-        # if a file is supplied
-        if log_to:
-            # use absolute path
-            log_to = log_to.resolve()
-            # if the file already exists (we are appending results to it)
-            if log_to.is_file():
-                log_to_relative_to_cwd = log_to.absolute().relative_to(Path.cwd())
-                print(f"Supplied Existing VV flag log: flag output going into {str(log_to_relative_to_cwd)}")
-                self._log_file = log_to
-                self._log_folder = self._log_file.parent
-                with open(self._log_file, "a+") as f:
-                    f.write(f"#Next Python Command: {' '.join(sys.argv)}\n")
-            # if the file does not exist, we want to start the file
-            else:
-                print(f"Could not find existing log file: {str(log_to)}")
-                self._log_file = log_to
-                self._log_folder = self._log_file.parent
-                self._start_log_file()
+        # use absolute path
+        log_to = log_to.resolve()
+        # if the file already exists (we are appending results to it)
+        if log_to.is_file():
+            log_to_relative_to_cwd = log_to.absolute().relative_to(Path.cwd())
+            print(f"Supplied Existing VV flag log: flag output going into {str(log_to_relative_to_cwd)}")
+            self._log_file = log_to
+            self._log_folder = self._log_file.parent
+            with open(self._log_file, "a+") as f:
+                f.write(f"#Next Python Command: {' '.join(sys.argv)}\n")
+        # if the file does not exist, we want to start the file
         else:
-            print("No existing log file given, starting new log file")
-            self._start_logfile()
+            print(f"Could not find existing log file: {str(log_to)}")
+            self._log_file = log_to
+            self._log_folder = self._log_file.parent
+            self._log_folder.mkdir(exist_ok=True, parents=True)
             self._start_log_file()
-
-    def _start_logfile(self):
-        """ sets log file and log folder """
-        self._log_folder = Path("VV_output").resolve()
-        self._log_folder.mkdir(exist_ok=True, parents=True)
-        log_filename = f"VV-Results.tsv"
-        self._log_file  = self._log_folder / log_filename
 
     def _start_log_file(self):
         """ Starts a new full log file with a comment header

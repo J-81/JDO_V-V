@@ -17,10 +17,14 @@ from VV.rsem import RsemCounts
 from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
 
-def main(config, sample_sheet_path, cutoffs):
+def main(data_dir: Path,
+         halt_severity: int,
+         output_path: Path,
+         sample_sheet_path: Path,
+         cutoffs: dict):
     """ Calls raw and processed data V-V functions
 
-    :param config: configuration object
+
     """
     program_header = "STARTING VV for Data Processed by RNASeq Consenus Pipeline"
     print(f"{'┅'*(len(program_header)+4)}")
@@ -28,7 +32,8 @@ def main(config, sample_sheet_path, cutoffs):
     print(f"{'┅'*(len(program_header)+4)}")
     # set up flagger
     flagger = Flagger(__file__,
-                      halt_level = config["Logging"].getint("HaltSeverity"))
+                      log_to = output_path,
+                      halt_level = halt_severity)
     ########################################################################
     # RNASeqSampleSheet Parsing
     ########################################################################
@@ -36,9 +41,9 @@ def main(config, sample_sheet_path, cutoffs):
     sample_sheet = RNASeqSampleSheet(sample_sheet = sample_sheet_path)
     cross_checks["SampleSheet"] = sample_sheet
     # switch working directory to where data is located
-    if config["Paths"].get("DataPath"):
-        print(f"Changing working directory to {config['Paths'].get('DataPath')}")
-        os.chdir(Path(config["Paths"].get("DataPath")))
+    if data_dir != Path(os.getcwd()):
+        print(f"Changing working directory to {data_dir}")
+        os.chdir(data_dir)
     ########################################################################
     # Raw Read VV
     ########################################################################

@@ -5,16 +5,18 @@
 # Imports
 ##############################################################
 import sys
+import os
 import argparse
 from pathlib import Path
 
-from VV.utils import load_cutoffs, load_config
+from VV.utils import load_cutoffs
 from VV.cutoffs import CUTOFFS as MODULECUTOFFS
 from VV import cutoffs
 DEFAULT_CUTOFFS_FILE = cutoffs.__file__
 
 from VV import RNASeq_VV
 from VV import __version__
+from VV.flagging import FLAG_LEVELS
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
@@ -32,20 +34,29 @@ def _parse_args():
     parser_RNASeq = subparsers.add_parser('RNASeq',
         help='Perform Automated V&V on data processed through the GeneLab RNASeq Consensus Pipeline')
 
-    parser_RNASeq.add_argument('--config', metavar='file.config', nargs='+', required=True,
-                        help='INI format configuration file')
+    parser_RNASeq.add_argument('--data-dir', metavar='GLDS-000', default=os.getcwd(),
+                        help='Directory containing the data to V&V.  The sample sheet paths MUST be relative to this directory.')
+
+    parser_RNASeq.add_argument('--halt-severity', metavar='{1..100}', default=90,
+                        help=f"The minimum level of severity that will raise a V&V based program halt.  Levels are defined as follows: {FLAG_LEVELS}")
+
+    parser_RNASeq.add_argument('--output', metavar='VV_log.tsv', default="VV_Log/VV_log.tsv",
+                        help='Output path for VV_log.tsv')
+
+    parser_RNASeq.add_argument('--overwrite', action='store_true', default=False,
+                        help='Allows the program to overwrite an existing log at the log output path')
 
     parser_RNASeq.add_argument('--sample-sheet', metavar='file.csv', required=True,
                         help='RNASeq Sample Sheet')
 
-    parser_RNASeq.add_argument('--cutoffs_file', metavar='file.py', default=None,
+    parser_RNASeq.add_argument('--cutoffs-file', metavar='file.py', default=None,
                         help=f"Override cutoffs set with custom file. " \
                              f"This file MUST match the format for each entry in "\
                              f"this modules VV/cutoffs.py file. "\
                              f"A copy of the default cutoffs set can be created "\
                              f"with the --create_cutoffs_file subcommand. ")
 
-    parser_RNASeq.add_argument('--cutoffs_set', default="DEFAULT",
+    parser_RNASeq.add_argument('--cutoffs-set', default="DEFAULT",
                         help=f"Parameter set to use. " \
                              f"located in cutoffs file. "\
                              f"Available cutoffs sets: {list(MODULECUTOFFS.keys())}")
@@ -54,13 +65,13 @@ def _parse_args():
     parser_CUTOFFS = subparsers.add_parser('Cutoffs',
         help='Handle V&V cutoffs files to examine flagging thresholds and settings')
 
-    parser_CUTOFFS.add_argument('--copy_module_cutoffs_file', action='store_true',
+    parser_CUTOFFS.add_argument('--copy-module-cutoffs-file', action='store_true',
                         help=f"Creates cutoffs file in current directory for "\
                              f"custom cutoffs sets. When using this custom "\
                              f"cutoffs file.  Make sure to indicate "\
                              f"this file using --cutoffs_file!")
 
-    parser_CUTOFFS.add_argument('--list_cutoffs_sets', action="append", nargs="?",
+    parser_CUTOFFS.add_argument('--list-cutoffs-sets', action="append", nargs="?",
                         help=f"Lists cutoffs sets found in a cutoffs file " \
                              f"If no file is specified, the module's cutoffs file "\
                              f"cutoffs sets are listed.")
@@ -92,12 +103,19 @@ if __name__ == '__main__':
     print(f"{'┅'*(len(program_header)+4)}")
     print(f"┇ {program_header} ┇")
     print(f"{'┅'*(len(program_header)+4)}")
-    # parse commandline args and read config file
+    # parse commandline args
     args = _parse_args()
+    #print(vars(args))
     if args.subcommand == "RNASeq":
-        RNASeq_VV.main(load_config(args.config),
-                       Path(args.sample_sheet),
-                       load_cutoffs(args.cutoffs_file, args.cutoffs_set))
+        if args.overwrite and Path(args.output).is_file():
+            print(f"Overwriting existing log file: {Path(args.output)}")
+            Path(args.output).unlink()
+        RNASeq_VV.main(data_dir = Path(args.data_dir),
+                       halt_severity = int(args.halt_severity),
+                       output_path = Path(args.output),
+                       sample_sheet_path = Path(args.sample_sheet),
+                       cutoffs = load_cutoffs(args.cutoffs_file, args.cutoffs_set)
+                       )
 
     elif args.subcommand == "CUTOFFS":
         if args.copy_module_cutoffs_file:
