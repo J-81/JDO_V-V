@@ -158,7 +158,7 @@ class Flagger():
                       checkID = checkID)
 
     def generate_derivative_log(self, log_type: str, samples: list):
-        known_log_types = ["only-issues", "by-sample", "by-step"]
+        known_log_types = ["only-issues", "by-sample", "by-step", "all-by-entity"]
         if log_type == "only-issues":
             full_df = self._get_log_as_df()
             output = f"{log_type}__{self._log_file.name}"
@@ -190,6 +190,27 @@ class Flagger():
                 derived_df = full_df.loc[full_df["step"] == step]
                 derived_df.to_csv(output, index=False, sep="\t")
                 print(f">>> Created {output}: Derived from {self._log_file}")
+        elif log_type == "all-by-entity":
+            full_df = self._get_log_as_df()
+            output = self._log_folder / f"{log_type}__{Path(self._log_file.name).with_suffix('.txt')}"
+            filter_out = [severity for flag_code, severity
+                          in FLAG_LEVELS.items()
+                          if flag_code <= 30]
+            # remove non-issue rows
+            derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
+            # remove columns
+            derived_df = derived_df.drop(["full_path"], axis=1)
+            with open(output, "w") as f:
+                # iterate by unique entities
+                for entity in derived_df["entity"].unique():
+                    entity_df = derived_df.loc[derived_df["entity"] == entity]
+                    f.write(f"ENTITY: {entity}\n")
+                    for _, row in entity_df.iterrows():
+                        message = row['user_message'] if not math.isnan(row['user_message']) else row['debug_message']
+                        report_line = f"Issue: {message}\tSeverity: {row['flag_id']}\tCheckID: {row['checkID']}"
+                        f.write(f"\t{report_line}\n")
+
+            print(f">>> Created {output}: Derived from {self._log_file}")
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
 

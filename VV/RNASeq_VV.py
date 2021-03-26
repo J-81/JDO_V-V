@@ -105,7 +105,7 @@ def main(data_dir: Path,
     ###########################################################################
     # Generate derivative log files
     ###########################################################################
-    for log_type in ["only-issues", "by-sample", "by-step"]:
+    for log_type in ["only-issues", "by-sample", "by-step","all-by-entity"]:
         flagger.generate_derivative_log(log_type = log_type,
                                         samples = sample_sheet.samples)
     # Return flagger at successful completion
