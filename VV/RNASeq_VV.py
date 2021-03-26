@@ -34,6 +34,7 @@ def main(config, sample_sheet_path, cutoffs):
     ########################################################################
     cross_checks = dict()
     sample_sheet = RNASeqSampleSheet(sample_sheet = sample_sheet_path)
+    cross_checks["SampleSheet"] = sample_sheet
     # switch working directory to where data is located
     if config["Paths"].get("DataPath"):
         print(f"Changing working directory to {config['Paths'].get('DataPath')}")
@@ -41,53 +42,52 @@ def main(config, sample_sheet_path, cutoffs):
     ########################################################################
     # Raw Read VV
     ########################################################################
-    raw_reads.validate_verify(raw_reads_dir = sample_sheet.raw_reads_dir,
-                              samples = sample_sheet.samples,
+    raw_reads.validate_verify(file_mapping = sample_sheet.raw_reads,
                               flagger = flagger,
                               cutoffs = cutoffs
                               )
-    raw_reads.validate_verify_multiqc(multiqc_json = Path(sample_sheet.raw_read_multiqc),
-                                      samples = sample_sheet.samples,
+    raw_reads.validate_verify_multiqc(multiqc_json = sample_sheet.raw_read_multiqc,
+                                      file_mapping = sample_sheet.raw_reads,
                                       flagger = flagger,
                                       cutoffs = cutoffs,
-                                      outlier_comparision_point = "median")
+                                      outlier_comparision_point = "median",
+                                      paired_end = sample_sheet.paired_end)
 
 
     ########################################################################
     # Trimmed Read VV
     ########################################################################
-    trimmed_reads.validate_verify(raw_reads_dir = sample_sheet.trimmed_reads_dir,
-                                  samples = sample_sheet.samples,
+    trimmed_reads.validate_verify(file_mapping = sample_sheet.trimmed_reads,
                                   flagger = flagger,
                                   cutoffs = cutoffs
                                   )
-    trimmed_reads.validate_verify_multiqc(multiqc_json = Path(sample_sheet.trimmed_read_multiqc),
-                                          samples = sample_sheet.samples,
+    trimmed_reads.validate_verify_multiqc(multiqc_json = sample_sheet.trimmed_read_multiqc,
+                                          file_mapping = sample_sheet.trimmed_reads,
                                           flagger = flagger,
                                           cutoffs = cutoffs,
-                                          outlier_comparision_point = "median")
-    1/0
+                                          outlier_comparision_point = "median",
+                                          paired_end = sample_sheet.paired_end)
     ###########################################################################
     # STAR Alignment VV
     ###########################################################################
-    StarAlignments(samples=samples,
-                   dir_path=config['Paths'].get("StarParentDir"),
+    StarAlignments(samples=sample_sheet.samples,
+                   dir_path= sample_sheet.STAR_Alignment_dir,
                    flagger = flagger,
                    cutoffs = cutoffs)
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################
-    rsem_cross_check =   RsemCounts(samples= samples,
-                                   dir_path=config['Paths'].get("RsemParentDir"),
+    rsem_cross_check =   RsemCounts(samples= sample_sheet.samples,
+                                   dir_path= sample_sheet.RSEM_Counts_dir,
                                    flagger = flagger,
                                    cutoffs = cutoffs).cross_check
     cross_checks["RSEM"] = rsem_cross_check
     ###########################################################################
     # Deseq2 Normalized Counts VV
     ###########################################################################
-    Deseq2ScriptOutput(samples = samples,
-                       counts_dir_path = Path(config['Paths'].get("Deseq2NormCountsParentDir")),
-                       dge_dir_path = Path(config['Paths'].get("Deseq2DGEParentDir")),
+    Deseq2ScriptOutput(samples = sample_sheet.samples,
+                       counts_dir_path = sample_sheet.DESeq2_NormCount,
+                       dge_dir_path = sample_sheet.DESeq2_DGE,
                        flagger = flagger,
                        cutoffs = cutoffs,
                        cross_checks = cross_checks)
@@ -100,6 +100,6 @@ def main(config, sample_sheet_path, cutoffs):
     ###########################################################################
     for log_type in ["only-issues", "by-sample", "by-step"]:
         flagger.generate_derivative_log(log_type = log_type,
-                                        samples = samples)
+                                        samples = sample_sheet.samples)
     # Return flagger at successful completion
     return flagger

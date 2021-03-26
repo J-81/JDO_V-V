@@ -299,20 +299,7 @@ class Deseq2ScriptOutput():
        self.factor_groups = set(self.factor_groups)
 
        count_contrasts_from_deseq2 = len(contrasts_df.columns)
-
-       ## Extract expected contrasts from samplesheet
-       samplesheet_df = self.samplesheet_cross_checks["DF"]
-       factor_cols = [col for col in samplesheet_df.columns if col.startswith("Factor Value[")]
-       factor_unique_options = samplesheet_df[factor_cols].nunique(axis=0).to_dict()
-       expected_contrasts = 1
-       # get unique combinations of factor options
-       for key, value in factor_unique_options.items():
-           expected_contrasts = expected_contrasts*value
-       # get number of possible combinations (excluding mirror combinations)
-       expected_contrasts = expected_contrasts*(expected_contrasts-1)
-
-       print(f"From DESEQ2: {count_contrasts_from_deseq2}")
-       print(f"EXPECTED: {expected_contrasts}")
+       expected_contrasts = self.samplesheet_cross_checks.expected_contrasts
 
        if count_contrasts_from_deseq2 == expected_contrasts:
            self.flagger.flag(debug_message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),

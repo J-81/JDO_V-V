@@ -144,11 +144,11 @@ def _check_headers(file, count_lines_to_check: int) -> int:
         debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
     return (passes, debug_message)
 
-def validate_verify_multiqc(samples: list[str],
-                            multiqc_json: Path,
+def validate_verify_multiqc(multiqc_json: Path,
+                            file_mapping: dict,
                             cutoffs: dict,
                             flagger: Flagger,
-                            file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
+                            paired_end: bool,
                             outlier_comparision_point: str = "median",
                             ):
     """ Performs VV for raw reads for checks involving multiqc json generated
@@ -164,17 +164,15 @@ def validate_verify_multiqc(samples: list[str],
     # STAGE MULTIQC DATA FROM JSON
     ##############################################################
     mqc = multiqc.MultiQC(multiQC_json = multiqc_json,
-                          samples = samples,
-                          file_mapping_substrings = file_mapping_substrings,
+                          file_mapping = file_mapping,
                           outlier_comparision_point = outlier_comparision_point)
-
+    samples = list(file_mapping.keys())
     ### START R_1001 ##################################################
     # TODO: add paired read length match check (R_1001)
-    checkID = "R_1001"
-    for sample in samples:
-        entity = sample
-        # I.E: if the study is paired end
-        if set(("forward", "reverse")) == set(mqc.file_labels):
+    if paired_end:
+        checkID = "R_1001"
+        for sample in samples:
+            entity = sample
             forward_count = mqc.data[sample]["forward-total_sequences"].value
             reverse_count = mqc.data[sample]["reverse-total_sequences"].value
             pairs_match = forward_count == reverse_count

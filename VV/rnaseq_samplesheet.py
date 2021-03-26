@@ -24,8 +24,34 @@ class RNASeqSampleSheet():
         # setup filemappings
         if self.paired_end:
             self.raw_reads = {sample:{"forward":Path(df["raw_read1"][i]), "reverse":Path(df["raw_read2"][i])} for i,sample in enumerate(self.samples)}
+            self.trimmed_reads = {sample:{"forward":Path(df["trimmed_read1"][i]), "reverse":Path(df["trimmed_read2"][i])} for i,sample in enumerate(self.samples)}
         else:
             self.raw_reads = {sample:{"read":Path(df["raw_read1"][i])} for i,sample in enumerate(self.samples)}
-        # somewhat patchy, depracated in favor of VV using mapping as arg instead of doing it within the process
-        self.raw_reads_dir = Path(df["raw_read1"][0]).parent
-        self.trimmed_reads_dir = Path(df["trimmed_read1"][0]).parent
+            self.trimmed_reads = {sample:{"read":Path(df["trimmed_read1"][i])} for i,sample in enumerate(self.samples)}
+
+        # extract factors
+        factors = dict()
+        for col in df.columns:
+            # E.G. Factor Value[Spaceflight]
+            if col.startswith("Factor Value["):
+                factor = col.split("[")[1].replace("]","").strip()
+                factor_values = df[col].unique().tolist()
+                factors[factor] = factor_values
+        self.factors = factors
+        # compute expected contrasts
+        expected_contrasts = 1
+        # get unique combinations of factor options
+        for factor_set in self.factors.values():
+            num_factors = len(factor_set)
+            expected_contrasts = expected_contrasts*num_factors
+        # get number of possible combinations (excluding mirror combinations)
+        self.expected_contrasts = expected_contrasts*(expected_contrasts-1)
+
+        # patch directories for star and rsem
+        # TODO: change associated VV to use direct sample directories instead
+        self.STAR_Alignment_dir = Path(df["STAR_Alignment"][0]).parent
+        self.RSEM_Counts_dir = Path(df["RSEM_Counts"][0]).parent
+
+        # set to path
+        self.DESeq2_NormCount = Path(self.DESeq2_NormCount)
+        self.DESeq2_DGE = Path(self.DESeq2_DGE)

@@ -11,13 +11,11 @@ from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_b
 from VV.flagging import Flagger
 from VV import multiqc
 
-def validate_verify(samples: list[str],
-                    raw_reads_dir: Path,
+def validate_verify(file_mapping: dict,
                     cutoffs: dict,
                     flagger: Flagger,
-                    file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
                     ):
-    """ Performs VV for raw reads for checks involving raw reads files directly
+    """ Performs VV for trimmed reads for checks involving trimmed reads files directly
     """
     print(f"Starting VV for Trimmed Reads based on fastq.gz files")
     ##############################################################
@@ -25,20 +23,6 @@ def validate_verify(samples: list[str],
     ##############################################################
     flagger.set_script(__name__)
     flagger.set_step("Trimmed Reads")
-    ##############################################################
-    # GENERATE SAMPLE TO FILE MAPPING
-    ##############################################################
-    file_mapping = dict()
-    for sample in samples:
-
-        # set up each sample entry as a dictionary
-        file_mapping[sample] = dict()
-
-        for filename in raw_reads_dir.glob(f"{sample}*.fastq.gz"):
-            file_label = label_file(str(filename), file_mapping_substrings)
-            # file patterns for paired end studies
-            # note: this may be replaced in the future using expected filenames specified in the ISA
-            file_mapping[sample][file_label] = filename
 
     ###################################################################
     # PERFROM CHECKS
@@ -46,8 +30,9 @@ def validate_verify(samples: list[str],
 
     ### START R_0001 ##################################################
     checkID = "T_0001"
-    expected_file_lables = list(file_mapping_substrings.values())
-    for sample in samples:
+    missing_file = list()
+    for sample in file_mapping.keys():
+        expected_file_lables = list(file_mapping[sample].keys())
         missing_files = list()
         for file_label in expected_file_lables:
             if not file_label in file_mapping[sample].keys():
@@ -68,7 +53,7 @@ def validate_verify(samples: list[str],
     # TODO: add header check (R_0002)
     checkID = "T_0002"
     lines_to_check = cutoffs["trimmed_reads"]["fastq_lines_to_check"]
-    for sample in samples:
+    for sample in file_mapping.keys():
         for filelabel, filename in file_mapping[sample].items():
             entity = f"{sample}:{filelabel}"
             passed, details = _check_headers(filename,
@@ -155,15 +140,15 @@ def _check_headers(file, count_lines_to_check: int) -> int:
         debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
     return (passes, debug_message)
 
-def validate_verify_multiqc(samples: list[str],
-                            multiqc_json: Path,
+def validate_verify_multiqc(multiqc_json: Path,
+                            file_mapping: dict,
                             cutoffs: dict,
                             flagger: Flagger,
-                            file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2_":"reverse"},
+                            paired_end: bool,
                             outlier_comparision_point: str = "median",
                             ):
-    """ Performs VV for raw reads for checks involving multiqc json generated
-            by raw reads fastqc aggregation
+    """ Performs VV for trimmed reads for checks involving multiqc json generated
+            by trimmed reads fastqc aggregation
     """
     print(f"Starting VV for Trimmed Reads based on MultiQC file")
     ##############################################################
@@ -175,10 +160,9 @@ def validate_verify_multiqc(samples: list[str],
     # STAGE MULTIQC DATA FROM JSON
     ##############################################################
     mqc = multiqc.MultiQC(multiQC_json = multiqc_json,
-                          samples = samples,
-                          file_mapping_substrings = file_mapping_substrings,
+                          file_mapping = file_mapping,
                           outlier_comparision_point = outlier_comparision_point)
-
+    samples = list(file_mapping.keys())
     ### START T_1001 ##################################################
     checkID = "T_1001"
     for sample in samples:

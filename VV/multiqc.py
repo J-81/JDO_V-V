@@ -43,26 +43,22 @@ class MultiQC():
                            "mean":mean}
 
     def __init__(self, multiQC_json: Path,
-                       samples: list[str],
-                       file_mapping_substrings: dict[str, str] = {"_R1_":"forward", "_R2":"reverse"},
+                       file_mapping: dict,
                        outlier_comparision_point: str = "median"):
         try:
             self.outlier_comparision = self.OUTLIER_COMPARISION[outlier_comparision_point]
         except KeyError:
             raise ValueError(f"Outlier comparision point not defined.  Select from {list(self.OUTLIER_COMPARISION.keys())}")
-        self.samples = samples
-        # substrings used to identify forward and reverse reads by file name
-        # Only forward substring is used if single end study is used
-        self._file_mapping_substrings = file_mapping_substrings
+        self.samples = list(file_mapping.keys())
+        self.file_mapping = file_mapping
+        self.file_labels = list(file_mapping[self.samples[0]].keys())
 
         # extracts data from multiQC json file.
-        self.data = self._extract_multiQC_data(json_file = multiQC_json, samples = samples)
-        self.sample_wise_data_keys = list(self.data[samples[0]].keys())
+        self.data = self._extract_multiQC_data(json_file = multiQC_json, samples = self.samples)
+        self.sample_wise_data_keys = list(self.data[self.samples[0]].keys())
 
         # holds subsets computed by user
         self.subsets = defaultdict(dict)
-
-        self.file_labels = list(self._file_mapping_substrings.values())
 
     def compile_subset(self, samples_subset, key, aggregator: Callable = None):
         compiled = None
@@ -158,23 +154,24 @@ class MultiQC():
             pass
         return outliers
 
-    def _label_file(self, filename: str):
-        """ Given a filename.  Return the file label based on a unique substring.
-
-        Substrings to file label mapping should be provided at init.
+    def _sample_filelabel_from_filename(self, query_filename: str):
+        """ Given a filename.  Return the file label and sample based on file_mapping.
         """
         matched = False
-        for substring, filelabel in self._file_mapping_substrings.items():
-            if substring in filename:
-                if not matched:
-                    matched = filelabel
-                else:
-                    raise ValueError(f"File name {filename} matched multiple substrings in provided mapping {self._file_mapping_substrings}")
+        for sample, file_map in self.file_mapping.items():
+            for filelabel, search_file in file_map.items():
+                # search_file: # has extension and parent paths, these are removed when comparing
+                # query_filename: sample1_R1 # notice no extension
+                if search_file.with_suffix("").with_suffix("").name ==  query_filename:
+                    if not matched:
+                        matched = (sample, filelabel)
+                    else:
+                        raise ValueError(f"File name {query_filename} matched multiple filenames in provided mapping {self.file_mapping}")
         if matched:
             return matched
         else:
-            # no matches
-            raise ValueError(f"File name {filename} did not match any substrings in provided mapping {self._file_mapping_substrings}")
+        # no matches
+            raise ValueError(f"File name {query_filename} did not match any in provided mapping {self.file_mapping}")
 
     # data extraction functions
     # TODO: These should return a value that will be assigned directly to the data mapping
@@ -185,9 +182,8 @@ class MultiQC():
 
         ###  extract general stats
         for file_data in raw_data["report_general_stats_data"]:
-            for file_name, data in file_data.items():
-                cur_sample = [sample for sample in samples if sample in file_name][0]
-                filelabel = self._label_file(file_name)
+            for filename, data in file_data.items():
+                cur_sample, filelabel = self._sample_filelabel_from_filename(filename)
                 for key, value in data.items():
                     full_key = f"{filelabel}-{key}"
                     data_mapping[cur_sample][full_key] = \
@@ -211,7 +207,7 @@ class MultiQC():
 
         # lock data mapping to parsed data by converting by to dict (from defaultdict)
         data_mapping = dict(data_mapping)
-        for sample in samples:
+        for sample in self.samples:
             data_mapping[sample] = dict(data_mapping[sample])
         return data_mapping
 
@@ -227,7 +223,7 @@ class MultiQC():
             assert len(matching_samples) == 1
 
             sample = matching_samples[0]
-            mqc_samples_to_samples[i] = (sample, self._label_file(mqc_sample))
+            mqc_samples_to_samples[i] = (self._sample_filelabel_from_filename(mqc_sample))
 
         # iterate through data from datasets
         # this should be a list with one entry
@@ -273,15 +269,14 @@ class MultiQC():
             # dataset entry represents one sample (i.e. one line from the line plot)
             for dataset_entry in dataset:
                 file_name = dataset_entry["name"]
+                # sometimes this includes an additional string
+                # E.G Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw - illumina_universal_adapter
+                # taking the first split token should work
+                file_name = file_name.split()[0]
 
                 # values is a list of [index,value]
                 values = dataset_entry["data"]
-                matching_samples = [sample for sample in samples if sample in file_name]
-                # only one sample should map
-                assert len(matching_samples) == 1
-
-                sample = matching_samples[0]
-                sample_file = self._label_file(file_name)
+                sample, sample_file = self._sample_filelabel_from_filename(file_name)
                 # for plots with bins, add bin string to values iterable
                 if isCategorical:
                     values = zip(bins, values)
