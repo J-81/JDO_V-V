@@ -65,10 +65,15 @@ def validate_verify(file_mapping: dict,
             entity = f"{sample}:{filelabel}"
             passed, details = _check_headers(filename,
                                              count_lines_to_check = lines_to_check)
-            if passed:
+            if passed == True:
                 flagger.flag(entity = entity,
                              debug_message = f"File headers appear fine up to line {lines_to_check}",
                              severity = 30,
+                             checkID = checkID)
+            elif passed == -1: # special code for when EOFError raised
+                flagger.flag(entity = entity,
+                             debug_message = details,
+                             severity = 90,
                              checkID = checkID)
             else:
                 flagger.flag(entity = entity,
@@ -120,32 +125,36 @@ def _check_headers(file, count_lines_to_check: int) -> int:
 
     passes = True
     debug_message = ""
-    with gzip.open(file, "rb") as f:
-        for i, line in enumerate(f):
-            # checks if lines counted equals the limit input
-            if i+1 == count_lines_to_check:
-                #print(f"Reached {count_lines_to_check} lines, ending line check")
-                break
+    # truncated files raise EOFError
+    try:
+        with gzip.open(file, "rb") as f:
+            for i, line in enumerate(f):
+                # checks if lines counted equals the limit input
+                if i+1 == count_lines_to_check:
+                    #print(f"Reached {count_lines_to_check} lines, ending line check")
+                    break
 
-            line = line.decode()
-            # every fourth line should be an identifier
-            expected_identifier_line = (i % 4 == 0)
-            # check if line is actually an identifier line
-            if (expected_identifier_line and line[0] != "@"):
-                lines_with_issues.append(i+1)
-                print(f"FAIL: {checkname}: "
-                      f"Line {i+1} of {file} was not an identifier line as expected "
-                      f"LINE {i+1}: {line}")
-            # update every 20,000,000 reads
-            if i % 20000000 == 0:
-                #print(f"Checked {i} lines for {file}")
-                pass
-    if len(lines_with_issues) != 0:
-        passes = False
-        debug_message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
-    else:
-        debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
-    return (passes, debug_message)
+                line = line.decode()
+                # every fourth line should be an identifier
+                expected_identifier_line = (i % 4 == 0)
+                # check if line is actually an identifier line
+                if (expected_identifier_line and line[0] != "@"):
+                    lines_with_issues.append(i+1)
+                    print(f"FAIL: {checkname}: "
+                          f"Line {i+1} of {file} was not an identifier line as expected "
+                          f"LINE {i+1}: {line}")
+                # update every 20,000,000 reads
+                if i % 20000000 == 0:
+                    #print(f"Checked {i} lines for {file}")
+                    pass
+        if len(lines_with_issues) != 0:
+            passes = False
+            debug_message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
+        else:
+            debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
+        return (passes, debug_message)
+    except EOFError:
+        return (-1, "EOFError raised, this indicates files may be corrupted")
 
 def validate_verify_multiqc(multiqc_json: Path,
                             file_mapping: dict,
