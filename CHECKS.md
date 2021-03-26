@@ -13,14 +13,11 @@
 ### Raw Reads
 
 - R_0001 (Implemented)
-  - Check that raw reads exist for the samples described in ISA.
-    - Input: SAMPLE, list of sample names.
-    - Assumption for single end: File expected is {SAMPLE}_R1_raw.fastq.gz
-    - Assumption for paired end: Files expected are {SAMPLE}_R1_raw.fastq.gz and {SAMPLE}_R2_raw.fastq.gz
-    - Assumption: SAMPLE never includes "_R1_raw.fastq.gz" nor "_R2_raw.fastq.gz"
+  - Check that raw reads exist for the samples described in RNASeq samplesheet.
 
 - R_0002 (Implemented)
   - Check that raw reads headers are present every 4 lines.
+    - Also catches truncated file errors.
     - Configuration: By default, first 10,000,000 lines are checked.
 
 - R_0003 (Implemented)
