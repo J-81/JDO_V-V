@@ -6,6 +6,7 @@ from collections import namedtuple, defaultdict
 from pathlib import Path
 import gzip
 import statistics
+import subprocess
 
 from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks, value_check_direct
 from VV.flagging import Flagger
@@ -51,23 +52,23 @@ def validate_verify(file_mapping: dict,
 
     ### START R_0002 ##################################################
     # TODO: add header check (R_0002)
-    checkID = "T_0002"
-    lines_to_check = cutoffs["trimmed_reads"]["fastq_lines_to_check"]
+    check_proportion = cutoffs["trimmed_reads"]["fastq_proportion_to_check"]
     for sample in file_mapping.keys():
+        checkArgs = dict()
+        checkArgs["checkID"] = "T_0002"
+        checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
-            entity = f"{sample}:{filelabel}"
-            passed, details = _check_headers(filename,
-                                             count_lines_to_check = lines_to_check)
-            if passed:
-                flagger.flag(entity = entity,
-                             debug_message = f"File headers appear fine up to line {lines_to_check}",
-                             severity = 30,
-                             checkID = checkID)
+            checkArgs["sub_entity"] = filelabel
+            passed, details = _check_headers(filename, check_proportion)
+            if passed == True:
+                checkArgs["debug_message"] = f"No header issues after checking {check_proportion*100}% of the records"
+                checkArgs["user_message"] = f"Fastq.gz headers validated"
+                checkArgs["severity"] = 30
             else:
-                flagger.flag(entity = entity,
-                             debug_message = f"File headers not detected for {details}",
-                             severity = 60,
-                             checkID = checkID)
+                checkArgs["debug_message"] = f"Found header issues after checking {check_proportion*100}% of the records"
+                checkArgs["user_message"] = f"Header issues"
+                checkArgs["severity"] = 90
+            flagger.flag(**checkArgs)
     ### DONE R_0002 ###################################################
 
     ### START R_0003 ##################################################
@@ -90,7 +91,7 @@ def validate_verify(file_mapping: dict,
                        )
     ### DONE R_0003 ###################################################
 
-def _check_headers(file, count_lines_to_check: int) -> int:
+def _check_headers(filename, check_proportion: float = 0.2):
     """ Checks fastq lines for expected header content
 
     Note: Example of header from GLDS-194
@@ -103,42 +104,29 @@ def _check_headers(file, count_lines_to_check: int) -> int:
     :param file: compressed fastq file to check
     :param count_lines_to_check: number of lines to check. Special value: -1 means no limit, check all lines.
     """
-    if count_lines_to_check == -1:
-        count_lines_to_check = float("inf")
+    ###### Generate temporary gzipped file
+    assert 1 >= check_proportion > 0, "Check proportion must be  value between 0 and 1"
+    subsampled = subprocess.Popen(['seqtk', 'sample', '-s',
+                                   '777', filename, str(check_proportion)],
+                                   stdout=subprocess.PIPE)
+    #sampled_lines, _ = subsampled.communicate()
+    # decode binary and split
+    #sampled_lines = sampled_lines.decode().split("\n")
+    for i, line in enumerate(iter(subsampled.stdout.readline, None)):
+        # end of iteration returns None
+        if not line:
+            #print("Finished checking sample of header lines")
+            break
+        # this indicates the end of sampled lines
+        line = line.decode().rstrip()
 
-    # TODO: add expected length check
-    expected_length = None
-
-    lines_with_issues = list()
-
-    passes = True
-    debug_message = ""
-    with gzip.open(file, "rb") as f:
-        for i, line in enumerate(f):
-            # checks if lines counted equals the limit input
-            if i+1 == count_lines_to_check:
-                #print(f"Reached {count_lines_to_check} lines, ending line check")
-                break
-
-            line = line.decode()
-            # every fourth line should be an identifier
-            expected_identifier_line = (i % 4 == 0)
-            # check if line is actually an identifier line
-            if (expected_identifier_line and line[0] != "@"):
-                lines_with_issues.append(i+1)
-                print(f"FAIL: {checkname}: "
-                      f"Line {i+1} of {file} was not an identifier line as expected "
-                      f"LINE {i+1}: {line}")
-            # update every 20,000,000 reads
-            if i % 20000000 == 0:
-                #print(f"Checked {i} lines for {file}")
-                pass
-    if len(lines_with_issues) != 0:
-        passes = False
-        debug_message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
-    else:
-        debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
-    return (passes, debug_message)
+        #print(i, line) #DEBUG PRINT
+        # every fourth line should be an identifier
+        expected_identifier_line = (i % 4 == 0)
+        # check if line is actually an identifier line
+        if (expected_identifier_line and line[0] != "@"):
+            return False, "Expected header line missing"
+    return True, "NO ISSUES"
 
 def validate_verify_multiqc(multiqc_json: Path,
                             file_mapping: dict,

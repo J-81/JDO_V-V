@@ -10,7 +10,7 @@ CUTOFFS = \
     "DEFAULT" : {
         "middlepoint": "median",
         "raw_reads": {
-            "fastq_lines_to_check" : 10000,
+            "fastq_proportion_to_check" : 0.2,
             "sequence_length" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
@@ -132,7 +132,7 @@ CUTOFFS = \
             },
         },
         "trimmed_reads": {
-            "fastq_lines_to_check" : 15000,
+            "fastq_proportion_to_check" : 0.2,
             "sequence_length" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
