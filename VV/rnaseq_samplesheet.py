@@ -49,8 +49,8 @@ class RNASeqSampleSheet():
 
         # patch directories for star and rsem
         # TODO: change associated VV to use direct sample directories instead
-        self.STAR_Alignment_dir = Path(df["STAR_Alignment"][0]).parent
-        self.RSEM_Counts_dir = Path(df["RSEM_Counts"][0])
+        self.STAR_Alignment_dir_mapping = df.set_index("sample_name")["STAR_Alignment"].to_dict()
+        self.RSEM_Counts_dir_mapping = df.set_index("sample_name")["RSEM_Counts"].to_dict()
 
         # set to path
         self.DESeq2_NormCount = Path(self.DESeq2_NormCount)
