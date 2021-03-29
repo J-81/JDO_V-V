@@ -31,7 +31,7 @@ def main(data_dir: Path,
     print(f"┇ {program_header} ┇")
     print(f"{'┅'*(len(program_header)+4)}")
     # set up flagger
-    flagger = Flagger(__file__,
+    flagger = Flagger(script = __file__,
                       log_to = output_path,
                       halt_level = halt_severity)
     ########################################################################
