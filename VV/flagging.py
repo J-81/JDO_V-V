@@ -24,7 +24,7 @@ FLAG_LEVELS = {
 class VVError(Exception):
     pass
 
-class Flagger():
+class _Flagger():
     """ Flagging object
     """
     def __init__(self,
@@ -81,6 +81,7 @@ class Flagger():
              debug_message: str,
              severity: int,
              checkID: str,
+             sub_entity: str = "",
              user_message: str = "",
              preprocess_debug_messages: bool = True,
              full_path: str = "",
@@ -94,6 +95,13 @@ class Flagger():
              check_function: str = "",
              ):
         """ Given an issue, logs a flag, prints human readable debug_message
+
+        If a user message is not supplied,
+        debug message will be used in its place
+
+        Note for programmers: this means if the debug message
+        is good enough as a user message, leaving user message blank to allow
+        override works great!
         """
         self._flag_count += 1
         # not required but provides some quality of life improvements in the log debug_messages
@@ -105,7 +113,7 @@ class Flagger():
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{user_message}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
+        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{sub_entity}\t{user_message}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
         #print(report)
         with open(self._log_file, "a") as f:
             f.write(report + "\n")
@@ -247,3 +255,11 @@ class Flagger():
                 word += "]"
             new_debug_message.append(word)
         return " ".join(new_debug_message)
+
+_instance = None
+
+def Flagger(**kwargs):
+    global _instance
+    if not _instance:
+        _instance = _Flagger(**kwargs)
+    return _instance
