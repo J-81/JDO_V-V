@@ -6,19 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- #### Overall
-  - Added 'library_layout' to config.
-    - 'library_layout' can be automatically detected from an ISA file.
-    - Setting output path for logs in CLI/Config. (Default: 'VV_output' in current working directory).
-    - Setting overwrite toggle for logs in CLI/Config. (Default: False)
-
 - #### STAR
   - MultiQC based checks
 
 ### Changed
-  - Moved the following values from cutoffs.py to config as they match the scope better 'hasERCC','middlePoint'.
-    - Both can be automatically detected from an ISA file.
-  - Improved config file comments to enhance clarity.
+  - Moved the following values from cutoffs.py to samplesheet as they match the scope better 'middlePoint'.
 
 - #### Raw Reads [Fastq.gz]
   - 'fastq_lines_to_check' cutoff changed to 'fastq_proportion_to_check'.
@@ -31,6 +23,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Removed
+
+## [0.3.0] - 2021-03-26
+### Added
+  - Setting output path for logs in CLI. (Default: 'VV_Log/VV_log.tsv' in current working directory).
+  - Setting data path for in CLI/Config. (Default: current working directory).
+  - Setting overwrite toggle for logs in CLI. (Default: False)
+
+### Changed
+- #### Overall
+  - RNASeq_Samplesheet replaces most of the configuration found in config.
+  - Remaining config for halt severity level and parent data directory (the one holding the raw and processed data) moved to CLI args with default halt severity level set to 90 and default parent data directory set to current working directory.
+
+### Removed
+  - Config file, replaced by RNASeq_Samplesheet.csv file and CLI args.
   - Timestamped intermediate log directories
 
 ## [0.2.0] - 2021-03-23
