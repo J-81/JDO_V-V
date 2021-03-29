@@ -14,8 +14,7 @@ class StarAlignments():
       - <sample>_Aligned.toTranscriptome.out.bam
     """
     def __init__(self,
-                 samples: str,
-                 dir_path: str,
+                 dir_mapping: dict,
                  flagger: Flagger,
                  cutoffs: dict):
         print(f"Starting VV for STAR alignment output")
@@ -26,8 +25,18 @@ class StarAlignments():
         flagger.set_step("STAR")
         self.flagger = flagger
         self.cutoffs = cutoffs
-        self.samples = samples
-        self.dir_path = dir_path
+        self.samples = list(dir_mapping.keys())
+        # generate expected files in the main sample directory
+        self.file_mapping = dict()
+        for sample, directory in dir_mapping:
+            self.file_mapping[sample] = dict()
+            self.file_mapping[sample]["_Log.final.out"] = Path(directory) / f"{sample}_Log.final.out"
+            self.file_mapping[sample]["_Log.out"] = Path(directory) / f"{sample}_Log.out"
+            self.file_mapping[sample]["_Log.progress.out"] = Path(directory) / f"{sample}_Log.progress.out"
+            self.file_mapping[sample]["_SJ.out.tab"] = Path(directory) / f"{sample}_SJ.out.tab"
+            self.file_mapping[sample]["_Aligned.sortedByCoord.out.bam"] = Path(directory) / f"{sample}_Aligned.sortedByCoord.out.bam"
+            self.file_mapping[sample]["_Aligned.toTranscriptome.out.bam"] = Path(directory) / f"{sample}_Aligned.toTranscriptome.out.bam"
+
         self.final = self._parse_log_final()
         self._validate_alignment_files()
         self._validate_additional_files()
@@ -64,44 +73,44 @@ class StarAlignments():
     def _parse_log_final(self):
         """ Parses <sample>_Log.final.out file
 
-        Example:
-                                 Started job on |	Oct 17 14:54:28
-                             Started mapping on |	Oct 17 17:48:01
-                                    Finished on |	Oct 17 22:04:45
-       Mapping speed, Million of reads per hour |	27.49
+                Example:
+                                         Started job on |	Oct 17 14:54:28
+                                     Started mapping on |	Oct 17 17:48:01
+                                            Finished on |	Oct 17 22:04:45
+               Mapping speed, Million of reads per hour |	27.49
 
-                          Number of input reads |	117627693
-                      Average input read length |	275
-                                    UNIQUE READS:
-                   Uniquely mapped reads number |	86205864
-                        Uniquely mapped reads % |	73.29%
-                          Average mapped length |	274.08
-                       Number of splices: Total |	55999786
-            Number of splices: Annotated (sjdb) |	55997549
-                       Number of splices: GT/AG |	55176898
-                       Number of splices: GC/AG |	678230
-                       Number of splices: AT/AC |	57224
-               Number of splices: Non-canonical |	87434
-                      Mismatch rate per base, % |	0.46%
-                         Deletion rate per base |	0.02%
-                        Deletion average length |	2.68
-                        Insertion rate per base |	0.04%
-                       Insertion average length |	3.30
-                             MULTI-MAPPING READS:
-        Number of reads mapped to multiple loci |	15196585
-             % of reads mapped to multiple loci |	12.92%
-        Number of reads mapped to too many loci |	96603
-             % of reads mapped to too many loci |	0.08%
-                                  UNMAPPED READS:
-  Number of reads unmapped: too many mismatches |	0
-       % of reads unmapped: too many mismatches |	0.00%
-            Number of reads unmapped: too short |	15652272
-                 % of reads unmapped: too short |	13.31%
-                Number of reads unmapped: other |	476369
-                     % of reads unmapped: other |	0.40%
-                                  CHIMERIC READS:
-                       Number of chimeric reads |	0
-                            % of chimeric reads |	0.00%
+                                  Number of input reads |	117627693
+                              Average input read length |	275
+                                            UNIQUE READS:
+                           Uniquely mapped reads number |	86205864
+                                Uniquely mapped reads % |	73.29%
+                                  Average mapped length |	274.08
+                               Number of splices: Total |	55999786
+                    Number of splices: Annotated (sjdb) |	55997549
+                               Number of splices: GT/AG |	55176898
+                               Number of splices: GC/AG |	678230
+                               Number of splices: AT/AC |	57224
+                       Number of splices: Non-canonical |	87434
+                              Mismatch rate per base, % |	0.46%
+                                 Deletion rate per base |	0.02%
+                                Deletion average length |	2.68
+                                Insertion rate per base |	0.04%
+                               Insertion average length |	3.30
+                                     MULTI-MAPPING READS:
+                Number of reads mapped to multiple loci |	15196585
+                     % of reads mapped to multiple loci |	12.92%
+                Number of reads mapped to too many loci |	96603
+                     % of reads mapped to too many loci |	0.08%
+                                          UNMAPPED READS:
+          Number of reads unmapped: too many mismatches |	0
+               % of reads unmapped: too many mismatches |	0.00%
+                    Number of reads unmapped: too short |	15652272
+                         % of reads unmapped: too short |	13.31%
+                        Number of reads unmapped: other |	476369
+                             % of reads unmapped: other |	0.40%
+                                          CHIMERIC READS:
+                               Number of chimeric reads |	0
+                                    % of chimeric reads |	0.00%
         """
         final_data = dict()
         for sample in self.samples:
@@ -238,14 +247,11 @@ class StarAlignments():
         Also checks using samtools quickcheck which should catch truncations and
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
-        checkID = "S_0005"
+        checkID = "S_0005" # check file exists and samtools raises no issues
         for sample in self.samples:
-            error_debug_message = ""
-            coord_file = os.path.join(self.dir_path,
-                                      sample,
-                                      f"{sample}_Aligned.sortedByCoord.out.bam")
-            if not os.path.isfile(coord_file):
-                error_debug_message += (f"*_Aligned.sortedByCoord.out.bam file missing")
+            file_map = self.file_mapping[sample]
+            coord_file = file_map["_Aligned.sortedByCoord.out.bam"]
+            self.flagger.flag_file_exists(entity = sample, check_file= coord_file, checkID = checkID)
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],
@@ -256,20 +262,16 @@ class StarAlignments():
                 error_debug_message += (f"FAIL: samtools quick checkout output for on {coord_file}: {stdout}")
 
             # check transcriptome alignment file
-            transcript_file = os.path.join(self.dir_path,
-                                      sample,
-                                      f"{sample}_Aligned.toTranscriptome.out.bam")
-            if not os.path.isfile(transcript_file):
-                error_debug_message += (f"*_Aligned.toTranscriptome.out.bam file missing")
+            transcript_file = file_map["_Aligned.toTranscriptome.out.bam"]
+            self.flagger.flag_file_exists(entity = sample, check_file= transcript_file, checkID = checkID)
 
-                continue
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', transcript_file],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                error_debug_message += (f"FAIL: samtools quick checkout output for on {transcript_file}: {stdout}")
+                error_debug_message += (f"samtools quickcheck {transcript_file}: {stdout}")
 
             if error_debug_message:
                 self.flagger.flag(entity = sample,
