@@ -113,79 +113,28 @@ def validate_verify_multiqc(multiqc_json: Path,
                           file_mapping = file_mapping,
                           outlier_comparision_point = outlier_comparision_point)
     samples = list(file_mapping.keys())
-    ### START R_1001 ##################################################
-    # TODO: add paired read length match check (R_1001)
+    ### UNIQUE IMPLEMENTATION CHECKS ##################################
+    # R_1001 ##########################################################
     if paired_end:
-        check_id = "R_1001"
+        check_args = dict()
+        check_args["check_id"] = "R_1001"
         for sample in samples:
-            entity = sample
+            check_args["entity"] = sample
             forward_count = mqc.data[sample]["forward-total_sequences"].value
             reverse_count = mqc.data[sample]["reverse-total_sequences"].value
             pairs_match = forward_count == reverse_count
             if pairs_match:
-                flagger.flag(entity = entity,
-                             debug_message = f"Total Count of reads matches between pairs.",
-                             severity = 30,
-                             check_id = check_id)
+                check_args["severity"] = 30
+                check_args["debug_message"] = f"Count of reads matches between paired reads."
             else:
-                flagger.flag(entity = entity,
-                             debug_message = f"Total Count of reads does NOT match between pairs.",
-                             severity = 90,
-                             check_id = check_id)
-    ### DONE R_1001 ###################################################
+                check_args["severity"] = 90
+                check_args["debug_message"] = f"Count of reads different between paired reads."
 
-    ### START R_1002 ##################################################
-    check_id = "R_1002"
-    key = "fastqc_sequence_length_distribution_plot"
-    try:
-        mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
-        for sample in samples:
-            for file_label in mqc.file_labels:
-                entity = f"{sample}:{file_label}"
-                cur_data_key = f"{file_label}-{key}"
-                for threshold, severity in check_cutoffs["outlier_thresholds"].items():
-                    outliers = mqc.detect_outliers(key = cur_data_key,
-                                                   deviation = threshold
-                                                 )
-                    outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
-                    if len(outliers_for_sample) == 0:
-                        flagger.flag(entity = entity,
-                                     debug_message = (f"Sequence length varies "
-                                                f"across samples; however, "
-                                                f"no outliers detected by "
-                                                f"sequence length bin [deviation > {threshold}]."),
-                                     severity = 50,
-                                     check_id = check_id)
-                    else:
-                        flagger.flag(entity = entity,
-                                     debug_message = (f"Outliers detected by sequence "
-                                               f"length bin. This indicates sequence length "
-                                               f"distribution may vary by sample. "
-                                               f"See the following x-indices "
-                                               f"{outliers_for_sample}"),
-                                     severity = severity,
-                                     check_id = check_id)
-
-    except KeyError:
-        # this indicates the plot was not generated.
-        # this happens when all average sequences are the same.
-        # therefore this is a pass condition for the check
-        for sample in samples:
-            entity = sample
-            flagger.flag(entity = entity,
-                         debug_message = ("Average sequence lengths across all samples matches. "\
-                                   "Reason: MultiQC did not graph average sequence "\
-                                   "lengths.  This happens when the graph is replace "\
-                                   "with a debug_message indicating 'All samples have "\
-                                   "sequences of a single length'"),
-                         severity = 30,
-                         check_id = check_id)
-
-    ### DONE R_1002 ###################################################
-
+            flagger.flag(**check_args)
 
     ################################################################
     check_specific_args = [
+        {"check_id":"R_1002", "mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True},
         {"check_id":"R_1003", "mqc_base_key":"percent_duplicates"},
         {"check_id":"R_1004", "mqc_base_key":"percent_gc"},
         {"check_id":"R_1005", "mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True},
