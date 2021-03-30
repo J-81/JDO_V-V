@@ -159,6 +159,23 @@ class _Flagger():
         if severity >= self._halt_level:
             raise VVError(f"SEVERE ISSUE, HALTING V-V AND ANY ADDITIONAL PROCESSING\nSee {self._log_file}")
 
+    def flag_file_exists(self,
+                         check_file: Path,
+                         partial_check_args: dict,
+                         ):
+        if not check_file.is_file():
+            partial_check_args["debug_message"] = f"{check_file.name} not found"
+            partial_check_args["full_path"] = str(check_file.resolve())
+            partial_check_args["relative_path"] = check_file.name
+            partial_check_args["severity"] = 90
+        else:
+            partial_check_args["debug_message"] = f"{check_file.name} exists"
+            partial_check_args["full_path"] = str(check_file.resolve())
+            partial_check_args["relative_path"] = check_file.name
+            partial_check_args["severity"] = 30
+        self.flag(**partial_check_args)
+
+
     def _get_log_as_df(self):
         return pd.read_csv(self._log_file,
                            sep="\t",
