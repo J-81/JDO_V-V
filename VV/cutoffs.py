@@ -323,6 +323,7 @@ CUTOFFS = \
             },
         },
         "RSEM" : {
+            "middlepoint": "median",
             "count_of_unique_genes_expressed" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
