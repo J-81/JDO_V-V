@@ -296,7 +296,7 @@ def general_mqc_based_check(flagger: Flagger,
 
 def value_check_direct(partial_check_args: dict,
                        check_cutoffs: dict,
-                       value: dict,
+                       value: float,
                        all_values: list,
                        flagger: Flagger,
                        value_alias: str,
