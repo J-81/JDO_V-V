@@ -296,6 +296,7 @@ CUTOFFS = \
 
         },
         "STAR" : {
+            "middlepoint": "median",
             "total_reads_mapped-Percentage" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {
