@@ -178,7 +178,7 @@ class _Flagger():
         flagged = False
         for flag_id in sorted(protoflag_map, reverse=True):
             threshold = check_cutoffs["sample_proportion_thresholds"][flag_id]
-            valid_proto_ids = protoflag_map[flag_id]
+            valid_proto_ids = [str(id) for id in protoflag_map[flag_id]]
             valid_proto_count = len(checkdf.loc[checkdf["flag_id"].isin(valid_proto_ids)])
             total_count = len(checkdf)
             proportion = valid_proto_count / total_count
