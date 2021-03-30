@@ -75,8 +75,7 @@ def main(data_dir: Path,
     ###########################################################################
     # STAR Alignment VV
     ###########################################################################
-    StarAlignments(samples=sample_sheet.samples,
-                   dir_path= sample_sheet.STAR_Alignment_dir,
+    StarAlignments(dir_mapping = sample_sheet.STAR_Alignment_dir_mapping,
                    flagger = flagger,
                    cutoffs = cutoffs)
     ###########################################################################

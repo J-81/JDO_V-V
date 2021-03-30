@@ -2,6 +2,7 @@
 """
 import os
 import subprocess
+from pathlib import Path
 
 from VV.utils import value_check_direct
 from VV.flagging import Flagger
@@ -23,12 +24,14 @@ class StarAlignments():
         ##############################################################
         flagger.set_script(__name__)
         flagger.set_step("STAR")
+
+        self.cutoffs_subsection = "STAR"
         self.flagger = flagger
         self.cutoffs = cutoffs
         self.samples = list(dir_mapping.keys())
         # generate expected files in the main sample directory
         self.file_mapping = dict()
-        for sample, directory in dir_mapping:
+        for sample, directory in dir_mapping.items():
             self.file_mapping[sample] = dict()
             self.file_mapping[sample]["_Log.final.out"] = Path(directory) / f"{sample}_Log.final.out"
             self.file_mapping[sample]["_Log.out"] = Path(directory) / f"{sample}_Log.out"
@@ -57,15 +60,20 @@ class StarAlignments():
             # test against all values from all samples
             for sample in self.samples:
                 value = self.final[sample][key]
-                value_check_direct(value = value,
+
+                partial_check_args = dict()
+                partial_check_args["check_id"] = check_id
+                partial_check_args["entity"] = sample
+                partial_check_args["outlier_comparison_type"] = "Across-Samples"
+                value_check_direct(partial_check_args = partial_check_args,
+                                   check_cutoffs = self.cutoffs[self.cutoffs_subsection][key],
+                                   value = value,
                                    all_values = all_values,
-                                   check_cutoffs = self.cutoffs["STAR"][key],
                                    flagger = self.flagger,
-                                   check_id = check_id,
-                                   entity = sample,
                                    value_alias = key,
-                                   middlepoint = self.cutoffs["middlepoint"],
-                                   debug_message_prefix = "Sample vs Samples")
+                                   middlepoint = self.cutoffs[self.cutoffs_subsection]["middlepoint"],
+                                  )
+
 
     def __repr__(self):
         return f"Star Alignment Results: <{self.samples}>"
@@ -116,22 +124,15 @@ class StarAlignments():
         for sample in self.samples:
             # create entry for sample
             final_data[sample] = dict()
-            file_path = os.path.join(self.dir_path,sample,f"{sample}_Log.final.out")
-            check_id = "S_0001"
-            if not os.path.isfile(file_path):
-                debug_message = f"Could not find {file_path}"
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 90,
-                                  check_id = check_id)
-                continue
-            else:
-                debug_message = f"Found {file_path}"
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 30,
-                                  check_id = check_id)
-            with open(file_path, "r") as f:
+            file_path = self.file_mapping[sample]["_Log.final.out"]
+            partial_check_args = dict()
+            partial_check_args["check_id"] = "S_0001"
+            partial_check_args["entity"] = sample
+            self.flagger.flag_file_exists(check_file = file_path,
+                                          partial_check_args = partial_check_args)
+
+            # extract data from file
+            with file_path.open() as f:
                 for line in f.readlines():
                     # Data lines contain '|''
                     if "|" in line:
@@ -174,72 +175,96 @@ class StarAlignments():
             - Last line condition:
                 - ALL DONE!
         """
+
+
         for sample in self.samples:
-            # Log.out check
-            log_out_file = os.path.join(self.dir_path,
-                                    sample,
-                                    f"{sample}_Log.out")
-            expected = "STAR version="
+            partial_check_args = dict()
+            partial_check_args["check_id"] = "S_0002"
+            partial_check_args["entity"] = sample
+            ####################################################################
+            # Log.out.tab check
+            EXPECTED_FIRSTLINE_START_SUBSTRING = "STAR version="
+            EXPECTED_LASTLINE = "ALL DONE!"
 
-            with open(log_out_file, "r") as f:
+            partial_check_args["debug_message"] = None # created as issues arise. Overridden if no issues
+            file_map = self.file_mapping[sample]
+            check_file = file_map["_Log.out"]
+            self.flagger.flag_file_exists(check_file = check_file,
+                                          partial_check_args = partial_check_args)
+
+            # Check file looks corret
+            partial_check_args["debug_message"] = ""
+            with check_file.open() as f:
                 lines = f.readlines()
-            error = None
-            if not lines[0].strip().startswith(expected):
-                error = (f"First line does not "
-                         f"start with {expected}")
-
-            expected = "ALL DONE!"
-            if lines[-1].strip() != expected:
-                error = (f"Last line does not "
-                         f"equal {expected}")
+            if not lines[0].strip().startswith(EXPECTED_FIRSTLINE_START_SUBSTRING):
+                partial_check_args["debug_message"] += (f"First line does not "
+                          f"start with {EXPECTED_FIRSTLINE_START_SUBSTRING}")
+            if lines[-1].strip() != EXPECTED_LASTLINE:
+                partial_check_args["debug_message"] += (f"Last line does not "
+                          f"equal {EXPECTED_LASTLINE}")
             # flag if errors found
-            check_id = "S_0002"
-            if error:
-                debug_message = f"{log_out_file} has issue: {error}"
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 90,
-                                  check_id = check_id)
-                continue
+            if partial_check_args["debug_message"]:
+                partial_check_args["user_message"] = f"Failed validation"
+                partial_check_args["severity"] = 90
+                self.flagger.flag(**partial_check_args)
+                continue # check other samples
             else:
-                debug_message = f"{log_out_file}, no issues found"
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 30,
-                                  check_id = check_id)
+                partial_check_args["debug_message"] = f"Validated by checking start and end lines."
+                partial_check_args["severity"] = 30
+                self.flagger.flag(**partial_check_args)
 
-
-             # SJ.out.tab check
-            sj_out_file = os.path.join(self.dir_path,
-                                    sample,
-                                    f"{sample}_SJ.out.tab")
-
-            with open(sj_out_file, "r") as f:
+            ####################################################################
+            # SJ.out.tab check
+            sj_out_file = self.file_mapping[sample]["_SJ.out.tab"]
+            self.flagger.flag_file_exists(check_file = sj_out_file,
+                                          partial_check_args = partial_check_args)
+            # check file contents
+            partial_check_args["debug_message"] = ""
+            with sj_out_file.open() as f:
                 for i, line in enumerate(f.readlines()):
                     if i % 100 == 0:
                         tokens = line.split()
                         if len(tokens)  != 9:
-                            print(f"FAIL: {sj_out_file} line {i} does not look correct: {line}")
-
+                            partial_check_args["debug_message"] = f"Line {i} does not look correct."
+            # flag if errors found
+            if partial_check_args["debug_message"]:
+                partial_check_args["user_message"] = f"Failed validation"
+                partial_check_args["severity"] = 90
+                self.flagger.flag(**partial_check_args)
+                continue # check other samples
+            else:
+                partial_check_args["debug_message"] = f"Validated by checking every 100th line has 9 values."
+                partial_check_args["severity"] = 30
+                self.flagger.flag(**partial_check_args)
+            ####################################################################
             # _Log.progress.out check
-            log_progress_out_file = os.path.join(self.dir_path,
-                                    sample,
-                                    f"{sample}_Log.progress.out")
-            expected = "Time    Speed        Read     Read   Mapped   Mapped   Mapped   Mapped Unmapped Unmapped Unmapped Unmapped"
+            EXPECTED_HEADER = "Time    Speed        Read     Read   Mapped   Mapped   Mapped   Mapped Unmapped Unmapped Unmapped Unmapped"
+            EXPECTED_LASTLINE = "ALL DONE!"
 
-            with open(log_progress_out_file, "r") as f:
+
+            log_progress_out_file = self.file_mapping[sample]["_Log.progress.out"]
+            self.flagger.flag_file_exists(check_file = log_progress_out_file,
+                                          partial_check_args = partial_check_args)
+            # check file contents
+            partial_check_args["debug_message"] = ""
+            with log_progress_out_file.open() as f:
                 lines = f.readlines()
-            error = None
-            if not lines[0].strip().startswith(expected):
-                error = (f"First line does not "
-                         f"start with {expected}")
+            if not lines[0].strip().startswith(EXPECTED_HEADER):
+                partial_check_args["debug_message"] += (f"First line does not "
+                                                        f"start with {EXPECTED_HEADER}")
 
-            expected = "ALL DONE!"
-            if lines[-1].strip() != expected:
-                error = (f"Last line does not "
-                         f"equal {expected}")
-            if error:
-                print(f"FAIL: {log_progress_out_file} has issue: {error}")
+            if lines[-1].strip() != EXPECTED_LASTLINE:
+                partial_check_args["debug_message"] += (f"Last line does not "
+                                                        f"equal {EXPECTED_LASTLINE}")
+            if partial_check_args["debug_message"]:
+                partial_check_args["user_message"] = f"Failed validation"
+                partial_check_args["severity"] = 90
+                self.flagger.flag(**partial_check_args)
+                continue # check other samples
+            else:
+                partial_check_args["debug_message"] = f"Validated by checking first and last line."
+                partial_check_args["severity"] = 30
+                self.flagger.flag(**partial_check_args)
 
     def _validate_alignment_files(self):
         """ Checks for existence of expected alignment files.
@@ -247,11 +272,16 @@ class StarAlignments():
         Also checks using samtools quickcheck which should catch truncations and
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
-        check_id = "S_0005" # check file exists and samtools raises no issues
         for sample in self.samples:
+            samtools_flag = False
+            partial_check_args = dict()
+            partial_check_args["check_id"] = "S_0005"
+            partial_check_args["entity"] = sample
+            partial_check_args["debug_message"] = None # created as issues arise. Overridden if no issues
             file_map = self.file_mapping[sample]
             coord_file = file_map["_Aligned.sortedByCoord.out.bam"]
-            self.flagger.flag_file_exists(entity = sample, check_file= coord_file, check_id = check_id)
+            self.flagger.flag_file_exists(check_file = coord_file,
+                                          partial_check_args = partial_check_args)
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],
@@ -259,11 +289,13 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                error_debug_message += (f"FAIL: samtools quick checkout output for on {coord_file}: {stdout}")
+                partial_check_args["debug_message"] += (f"samtools quickcheck {coord_file}: {stdout}")
+                samtools_flag = True
 
             # check transcriptome alignment file
             transcript_file = file_map["_Aligned.toTranscriptome.out.bam"]
-            self.flagger.flag_file_exists(entity = sample, check_file= transcript_file, check_id = check_id)
+            self.flagger.flag_file_exists(check_file = transcript_file,
+                                          partial_check_args = partial_check_args)
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', transcript_file],
@@ -271,20 +303,16 @@ class StarAlignments():
                                  stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
             if stdout:
-                error_debug_message += (f"samtools quickcheck {transcript_file}: {stdout}")
+                partial_check_args["debug_message"] += (f"samtools quickcheck {transcript_file}: {stdout}")
+                samtools_flag = True
 
-            if error_debug_message:
-                self.flagger.flag(entity = sample,
-                                  debug_message = error_debug_message,
-                                  severity = 90,
-                                  check_id = check_id
-                                  )
+            if samtools_flag:
+                partial_check_args["severity"] = 90
+                self.flagger.flag(**partial_check_args)
             else:
-                self.flagger.flag(entity = sample,
-                                  debug_message = "Both bam files exist and raise no issues with samtools quickcheck",
-                                  severity=30,
-                                  check_id = check_id
-                                  )
+                partial_check_args["debug_message"] = "BAM files look fine as per samtools quickcheck"
+            self.flagger.flag(**partial_check_args)
+
 
     def _check_samples_proportions_for_dataset_flags(self):
         ### Check if any sample proportion related flags should be raised
