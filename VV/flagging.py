@@ -20,6 +20,15 @@ FLAG_LEVELS = {
     90:"Issue-Halt_Processing"
     }
 
+FULL_LOG_HEADER = [
+    "severity",      "flag_id"      ,           "step",
+    "script",        "entity"       ,           "sub_entity",
+    "user_message",  "debug_message",           "check_id",
+    "full_path",     "relative_path",           "indices",
+    "entity_value",  "outlier_comparison_type", "max_thresholds",
+    "min_thresholds","outlier_thresholds",      "unique_critera_results",
+    "check_function"
+    ]
 
 class VVError(Exception):
     pass
@@ -59,6 +68,8 @@ class _Flagger():
             self._log_folder = self._log_file.parent
             self._log_folder.mkdir(exist_ok=True, parents=True)
             self._start_log_file()
+        # load log file as dataframe
+        self.df = self._get_log_as_df()
 
     def _start_log_file(self):
         """ Starts a new full log file with a comment header
@@ -80,7 +91,7 @@ class _Flagger():
              entity: str,
              debug_message: str,
              severity: int,
-             checkID: str,
+             check_id: str,
              sub_entity: str = "",
              user_message: str = "",
              preprocess_debug_messages: bool = True,
@@ -88,6 +99,7 @@ class _Flagger():
              relative_path: str = "",
              indices: list = [],
              entity_value: float = "NAN",
+             outlier_comparison_type: str = "",
              max_thresholds: list = [],
              min_thresholds: list = [],
              outlier_thresholds: list = [],
@@ -113,10 +125,35 @@ class _Flagger():
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{sub_entity}\t{user_message}\t{debug_message}\t{checkID}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
-        #print(report)
+        '''report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{sub_entity}\t{user_message}\t{debug_message}\t{check_id}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{outlier_comparison_type}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
+
         with open(self._log_file, "a") as f:
-            f.write(report + "\n")
+            f.write(report + "\n")'''
+
+        report = {"severity": self._severity[severity], "flag_id": severity,
+                  "step": self._step, "script":self._script, "entity": entity,
+                  "sub_entity": sub_entity,"user_message": user_message,
+                  "debug_message": debug_message, "check_id": check_id,
+                  "full_path": full_path, "relative_path": relative_path,
+                  "indices": indices, "entity_value": entity_value,
+                  "outlier_comparison_type": outlier_comparison_type,
+                  "max_thresholds": max_thresholds,
+                  "min_thresholds": min_thresholds,
+                  "outlier_thresholds": outlier_thresholds,
+                  "unique_critera_results": unique_criteria_results,
+                  "check_function": check_function}
+
+        # ensure report dict matches expected headers
+        assert set(report.keys()) == set(FULL_LOG_HEADER), "Report keys MUST be the ones expected full log header."
+        add_df = pd.DataFrame.from_records([report])
+        # add to in memory log
+        self.df = pd.concat([self.df, add_df])
+        print(self.df) # debug
+        # add to file log, if first log add header
+        if len(self.df) == 1:
+            add_df.to_csv(self._log_file, mode="a", index=False, sep="\t")
+        else:
+            add_df.to_csv(self._log_file, mode="a", index=False, sep="\t", header=False)
 
         # full exit upon severe enough issue
         if severity >= self._halt_level:
@@ -126,16 +163,16 @@ class _Flagger():
         return pd.read_csv(self._log_file,
                            sep="\t",
                            comment="#",
-                           names=["severity","flag_id","step","script","entity","user_message","debug_message","checkID","full_path","relative_path","indices","entity_value","max_thresholds","min_thresholds","outlier_thresholds","unique_critera_results","check_function"]
+                           names=FULL_LOG_HEADER
                            )
 
     def check_sample_proportions(self,
-                                 checkID: str,
+                                 check_id: str,
                                  check_cutoffs: dict,
                                  protoflag_map: dict):
         df = self._get_log_as_df()
-        # filter by checkID
-        checkdf = df.loc[df["checkID"] == checkID]
+        # filter by check_id
+        checkdf = df.loc[df["check_id"] == check_id]
 
         # compute proportion with proto flags
         flagged = False
@@ -153,7 +190,7 @@ class _Flagger():
                                     f"meet criteria for flagging. [threshold: {threshold*100}%]"
                                     ),
                           severity = flag_id,
-                          checkID = checkID)
+                          check_id = check_id)
                 flagged = True
                 break
         if not flagged:
@@ -163,7 +200,7 @@ class _Flagger():
                                 f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
                                 ),
                       severity = 30,
-                      checkID = checkID)
+                      check_id = check_id)
 
     def generate_derivative_log(self, log_type: str, samples: list):
         known_log_types = ["only-issues", "by-sample", "by-step", "all-by-entity"]
@@ -215,7 +252,7 @@ class _Flagger():
                     f.write(f"ENTITY: {entity}\n")
                     for _, row in entity_df.iterrows():
                         message = row['user_message'] if not math.isnan(row['user_message']) else row['debug_message']
-                        report_line = f"Issue: {message}\tSeverity: {FLAG_LEVELS[row['flag_id']]} ({row['flag_id']})\tCheckID: {row['checkID']}"
+                        report_line = f"Issue: {message}\tSeverity: {FLAG_LEVELS[row['flag_id']]} ({row['flag_id']})\tCheckID: {row['check_id']}"
                         f.write(f"\t{report_line}\n")
 
             print(f">>> Created {output}: Derived from {self._log_file}")
