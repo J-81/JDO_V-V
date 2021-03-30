@@ -8,8 +8,8 @@
 CUTOFFS = \
 {
     "DEFAULT" : {
-        "middlepoint": "median",
         "raw_reads": {
+            "middlepoint": "median",
             "fastq_proportion_to_check" : 0.2,
             "sequence_length" : {
                 "max_thresholds" : {},
@@ -132,6 +132,7 @@ CUTOFFS = \
             },
         },
         "trimmed_reads": {
+            "middlepoint": "median",
             "fastq_proportion_to_check" : 0.2,
             "sequence_length" : {
                 "max_thresholds" : {},
