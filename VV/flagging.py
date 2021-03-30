@@ -41,10 +41,12 @@ class _Flagger():
                  halt_level: int,
                  log_to: Path,
                  step: str = "General VV"):
+        self._cwd = Path.cwd()
         self._script = script # location of flagging script
         self._step = step # location of flagging script
         self._severity = FLAG_LEVELS
         self._halt_level = halt_level # level to raise a VV exception at
+        self.derivatives = list() # these mimic the flag calls conditionally to generate derivative logs
 
         self._flag_count = 0 # increments for each flag call, useful for testing
 
@@ -148,7 +150,8 @@ class _Flagger():
         add_df = pd.DataFrame.from_records([report])
         # add to in memory log
         self.df = pd.concat([self.df, add_df])
-        print(self.df) # debug
+        #if len(self.df) % 50 == 0:
+        #    print(self.df) # debug
         # add to file log, if first log add header
         if len(self.df) == 1:
             add_df.to_csv(self._log_file, mode="a", index=False, sep="\t")
@@ -175,12 +178,11 @@ class _Flagger():
             partial_check_args["severity"] = 30
         self.flag(**partial_check_args)
 
-
     def _get_log_as_df(self):
         return pd.read_csv(self._log_file,
                            sep="\t",
                            comment="#",
-                           names=FULL_LOG_HEADER
+                           names=FULL_LOG_HEADER,
                            )
 
     def check_sample_proportions(self,
@@ -223,7 +225,7 @@ class _Flagger():
         known_log_types = ["only-issues", "by-sample", "by-step", "all-by-entity"]
         if log_type == "only-issues":
             full_df = self._get_log_as_df()
-            output = f"{log_type}__{self._log_file.name}"
+            output = self._log_folder / f"{log_type}__{self._log_file.name}"
             filter_out = [severity for flag_code, severity
                           in FLAG_LEVELS.items()
                           if flag_code <= 30]
@@ -231,8 +233,10 @@ class _Flagger():
             derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
             # remove columns
             derived_df = derived_df.drop(["full_path"], axis=1)
-            derived_df.to_csv(self._log_folder / output, index=False, sep="\t")
-            print(f">>> Created {output}: Derived from {self._log_file}")
+            derived_df.to_csv(output, index=False, sep="\t")
+            print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
+
+
         elif log_type == "by-sample":
             full_df = self._get_log_as_df()
             parent_dir = self._log_folder / Path("bySample")
@@ -241,7 +245,10 @@ class _Flagger():
                 output = parent_dir / f"{sample}__{self._log_file.name}"
                 derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
                 derived_df.to_csv(output, index=False, sep="\t")
-                print(f">>> Created {output}: Derived from {self._log_file}")
+                print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
+
+
+
         elif log_type == "by-step":
             full_df = self._get_log_as_df()
             parent_dir = self._log_folder / Path("byStep")
@@ -251,7 +258,10 @@ class _Flagger():
                 output = parent_dir / f"{step.replace(' ', '_')}__{self._log_file.name}"
                 derived_df = full_df.loc[full_df["step"] == step]
                 derived_df.to_csv(output, index=False, sep="\t")
-                print(f">>> Created {output}: Derived from {self._log_file}")
+                print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
+
+
+
         elif log_type == "all-by-entity":
             full_df = self._get_log_as_df()
             output = self._log_folder / f"{log_type}__{Path(self._log_file.name).with_suffix('.txt')}"
@@ -266,13 +276,19 @@ class _Flagger():
                 # iterate by unique entities
                 for entity in derived_df["entity"].unique():
                     entity_df = derived_df.loc[derived_df["entity"] == entity]
-                    f.write(f"ENTITY: {entity}\n")
-                    for _, row in entity_df.iterrows():
-                        message = row['user_message'] if not math.isnan(row['user_message']) else row['debug_message']
-                        report_line = f"Issue: {message}\tSeverity: {FLAG_LEVELS[row['flag_id']]} ({row['flag_id']})\tCheckID: {row['check_id']}"
-                        f.write(f"\t{report_line}\n")
+                    f.write(f"SAMPLE: {entity}\n")
+                    for i, (_, row) in enumerate(entity_df.iterrows()):
+                        if i == 0:
+                            continue # skip header
+                        #print(row['sub_entity'], type(row['sub_entity']))
+                        #print(f"ROW:  {row['user_message']} {type( row['user_message'])}")
+                        message = row['user_message'] if not row['user_message'] != "" else row['debug_message']
+                        message_line = f"{i}. ({row['sub_entity']}) " if str(row["sub_entity"]) != "nan" else f"{i}. "
+                        message_line += message
+                        details_line = f"Severity: {FLAG_LEVELS[int(row['flag_id'])]} ({row['flag_id']})  CheckID: {row['check_id']}"
+                        f.write(f"  {message_line}\n    {details_line}\n\n")
 
-            print(f">>> Created {output}: Derived from {self._log_file}")
+            print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
 
