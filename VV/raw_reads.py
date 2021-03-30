@@ -220,51 +220,47 @@ def validate_verify_multiqc(multiqc_json: Path,
                                    "with a debug_message indicating 'All samples have "\
                                    "sequences of a single length'"),
                          severity = 30,
-                         checkID = checkID)
+                         check_id = check_id)
 
     ### DONE R_1002 ###################################################
 
 
     ################################################################
     # Checks for each sample:file_label vs all samples
-    checkIDs_to_keys = {"R_1003":"percent_duplicates",
+    check_ids_to_keys = {"R_1003":"percent_duplicates",
                         "R_1004":"percent_gc",
                         "R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                         "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"
                         }
-    for checkID, key in checkIDs_to_keys.items():
-        # compile all values for all file labels
-        # e.g. for paired end, both forward and reverse reads
-        all_values = list()
-        for file_label in mqc.file_labels:
-            full_key = f"{file_label}-{key}"
-            all_values.extend(mqc.compile_subset(samples_subset = samples,
-                                                 key = full_key))
+    for check_id, key in check_ids_to_keys.items():
+        check_args = dict()
+        check_args["check_id"] = check_id
+        check_args["outlier_comparison_type"] = "Across_Samples:By_File_Label"
         # iterate through each sample:file_label
         # test against all values from all file-labels
         for sample in samples:
+            check_args["entity"] = sample
             for file_label in mqc.file_labels:
-                entity = f"{sample}:{file_label}"
-                all_values = mqc.compile_subset(samples_subset = samples,
-                                                key = full_key)
+                check_args["sub_entity"] = file_label
+                # used to access the label wise values
+                full_key = f"{file_label}-{key}"
                 value = mqc.data[sample][full_key].value
+                check_args["entity_value"] = value
                 value_check_direct(value = value,
-                                   all_values = all_values,
+                                   all_values = mqc.compile_subset(samples_subset = samples, key = full_key),
                                    check_cutoffs = cutoffs["raw_reads"][key],
                                    flagger = flagger,
-                                   checkID = checkID,
-                                   entity = entity,
+                                   partial_check_args = check_args,
                                    value_alias = key,
-                                   middlepoint = cutoffs["middlepoint"],
-                                   debug_message_prefix = "Sample:File_Label vs Samples")
+                                   middlepoint = cutoffs["middlepoint"])
 
     ### DONE R_1003 ###################################################
-    checkIDs_to_keys = {"R_1005":"fastqc_per_base_sequence_quality_plot",
+    check_ids_to_keys = {"R_1005":"fastqc_per_base_sequence_quality_plot",
                         "R_1006":"fastqc_per_sequence_quality_scores_plot",
                         "R_1007":"fastqc_per_sequence_gc_content_plot-Percentages",
                         "R_1008":"fastqc_sequence_duplication_levels_plot",
                         }
-    for checkID, key in checkIDs_to_keys.items():
+    for check_id, key in check_ids_to_keys.items():
         check_cutoffs = cutoffs["raw_reads"][key]
         for sample in samples:
             for file_label in mqc.file_labels:
