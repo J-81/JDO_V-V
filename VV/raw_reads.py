@@ -227,12 +227,15 @@ def validate_verify_multiqc(multiqc_json: Path,
 
     ################################################################
     # Checks for each sample:file_label vs all samples
-    check_ids_to_keys = {"R_1003":"percent_duplicates",
-                        "R_1004":"percent_gc",
-                        "R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
-                        "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"
+    check_ids_to_keys = {"R_1003":("percent_duplicates", None, None),
+                         "R_1004":("percent_gc", None, None),
+                         "R_1011":("fastqc_overrepresented_sequencesi_plot-Top over-represented sequence", None, None),
+                         "R_1012":("fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences", None, None),
+                         "R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
+                         "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
                         }
-    for check_id, key in check_ids_to_keys.items():
+    for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
+        check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key] if cutoffs_key else cutoffs["raw_reads"][key]
         check_args = dict()
         check_args["check_id"] = check_id
         check_args["outlier_comparison_type"] = "Across_Samples:By_File_Label"
@@ -244,11 +247,19 @@ def validate_verify_multiqc(multiqc_json: Path,
                 check_args["sub_entity"] = file_label
                 # used to access the label wise values
                 full_key = f"{file_label}-{key}"
-                value = mqc.data[sample][full_key].value
+                # note: this is just the sample to check for outliers!
+                value = mqc.compile_subset(samples_subset = [sample], key = full_key, aggregator = aggregator)
+                # additional unpacking if aggregator used
+                if isinstance(value,list):
+                    assert len(value) == 1, "Aggregation should return more than one value!"
+                     # an error here may indicate an issue generating a single value from the compile subset arg
+                    value = float(value[0])
+                # this is all values from all samples and the same filelabel
+                all_values = mqc.compile_subset(samples_subset = samples, key = full_key, aggregator = aggregator)
                 check_args["entity_value"] = value
                 value_check_direct(value = value,
-                                   all_values = mqc.compile_subset(samples_subset = samples, key = full_key),
-                                   check_cutoffs = cutoffs["raw_reads"][key],
+                                   all_values = all_values,
+                                   check_cutoffs = check_cutoffs,
                                    flagger = flagger,
                                    partial_check_args = check_args,
                                    value_alias = key,
@@ -297,9 +308,7 @@ def validate_verify_multiqc(multiqc_json: Path,
     # for each file label
     #
     # format: { check_id: (key, aggregation_function, cutoffs_subkey)
-    check_ids_to_keys = {"R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
-                        "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
-                        }
+    check_ids_to_keys = {}
     for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
         check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key]
         for sample in samples:
