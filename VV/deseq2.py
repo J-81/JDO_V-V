@@ -52,26 +52,26 @@ class Deseq2ScriptOutput():
         """
         # SampleTable.csv Check
         entity = "FULL_DATASET"
-        checkID_to_file = {
+        check_id_to_file = {
             "D_0001" : self.counts_dir_path / "SampleTable.csv",
             "D_0002" : self.counts_dir_path / "Unnormalized_Counts.csv",
             "D_0003" : self.counts_dir_path / "Normalized_Counts.csv",
             }
         if self.has_ERCC:
-            checkID_to_file["D_0004"] = self.counts_dir_path / "ERCC_Normalized_Counts.csv"
+            check_id_to_file["D_0004"] = self.counts_dir_path / "ERCC_Normalized_Counts.csv"
 
-        for checkID, expectedFile in checkID_to_file.items():
+        for check_id, expectedFile in check_id_to_file.items():
             # check file existence
             if expectedFile.is_file():
-                self._check_samples_match(expectedFile, checkID, entity)
+                self._check_samples_match(expectedFile, check_id, entity)
                 if expectedFile.name in ["Unnormalized_Counts.csv"]:
-                    self._check_counts_match_gene_results(expectedFile, checkID)
+                    self._check_counts_match_gene_results(expectedFile, check_id)
 
             else:
                 debug_message = f"{expectedFile.name} does not exist"
                 self.flagger.flag(debug_message=(f"Missing {expectedFile}"),
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
     def _check_dge_files(self):
@@ -90,47 +90,47 @@ class Deseq2ScriptOutput():
         # ERCC_NormDGE  visualization_PCA_table.csv
         # SampleTable.csv Check
         entity = "FULL_DATASET"
-        checkID_to_file = {
+        check_id_to_file = {
             "D_0005" : self.dge_dir_path / "contrasts.csv",
             "D_0006" : self.dge_dir_path / "differential_expression.csv",
             "D_0007" : self.dge_dir_path / "visualization_output_table.csv",
             "D_0008" : self.dge_dir_path / "visualization_PCA_table.csv",
             }
         if self.has_ERCC:
-            checkID_to_file["D_0009"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_contrasts.csv"
-            checkID_to_file["D_0010"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_differential_expression.csv"
-            checkID_to_file["D_0011"] = self.dge_dir_path / Path("ERCC_NormDGE") / "visualization_output_table_ERCCnorm.csv"
-            checkID_to_file["D_0012"] = self.dge_dir_path / Path("ERCC_NormDGE") / "visualization_PCA_table_ERCCnorm.csv"
+            check_id_to_file["D_0009"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_contrasts.csv"
+            check_id_to_file["D_0010"] = self.dge_dir_path / Path("ERCC_NormDGE") / "ERCCnorm_differential_expression.csv"
+            check_id_to_file["D_0011"] = self.dge_dir_path / Path("ERCC_NormDGE") / "visualization_output_table_ERCCnorm.csv"
+            check_id_to_file["D_0012"] = self.dge_dir_path / Path("ERCC_NormDGE") / "visualization_PCA_table_ERCCnorm.csv"
 
-        for checkID, expectedFile in checkID_to_file.items():
+        for check_id, expectedFile in check_id_to_file.items():
             # check file existence
             if expectedFile.is_file():
                 # file specific checks
                 if expectedFile.name in ["contrasts.csv","ERCCnorm_contrasts.csv"]:
-                    self._check_contrasts(expectedFile, checkID = checkID, entity = entity)
+                    self._check_contrasts(expectedFile, check_id = check_id, entity = entity)
 
                 elif expectedFile.name in ["differential_expression.csv","ERCCnorm_differential_expression.csv"]:
-                    self._check_dge_table(expectedFile, checkID = checkID, entity = entity)
+                    self._check_dge_table(expectedFile, check_id = check_id, entity = entity)
 
                 elif expectedFile.name in ["visualization_output_table.csv","visualization_output_table_ERCCnorm.csv"]:
-                    self._check_visualization_table(expectedFile, checkID = checkID, entity = entity)
+                    self._check_visualization_table(expectedFile, check_id = check_id, entity = entity)
 
                 # no file specific checks needed
                 else:
                     debug_message = f"{expectedFile.name} exists. No other filespecific checks requested."
                     self.flagger.flag(debug_message = debug_message,
                                       severity = 30,
-                                      checkID = checkID,
+                                      check_id = check_id,
                                       entity = entity)
 
             else:
                 debug_message = f"{expectedFile.name} does not exist"
                 self.flagger.flag(debug_message=(f"Missing {expectedFile}"),
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
-    def _check_dge_table(self, expectedFile, checkID, entity):
+    def _check_dge_table(self, expectedFile, check_id, entity):
         dge_df = pd.read_csv(expectedFile, index_col=None)
         flagged = False
         # check all samples have a column
@@ -140,7 +140,7 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         # check expected columns based on groups and groups_versus
@@ -158,7 +158,7 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         non_negative_cols = [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
@@ -173,17 +173,17 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         if not flagged:
             debug_message = f"{expectedFile.name} exists, expected columns found, p.values and adj.p.values were non-negative"
             self.flagger.flag(debug_message=debug_message,
                               severity=30,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
-    def _check_visualization_table(self, expectedFile, checkID, entity):
+    def _check_visualization_table(self, expectedFile, check_id, entity):
         visualization_df = pd.read_csv(expectedFile, index_col=None)
         flagged = False
         # check all samples have a column
@@ -193,7 +193,7 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists but appears to be missing sample columns {missing_sample_cols}."
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         # check expected columns based on groups and groups_versus
@@ -215,7 +215,7 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists but missing columns ({missing_cols})"
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         non_negative_cols = [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
@@ -231,17 +231,17 @@ class Deseq2ScriptOutput():
             debug_message = f"{expectedFile.name} exists and all columns exist, but found negative values in {has_negative_values}"
             self.flagger.flag(debug_message=debug_message,
                               severity=90,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
         if not flagged:
             debug_message = f"{expectedFile.name} exists, expected columns found, columns datatypes were within constraints"
             self.flagger.flag(debug_message=debug_message,
                               severity=30,
-                              checkID=checkID,
+                              check_id=check_id,
                               entity = entity)
 
-    def _check_counts_match_gene_results(self, unnorm_counts_file, checkID):
+    def _check_counts_match_gene_results(self, unnorm_counts_file, check_id):
         """ Checks that the gene counts match on a per sample basis """
         # get by sample counts (from RSEM)
         bySample_summed_gene_counts = self.rsem_cross_checks["bySample_summed_gene_counts"]
@@ -257,36 +257,36 @@ class Deseq2ScriptOutput():
             if unnorm_sum_of_counts == rsem_sum_of_counts:
                 self.flagger.flag(debug_message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts}) matches counts from RSEM ({rsem_sum_of_counts})"),
                                   severity=30,
-                                  checkID=checkID,
+                                  check_id=check_id,
                                   entity = entity)
             else:
                 self.flagger.flag(debug_message=(f"{unnorm_counts_file.name} summed gene counts ({unnorm_sum_of_counts})  DOES NOT match counts from RSEM ({rsem_sum_of_counts})"),
                                   severity=90,
-                                  checkID=checkID,
+                                  check_id=check_id,
                                   entity = entity)
 
-    def _check_samples_match(self, expectedFile, checkID, entity):
+    def _check_samples_match(self, expectedFile, check_id, entity):
         """ Checks that sample names match
         """
         # check if samples match expectation
         df = pd.read_csv(expectedFile, header=0)
         # in counts tables, samples are columns (excluing first column)
         # in samples table, samples are rows
-        samples_in_file = list(df.columns[1:]) if checkID != "D_0001" else list(df.iloc[:,0])
+        samples_in_file = list(df.columns[1:]) if check_id != "D_0001" else list(df.iloc[:,0])
         if set(samples_in_file) == set(self.samples):
             debug_message = f"{expectedFile.name} exists and samples are correct"
             self.flagger.flag(debug_message = debug_message,
                               severity = 30,
-                              checkID = checkID,
+                              check_id = check_id,
                               entity = entity)
         else:
             debug_message = f"{expectedFile.name} exists but samples are not as expected: In file: {samples_in_file}, expected: {self.samples}"
             self.flagger.flag(debug_message = debug_message,
                               severity = 90,
-                              checkID = checkID,
+                              check_id = check_id,
                               entity = entity)
 
-    def _check_contrasts(self, contrasts_file, checkID, entity):
+    def _check_contrasts(self, contrasts_file, check_id, entity):
        """ Performs a check that appropriate number of contrasts generated.
 
        Also sets contrast groups
@@ -305,10 +305,10 @@ class Deseq2ScriptOutput():
        if count_contrasts_from_deseq2 == expected_contrasts:
            self.flagger.flag(debug_message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2}) matches expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=30,
-                             checkID=checkID,
+                             check_id=check_id,
                              entity = entity)
        else:
            self.flagger.flag(debug_message=(f"{contrasts_file.name} contrasts ({count_contrasts_from_deseq2})  DOES NOT match expected contrasts based on SampleSheet ({expected_contrasts})"),
                              severity=90,
-                             checkID=checkID,
+                             check_id=check_id,
                              entity = entity)

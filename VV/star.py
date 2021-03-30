@@ -46,10 +46,10 @@ class StarAlignments():
     def _check_values(self):
         ################################################################
         # Checks for each sample:file_label vs all samples
-        checkIDs_to_keys = {"S_0003":"total_reads_mapped-Percentage",
+        check_ids_to_keys = {"S_0003":"total_reads_mapped-Percentage",
                             "S_0004":"mapped_to_multiple_loci-Percentage",
                             }
-        for checkID, key in checkIDs_to_keys.items():
+        for check_id, key in check_ids_to_keys.items():
             # compile values for the key for all samples
             all_values = [sample_values[key] for sample_values in self.final.values()]
 
@@ -61,7 +61,7 @@ class StarAlignments():
                                    all_values = all_values,
                                    check_cutoffs = self.cutoffs["STAR"][key],
                                    flagger = self.flagger,
-                                   checkID = checkID,
+                                   check_id = check_id,
                                    entity = sample,
                                    value_alias = key,
                                    middlepoint = self.cutoffs["middlepoint"],
@@ -117,20 +117,20 @@ class StarAlignments():
             # create entry for sample
             final_data[sample] = dict()
             file_path = os.path.join(self.dir_path,sample,f"{sample}_Log.final.out")
-            checkID = "S_0001"
+            check_id = "S_0001"
             if not os.path.isfile(file_path):
                 debug_message = f"Could not find {file_path}"
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 90,
-                                  checkID = checkID)
+                                  check_id = check_id)
                 continue
             else:
                 debug_message = f"Found {file_path}"
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 30,
-                                  checkID = checkID)
+                                  check_id = check_id)
             with open(file_path, "r") as f:
                 for line in f.readlines():
                     # Data lines contain '|''
@@ -193,20 +193,20 @@ class StarAlignments():
                 error = (f"Last line does not "
                          f"equal {expected}")
             # flag if errors found
-            checkID = "S_0002"
+            check_id = "S_0002"
             if error:
                 debug_message = f"{log_out_file} has issue: {error}"
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 90,
-                                  checkID = checkID)
+                                  check_id = check_id)
                 continue
             else:
                 debug_message = f"{log_out_file}, no issues found"
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 30,
-                                  checkID = checkID)
+                                  check_id = check_id)
 
 
              # SJ.out.tab check
@@ -247,11 +247,11 @@ class StarAlignments():
         Also checks using samtools quickcheck which should catch truncations and
             malformed header information. Source: http://www.htslib.org/doc/samtools-quickcheck.html
         """
-        checkID = "S_0005" # check file exists and samtools raises no issues
+        check_id = "S_0005" # check file exists and samtools raises no issues
         for sample in self.samples:
             file_map = self.file_mapping[sample]
             coord_file = file_map["_Aligned.sortedByCoord.out.bam"]
-            self.flagger.flag_file_exists(entity = sample, check_file= coord_file, checkID = checkID)
+            self.flagger.flag_file_exists(entity = sample, check_file= coord_file, check_id = check_id)
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', coord_file],
@@ -263,7 +263,7 @@ class StarAlignments():
 
             # check transcriptome alignment file
             transcript_file = file_map["_Aligned.toTranscriptome.out.bam"]
-            self.flagger.flag_file_exists(entity = sample, check_file= transcript_file, checkID = checkID)
+            self.flagger.flag_file_exists(entity = sample, check_file= transcript_file, check_id = check_id)
 
             # check with coord file with samtools
             process = subprocess.Popen(['samtools', 'quickcheck', transcript_file],
@@ -277,13 +277,13 @@ class StarAlignments():
                 self.flagger.flag(entity = sample,
                                   debug_message = error_debug_message,
                                   severity = 90,
-                                  checkID = checkID
+                                  check_id = check_id
                                   )
             else:
                 self.flagger.flag(entity = sample,
                                   debug_message = "Both bam files exist and raise no issues with samtools quickcheck",
                                   severity=30,
-                                  checkID = checkID
+                                  check_id = check_id
                                   )
 
     def _check_samples_proportions_for_dataset_flags(self):
@@ -292,10 +292,10 @@ class StarAlignments():
             60 : [60],
             50 : [50, 60]
         }
-        checkID_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
+        check_id_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
                                                      "S_0004":"mapped_to_multiple_loci-Percentage",
                                     }
-        for checkID, cutoffs_key in checkID_with_samples_proportion_threshold.items():
-            self.flagger.check_sample_proportions(checkID,
+        for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
+            self.flagger.check_sample_proportions(check_id,
                                                   self.cutoffs["STAR"][cutoffs_key],
                                                   PROTOFLAG_MAP)

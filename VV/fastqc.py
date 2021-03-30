@@ -18,7 +18,7 @@ def validate_verify(samples: [str],
     :param file_mapping_substrings: Added by fastQC (e.g. '_raw_fastqc')
     """
     # check if html and zip files exists
-    checkID = "FastQC file existence check"
+    check_id = "FastQC file existence check"
     for sample in samples:
         expected_html_file = os.path.join(input_path, f"{prefix}{expected_suffix}.html")
         expected_zip_file = os.path.join(input_path, f"{prefix}{expected_suffix}.html")
@@ -28,9 +28,9 @@ def validate_verify(samples: [str],
             Flagger.flag(debug_message=f"Missing {expected_html_file} and/or {expected_zip_file}",
                          entity=sample,
                          severity=90,
-                         checkID="F_0001")
+                         check_id="F_0001")
         else:
             Flagger.flag(debug_message=f"Missing {expected_html_file} and/or {expected_zip_file}",
                          entity=sample,
                          severity=30,
-                         checkID="F_0001")
+                         check_id="F_0001")

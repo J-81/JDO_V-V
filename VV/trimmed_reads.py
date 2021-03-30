@@ -30,7 +30,7 @@ def validate_verify(file_mapping: dict,
     ###################################################################
 
     ### START R_0001 ##################################################
-    checkID = "T_0001"
+    check_id = "T_0001"
     missing_file = list()
     for sample in file_mapping.keys():
         expected_file_lables = list(file_mapping[sample].keys())
@@ -42,12 +42,12 @@ def validate_verify(file_mapping: dict,
             flagger.flag(entity = sample,
                          debug_message = f"Missing expected files for {missing_files}",
                          severity = 90,
-                         checkID = checkID)
+                         check_id = check_id)
         else:
             flagger.flag(entity = sample,
                          debug_message = f"All expected files present: {expected_file_lables}",
                          severity = 30,
-                         checkID = checkID)
+                         check_id = check_id)
     ### DONE R_0001 ###################################################
 
     ### START R_0002 ##################################################
@@ -55,7 +55,7 @@ def validate_verify(file_mapping: dict,
     check_proportion = cutoffs["trimmed_reads"]["fastq_proportion_to_check"]
     for sample in file_mapping.keys():
         checkArgs = dict()
-        checkArgs["checkID"] = "T_0002"
+        checkArgs["check_id"] = "T_0002"
         checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
@@ -72,7 +72,7 @@ def validate_verify(file_mapping: dict,
     ### DONE R_0002 ###################################################
 
     ### START R_0003 ##################################################
-    checkID = "T_0003"
+    check_id = "T_0003"
     def file_size(file: Path):
         """ Returns filesize for a Path object
         """
@@ -85,7 +85,7 @@ def validate_verify(file_mapping: dict,
                        value_mapping = filesize_mapping,
                        all_values = all_filesizes,
                        flagger = flagger,
-                       checkID = checkID,
+                       check_id = check_id,
                        value_alias = metric,
                        middlepoint = cutoffs["middlepoint"]
                        )
@@ -152,7 +152,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                           outlier_comparision_point = outlier_comparision_point)
     samples = list(file_mapping.keys())
     ### START T_1001 ##################################################
-    checkID = "T_1001"
+    check_id = "T_1001"
     for sample in samples:
         entity = sample
         # I.E: if the study is paired end
@@ -164,17 +164,17 @@ def validate_verify_multiqc(multiqc_json: Path,
                 flagger.flag(entity = entity,
                              debug_message = f"Total Count of reads matches between pairs.",
                              severity = 30,
-                             checkID = checkID)
+                             check_id = check_id)
             else:
                 flagger.flag(entity = entity,
                              debug_message = f"Total Count of reads does NOT matches between pairs.",
                              severity = 90,
-                             checkID = checkID)
+                             check_id = check_id)
     ### DONE T_1001 ###################################################
 
     ### START T_1002 ##################################################
     # NOTE: outliers is calculated for each sample.  This is redudant and efficiency may be improved by refactoring this in the future.
-    checkID = "T_1002"
+    check_id = "T_1002"
     key = "fastqc_sequence_length_distribution_plot"
     check_cutoffs = cutoffs["trimmed_reads"]["sequence_length_dist"]
     try:
@@ -199,7 +199,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                                f"See the following x-indices "
                                                f"{outliers_for_sample}"),
                                      severity = severity,
-                                     checkID = checkID)
+                                     check_id = check_id)
                         flagged = True
                         break
                 if not flagged:
@@ -209,7 +209,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                             f"no outliers detected by "
                                             f"sequence length bin [deviation > {threshold}]."),
                                  severity = 30,
-                                 checkID = checkID)
+                                 check_id = check_id)
 
     except KeyError:
         # this indicates the plot was not generated.
@@ -224,19 +224,19 @@ def validate_verify_multiqc(multiqc_json: Path,
                                    "with a debug_message indicating 'All samples have "\
                                    "sequences of a single length'"),
                          severity = 30,
-                         checkID = checkID)
+                         check_id = check_id)
 
     ### DONE T_1002 ###################################################
 
     ################################################################
     # Checks for each sample:file_label vs all samples
     # for single value cases
-    checkIDs_to_keys = {"T_1003":"percent_duplicates",
+    check_ids_to_keys = {"T_1003":"percent_duplicates",
                         "T_1004":"percent_gc",
                         "T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                         "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"
                         }
-    for checkID, key in checkIDs_to_keys.items():
+    for check_id, key in check_ids_to_keys.items():
         # compile all values for all file labels
         # e.g. for paired end, both forward and reverse reads
         all_values = list()
@@ -256,7 +256,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                    all_values = all_values,
                                    check_cutoffs = cutoffs["trimmed_reads"][key],
                                    flagger = flagger,
-                                   checkID = checkID,
+                                   check_id = check_id,
                                    entity = entity,
                                    value_alias = key,
                                    middlepoint = cutoffs["middlepoint"],
@@ -265,12 +265,12 @@ def validate_verify_multiqc(multiqc_json: Path,
     #######################################################
     # Checks against index values
     # Outliers are detected within each index bin and outlier bins are reported
-    checkIDs_to_keys = {"T_1007":"fastqc_per_base_sequence_quality_plot",
+    check_ids_to_keys = {"T_1007":"fastqc_per_base_sequence_quality_plot",
                         "T_1008":"fastqc_per_sequence_quality_scores_plot",
                         "T_1009":"fastqc_per_sequence_gc_content_plot-Percentages",
                         "T_1010":"fastqc_sequence_duplication_levels_plot",
                         }
-    for checkID, key in checkIDs_to_keys.items():
+    for check_id, key in check_ids_to_keys.items():
         check_cutoffs = cutoffs["trimmed_reads"][key]
         for sample in samples:
             for file_label in mqc.file_labels:
@@ -293,21 +293,21 @@ def validate_verify_multiqc(multiqc_json: Path,
                                               f"See the following x-indices in {key} "
                                               f"{outliers_for_sample}"),
                                      severity = check_cutoffs["outlier_thresholds"][threshold],
-                                     checkID = checkID)
+                                     check_id = check_id)
                         flagged = True
                 # log passes
                 if not flagged:
                     flagger.flag(entity = entity,
                                  debug_message = (f"No outliers detected for {key} [deviation > {threshold}]."),
                                  severity = 30,
-                                 checkID = checkID)
+                                 check_id = check_id)
 
     ################################################################
     # Checks against indexed values with aggregation of such values
-    checkIDs_to_keys = {"T_1011":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
+    check_ids_to_keys = {"T_1011":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
                         "T_1012":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
                         }
-    for checkID, (key, aggregator, cutoffs_key) in checkIDs_to_keys.items():
+    for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
         check_cutoffs = cutoffs["trimmed_reads"][key][cutoffs_key]
         for sample in samples:
             for file_label in mqc.file_labels:
@@ -326,7 +326,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                    all_values = all_values,
                                    check_cutoffs = check_cutoffs,
                                    flagger = flagger,
-                                   checkID = checkID,
+                                   check_id = check_id,
                                    entity = entity,
                                    value_alias = f"{key}-aggregated by {cutoffs_key}",
                                    middlepoint = cutoffs["middlepoint"],
@@ -335,7 +335,7 @@ def validate_verify_multiqc(multiqc_json: Path,
 
     ### START T_1002 ##################################################
     # NOTE: outliers is calculated for each sample.  This is redudant and efficiency may be improved by refactoring this in the future.
-    checkID = "T_1013"
+    check_id = "T_1013"
     key = "fastqc_adapter_content_plot"
     check_cutoffs = cutoffs["trimmed_reads"]["fastqc_adapter_content_plot"]
     try:
@@ -347,7 +347,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                "with a debug_message indicating 'No samples found "
                                "with any adapter contamination > 0.1%'"),
                      severity = 60,
-                     checkID = checkID)
+                     check_id = check_id)
 
     except KeyError:
         # this indicates the plot was not generated.
@@ -360,7 +360,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                "with a debug_message indicating 'No samples found "
                                "with any adapter contamination > 0.1%'"),
                      severity = 30,
-                     checkID = checkID)
+                     check_id = check_id)
 
 
     ### DONE R_1003 ###################################################
@@ -371,10 +371,10 @@ def validate_verify_multiqc(multiqc_json: Path,
         50 : [59,49]
     }
     ### Check if any sample proportion related flags should be raised
-    checkID_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+    check_id_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
-    for checkID, cutoffs_key in checkID_with_samples_proportion_threshold.items():
-        flagger.check_sample_proportions(checkID,
+    for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
+        flagger.check_sample_proportions(check_id,
                                          cutoffs["trimmed_reads"][cutoffs_key],
                                          PROTOFLAG_MAP)

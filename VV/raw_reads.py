@@ -36,7 +36,7 @@ def validate_verify(file_mapping: dict,
     ### START R_0001 ##################################################
     for sample, file_map in file_mapping.items():
         checkArgs = dict()
-        checkArgs["checkID"] = "R_0001"
+        checkArgs["check_id"] = "R_0001"
         checkArgs["entity"] = sample
         missing_files = list()
         for filelabel, file in file_map.items():
@@ -58,7 +58,7 @@ def validate_verify(file_mapping: dict,
     check_proportion = cutoffs["raw_reads"]["fastq_proportion_to_check"]
     for sample in file_mapping.keys():
         checkArgs = dict()
-        checkArgs["checkID"] = "R_0002"
+        checkArgs["check_id"] = "R_0002"
         checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
@@ -75,7 +75,7 @@ def validate_verify(file_mapping: dict,
     ### DONE R_0002 ###################################################
 
     ### START R_0003 ##################################################
-    checkID = "R_0003"
+    check_id = "R_0003"
     def file_size(file: Path):
         """ Returns filesize for a Path object
         """
@@ -88,7 +88,7 @@ def validate_verify(file_mapping: dict,
                        value_mapping = filesize_mapping,
                        all_values = all_filesizes,
                        flagger = flagger,
-                       checkID = checkID,
+                       check_id = check_id,
                        value_alias = metric,
                        middlepoint = cutoffs["middlepoint"]
                        )
@@ -157,7 +157,7 @@ def validate_verify_multiqc(multiqc_json: Path,
     ### START R_1001 ##################################################
     # TODO: add paired read length match check (R_1001)
     if paired_end:
-        checkID = "R_1001"
+        check_id = "R_1001"
         for sample in samples:
             entity = sample
             forward_count = mqc.data[sample]["forward-total_sequences"].value
@@ -167,16 +167,16 @@ def validate_verify_multiqc(multiqc_json: Path,
                 flagger.flag(entity = entity,
                              debug_message = f"Total Count of reads matches between pairs.",
                              severity = 30,
-                             checkID = checkID)
+                             check_id = check_id)
             else:
                 flagger.flag(entity = entity,
                              debug_message = f"Total Count of reads does NOT matches between pairs.",
                              severity = 90,
-                             checkID = checkID)
+                             check_id = check_id)
     ### DONE R_1001 ###################################################
 
     ### START R_1002 ##################################################
-    checkID = "R_1002"
+    check_id = "R_1002"
     key = "fastqc_sequence_length_distribution_plot"
     try:
         mqc.data[samples[0]][f"{mqc.file_labels[0]}-{key}"]
@@ -196,7 +196,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                                 f"no outliers detected by "
                                                 f"sequence length bin [deviation > {threshold}]."),
                                      severity = 50,
-                                     checkID = checkID)
+                                     check_id = check_id)
                     else:
                         flagger.flag(entity = entity,
                                      debug_message = (f"Outliers detected by sequence "
@@ -205,7 +205,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                                f"See the following x-indices "
                                                f"{outliers_for_sample}"),
                                      severity = severity,
-                                     checkID = checkID)
+                                     check_id = check_id)
 
     except KeyError:
         # this indicates the plot was not generated.
@@ -287,24 +287,24 @@ def validate_verify_multiqc(multiqc_json: Path,
                                               f"See the following x-indices in {key} "
                                               f"{outliers_for_sample}"),
                                      severity = check_cutoffs["outlier_thresholds"][threshold],
-                                     checkID = checkID)
+                                     check_id = check_id)
                         flagged = True
                 # log passes
                 if not flagged:
                     flagger.flag(entity = entity,
                                  debug_message = (f"No outliers detected for {key} [deviation > {threshold}]."),
                                  severity = 30,
-                                 checkID = checkID)
+                                 check_id = check_id)
 
     ### DONE R_1003 ###################################################
     # Checks that are performed across an aggregate value for indexed positions
     # for each file label
     #
-    # format: { checkID: (key, aggregation_function, cutoffs_subkey)
-    checkIDs_to_keys = {"R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
+    # format: { check_id: (key, aggregation_function, cutoffs_subkey)
+    check_ids_to_keys = {"R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
                         "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
                         }
-    for checkID, (key, aggregator, cutoffs_key) in checkIDs_to_keys.items():
+    for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
         check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key]
         for sample in samples:
             for file_label in mqc.file_labels:
@@ -323,7 +323,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                                    all_values = all_values,
                                    check_cutoffs = check_cutoffs,
                                    flagger = flagger,
-                                   checkID = checkID,
+                                   check_id = check_id,
                                    entity = entity,
                                    value_alias = f"{key}-aggregated by {cutoffs_key}",
                                    middlepoint = cutoffs["middlepoint"],
@@ -336,10 +336,10 @@ def validate_verify_multiqc(multiqc_json: Path,
         50 : [59,49]
     }
     ### Check if any sample proportion related flags should be raised
-    checkID_with_samples_proportion_threshold = {"R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
+    check_id_with_samples_proportion_threshold = {"R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
-    for checkID, cutoffs_key in checkID_with_samples_proportion_threshold.items():
-        flagger.check_sample_proportions(checkID,
+    for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
+        flagger.check_sample_proportions(check_id,
                                          cutoffs["raw_reads"][cutoffs_key],
                                          PROTOFLAG_MAP)

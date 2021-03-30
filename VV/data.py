@@ -191,14 +191,14 @@ class Dataset():
                         vv_for: str):
 
         ### START I_0001 ##################################################
-        checkID = "I_0001"
+        check_id = "I_0001"
         if self.isa_zip_path.is_file():
             self.flagger.flag(entity = self.entity,
                          debug_message = f"Found ISA zip file",
                          full_path = self.isa_zip_path.resolve(),
                          relative_path = self.isa_zip_path.name,
                          severity = 30,
-                         checkID = checkID
+                         check_id = check_id
                         )
         else:
             self.flagger.flag(entity = self.entity,
@@ -206,25 +206,25 @@ class Dataset():
                          full_path = self.isa_zip_path.resolve(),
                          relative_path = self.isa_zip_path.name,
                          severity = 90,
-                         checkID = checkID
+                         check_id = check_id
                         )
             raise FileNotFoundError(f"ISA FILE MISSING: {self.isa_zip_path}")
         ### DONE S_0001 ##################################################
 
         if vv_for == "RNASeq":
             assay_name = "transcription profiling by RNASeq"
-            checkID = "I_0002"
+            check_id = "I_0002"
             if assay_name in self.assays.keys():
                 self.flagger.flag(entity = self.entity,
                                   debug_message = f"Expected assay ({assay_name}) was found in ISA file as parsed.",
                                   severity = 30,
-                                  checkID = checkID
+                                  check_id = check_id
                                  )
             else:
                 self.flagger.flag(entity = self.entity,
                                   debug_message = f"Expected assay ({assay_name}) not found in ISA file as parsed.",
                                   severity = 90,
-                                  checkID = checkID
+                                  check_id = check_id
                                   )
         else:
             raise ValueError(f"VV for {vv_for} has not been implemented.")

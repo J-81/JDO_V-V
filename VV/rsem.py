@@ -49,28 +49,28 @@ class RsemCounts():
             isoform_count_path = self.dir_path  / f"{sample}.isoforms.results"
 
             # check if file exists
-            checkID = "M_0001"
+            check_id = "M_0001"
             if gene_count_path.is_file():
                 debug_message = f"Gene counts file found. {gene_count_path}"
                 self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 30, checkID = checkID
+                                  severity = 30, check_id = check_id
                                 )
             else:
                 debug_message = f"Gene counts file NOT found. {gene_count_path}"
                 self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 90, checkID = checkID
+                                  severity = 90, check_id = check_id
                                 )
             # check if file exists
-            checkID = "M_0002"
+            check_id = "M_0002"
             if isoform_count_path.is_file():
                 debug_message = f"Isoform counts file found. {isoform_count_path}"
                 self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 30, checkID = checkID
+                                  severity = 30, check_id = check_id
                                 )
             else:
                 debug_message = f"Isoform counts file NOT found. {isoform_count_path}"
                 self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 90, checkID = checkID
+                                  severity = 90, check_id = check_id
                                 )
             self.gene_counts[sample] = pd.read_csv(gene_count_path ,sep="\t")
             self.isoform_counts[sample] = pd.read_csv(isoform_count_path ,sep="\t")
@@ -108,7 +108,7 @@ class RsemCounts():
             counts_of_isoforms_expressed[sample] = len(df.loc[isExpressed])
 
         # flag if under average count
-        checkID = "M_0003"
+        check_id = "M_0003"
         mean_count = statistics.mean(counts_of_NonERCC_genes_expressed.values())
         for sample, count in counts_of_NonERCC_genes_expressed.items():
             if count < mean_count:
@@ -116,17 +116,17 @@ class RsemCounts():
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 50,
-                                  checkID = checkID
+                                  check_id = check_id
                                 )
             else:
                 debug_message = "Gene counts are not less than the average."
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 30,
-                                  checkID = checkID
+                                  check_id = check_id
                                 )
         # flag if under average count
-        checkID = "M_0004"
+        check_id = "M_0004"
         mean_count = statistics.mean(counts_of_NonERCC_isoforms_expressed.values())
         for sample, count in counts_of_NonERCC_isoforms_expressed.items():
             if count < mean_count:
@@ -134,24 +134,24 @@ class RsemCounts():
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 50,
-                                  checkID = checkID
+                                  check_id = check_id
                                 )
             else:
                 debug_message = "Isoform counts are not less than the average."
                 self.flagger.flag(entity = sample,
                                   debug_message = debug_message,
                                   severity = 30,
-                                  checkID = checkID
+                                  check_id = check_id
                                 )
 
         ################################################################
         # Checks for each sample:file_label vs all samples
-        checkIDs_to_keys = {"M_0005":("count_of_unique_genes_expressed", counts_of_genes_expressed),
+        check_ids_to_keys = {"M_0005":("count_of_unique_genes_expressed", counts_of_genes_expressed),
                             "M_0006":("count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
                             }
         if self.has_ERCC:
-            checkIDs_to_keys["M_0007"] = ("count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected)
-        for checkID, (key, df_dict) in checkIDs_to_keys.items():
+            check_ids_to_keys["M_0007"] = ("count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected)
+        for check_id, (key, df_dict) in check_ids_to_keys.items():
             # compile all values for all file labels
             # e.g. for paired end, both forward and reverse reads
             all_values = df_dict.values()
@@ -165,7 +165,7 @@ class RsemCounts():
                                        all_values = all_values,
                                        check_cutoffs = cutoffs["RSEM"][key],
                                        flagger = flagger,
-                                       checkID = checkID,
+                                       check_id = check_id,
                                        entity = entity,
                                        value_alias = key,
                                        middlepoint = cutoffs["middlepoint"],
