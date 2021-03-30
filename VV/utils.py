@@ -8,8 +8,10 @@ from typing import Tuple, Callable
 import statistics
 import configparser
 from pathlib import Path
+import subprocess
 
 from VV.flagging import Flagger
+from VV.multiqc import MultiQC
 
 FLAG_LEVELS = {
     20:"Info-Only",
@@ -141,76 +143,142 @@ def filevalues_from_mapping(file_mapping: dict,
 
     return file_value_mapping, all_values
 
-def value_based_checks(check_cutoffs: dict,
-                       value_mapping: dict,
-                       all_values: list,
-                       flagger: Flagger,
-                       check_id: str,
-                       value_alias: str,
-                       middlepoint: str):
-    """ Performs checks and sends appropriate flag calls for a value.
-    """
-    # calculate middlepoint and standard deviation
+def get_stdev_middle(all_values, middlepoint):
+    """ calculate middlepoint and standard deviation """
     stdev = statistics.stdev(all_values)
     try:
         middlepoint_function = MIDDLEPOINT_FUNC[middlepoint]
     except KeyError:
         raise KeyError(f"Middlepoint named {middlepoint} not valid. Try from {list(MIDDLEPOINT_FUNC.keys())}")
     middlepoint = middlepoint_function(all_values)
+    return stdev, middlepoint
 
+def value_based_checks(partial_check_args: dict,
+                       check_cutoffs: dict,
+                       value_mapping: dict,
+                       all_values: list,
+                       flagger: Flagger,
+                       value_alias: str,
+                       middlepoint: str):
+    """ Performs checks and sends appropriate flag calls for a value.
+    """
     for sample in value_mapping.keys():
+        partial_check_args["entity"] = sample
         for filelabel, value in value_mapping[sample].items():
-            entity = f"{sample}:{filelabel}"
-            flagged = False
-            # global maximum threshold checks
-            if check_cutoffs["max_thresholds"]:
-                for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
-                    if value > threshold:
-                        flagger.flag(   entity = entity,
-                                        debug_message = (f"{value_alias} is over threshold of {threshold}. "
-                                                   f"[value: {value:.7f}][threshold: {threshold}]"
-                                                   ),
-                                        severity = check_cutoffs["max_thresholds"][threshold],
-                                        check_id = check_id)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks)
+            partial_check_args["sub_entity"] = filelabel
+            value_check_direct(value = value,
+                               all_values = all_values,
+                               check_cutoffs = check_cutoffs[value_alias],
+                               flagger = flagger,
+                               partial_check_args = partial_check_args,
+                               value_alias = value_alias,
+                               middlepoint = check_cutoffs["middlepoint"]
+                               )
 
-            # global minimum threshold checks
-            if check_cutoffs["min_thresholds"]:
-                for threshold in sorted(check_cutoffs["min_thresholds"]).items():
-                    if value < threshold:
-                        flagger.flag(   entity = entity,
-                                        debug_message = (f"{value_alias} is under threshold of {threshold}. "
-                                                   f"[value: {value:.7f}][threshold: {threshold}]"
-                                                   ),
-                                        severity = check_cutoffs["min_thresholds"][threshold],
-                                        check_id = check_id)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+def check_fastq_headers(filename, check_proportion: float = 0.2):
+    """ Checks fastq lines for expected header content
 
-            # outlier by standard deviation threshold checks
-            if check_cutoffs["outlier_thresholds"]:
-                if stdev == 0:
-                    deviation = 0
-                else:
-                    deviation = abs(value - middlepoint)/stdev
-                for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
-                    if deviation > threshold:
-                        flagger.flag(   entity = entity,
-                                        debug_message = (f"{value_alias} flagged as outlier. "\
-                                                  f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
-                                                  f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
-                                                  ),
-                                        severity = check_cutoffs["outlier_thresholds"][threshold],
-                                        check_id = check_id)
-                        flagged = True
-                        break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+    Note: Example of header from GLDS-194
 
-            if not flagged:
-                flagger.flag(entity = entity,
-                             debug_message = f"No issues with {value_alias}. [value: {value:.7f}]",
-                             severity = 30,
-                             check_id = check_id)
+    |  ``@J00113:376:HMJMYBBXX:3:1101:26666:1244 1:N:0:NCGCTCGA\n``
+
+    This also assumes the fastq file does NOT split sequence or quality lines
+    for any read
+
+    :param file: compressed fastq file to check
+    :param count_lines_to_check: number of lines to check. Special value: -1 means no limit, check all lines.
+    """
+    ###### Generate temporary gzipped file
+    assert 1 >= check_proportion > 0, "Check proportion must be  value between 0 and 1"
+    subsampled = subprocess.Popen(['seqtk', 'sample', '-s',
+                                   '777', filename, str(check_proportion)],
+                                   stdout=subprocess.PIPE)
+    #sampled_lines, _ = subsampled.communicate()
+    # decode binary and split
+    #sampled_lines = sampled_lines.decode().split("\n")
+    for i, line in enumerate(iter(subsampled.stdout.readline, None)):
+        # end of iteration returns None
+        if not line:
+            #print("Finished checking sample of header lines")
+            break
+        # this indicates the end of sampled lines
+        line = line.decode().rstrip()
+
+        #print(i, line) #DEBUG PRINT
+        # every fourth line should be an identifier
+        expected_identifier_line = (i % 4 == 0)
+        # check if line is actually an identifier line
+        if (expected_identifier_line and line[0] != "@"):
+            return False, "Expected header line missing"
+    return True, "NO ISSUES"
+
+def general_mqc_based_check(flagger: Flagger,
+                            samples: list,
+                            mqc: MultiQC,
+                            cutoffs: dict,
+                            check_id: str,
+                            mqc_base_key: str,
+                            aggregation_function: Callable = None,
+                            cutoffs_subkey: str = None, # usually a string that references aggregation function
+                            by_indice: bool = False
+                            ):
+    check_cutoffs = cutoffs[mqc_base_key][cutoffs_subkey] if cutoffs_subkey else cutoffs[mqc_base_key]
+    check_args = dict()
+    check_args["check_id"] = check_id
+    # iterate through each sample:file_label
+    # test against all values from all file-labels
+    for sample in samples:
+        check_args["entity"] = sample
+        for file_label in mqc.file_labels:
+            check_args["sub_entity"] = file_label
+            check_args["outlier_comparison_type"] = "Across-Samples:By-File_Label"
+            # used to access the label wise values
+            full_key = f"{file_label}-{mqc_base_key}"
+            if not by_indice:
+                # note: this is just the sample to check for outliers!
+                value = mqc.compile_subset(samples_subset = [sample], key = full_key, aggregator = aggregation_function)
+                # additional unpacking if aggregator used
+                if isinstance(value,list):
+                    assert len(value) == 1, "Aggregation should return more than one value!"
+                     # an error here may indicate an issue generating a single value from the compile subset arg
+                    value = float(value[0])
+                # this is all values from all samples and the same filelabel
+                all_values = mqc.compile_subset(samples_subset = samples, key = full_key, aggregator = aggregation_function)
+                check_args["entity_value"] = value
+                value_check_direct(value = value,
+                                   all_values = all_values,
+                                   check_cutoffs = check_cutoffs,
+                                   flagger = flagger,
+                                   partial_check_args = check_args,
+                                   value_alias = mqc_base_key,
+                                   middlepoint = cutoffs["middlepoint"])
+            else:
+                flagged = False
+                bin_units = mqc.data[sample][full_key].bin_units
+                check_args["outlier_comparison_type"] = "Across-Samples:By-File_Label:By-Bin"
+                # iterate through thresholds in descending order (more severe first)
+                thresholds = sorted(check_cutoffs["outlier_thresholds"], reverse=True)
+                check_args["outlier_thresholds"] = check_cutoffs["outlier_thresholds"]
+                for threshold in thresholds:
+                    outliers = mqc.detect_outliers(key = full_key,
+                                                   deviation = threshold
+                                                  )
+                    check_args["indices"] = [index for _sample,index,_ in outliers if _sample == sample]
+                    # check if any outliers actually found for this sample
+                    if len(check_args["indices"]) != 0:
+                        check_args["debug_message"] = f"Outliers detected by {bin_units}"
+                        check_args["severity"] = check_cutoffs["outlier_thresholds"][threshold]
+                        flagger.flag(**check_args)
+                        flagged = True
+                        # if one threshold is flagged
+                        # the rest will flagged (because descending order)
+                        # so we break out of checks
+                        break
+                # log passes
+                if not flagged:
+                    check_args["debug_message"] = f"All {bin_units} bins pass max, min, and outliers checks"
+                    check_args["severity"] = 30
+                    flagger.flag(**check_args)
 
 def value_check_direct(partial_check_args: dict,
                        check_cutoffs: dict,
@@ -222,13 +290,7 @@ def value_check_direct(partial_check_args: dict,
                        ):
     """ Performs checks and sends appropriate flag calls for a value.
     """
-    # calculate middlepoint and standard deviation
-    stdev = statistics.stdev(all_values)
-    try:
-        middlepoint_function = MIDDLEPOINT_FUNC[middlepoint]
-    except KeyError:
-        raise KeyError(f"Middlepoint named {middlepoint} not valid. Try from {list(MIDDLEPOINT_FUNC.keys())}")
-    middlepoint = middlepoint_function(all_values)
+    stdev, middlepoint = get_stdev_middle(all_values, middlepoint)
     ####################################################
     # populate template check args with cutoffs
     template_check_args = partial_check_args.copy()

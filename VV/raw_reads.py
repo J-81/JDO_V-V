@@ -8,7 +8,7 @@ import gzip
 import statistics
 import subprocess
 
-from VV.utils import outlier_check, label_file, filevalues_from_mapping, value_based_checks, value_check_direct
+from VV.utils import filevalues_from_mapping, value_based_checks, check_fastq_headers, general_mqc_based_check
 from VV.flagging import Flagger
 from VV import multiqc
 
@@ -30,10 +30,10 @@ def validate_verify(file_mapping: dict,
     flagger.set_step("Raw Reads")
 
     ###################################################################
-    # PERFROM CHECKS
+    # PERFORM CHECKS
     ###################################################################
-
-    ### START R_0001 ##################################################
+    ### UNIQUE IMPLEMENTATION CHECKS ##################################
+    # R_0001 ##########################################################
     for sample, file_map in file_mapping.items():
         checkArgs = dict()
         checkArgs["check_id"] = "R_0001"
@@ -51,10 +51,8 @@ def validate_verify(file_mapping: dict,
             checkArgs["debug_message"] = "Raw read files exist"
             checkArgs["severity"] = 30
         flagger.flag(**checkArgs)
-    ### DONE R_0001 ###################################################
 
-    ### START R_0002 ##################################################
-    # TODO: add header check (R_0002)
+    # R_0002 ##########################################################
     check_proportion = cutoffs["raw_reads"]["fastq_proportion_to_check"]
     for sample in file_mapping.keys():
         checkArgs = dict()
@@ -62,7 +60,7 @@ def validate_verify(file_mapping: dict,
         checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
-            passed, details = _check_headers(filename, check_proportion)
+            passed, details = check_fastq_headers(filename, check_proportion)
             if passed == True:
                 checkArgs["debug_message"] = f"No header issues after checking {check_proportion*100}% of the records"
                 checkArgs["user_message"] = f"Fastq.gz headers validated"
@@ -72,10 +70,9 @@ def validate_verify(file_mapping: dict,
                 checkArgs["user_message"] = f"Header issues"
                 checkArgs["severity"] = 90
             flagger.flag(**checkArgs)
-    ### DONE R_0002 ###################################################
-
-    ### START R_0003 ##################################################
-    check_id = "R_0003"
+    # R_0003 ##########################################################
+    partial_check_args = dict()
+    partial_check_args["check_id"] = "R_0003"
     def file_size(file: Path):
         """ Returns filesize for a Path object
         """
@@ -84,52 +81,14 @@ def validate_verify(file_mapping: dict,
     filesize_mapping, all_filesizes = filevalues_from_mapping(file_mapping, file_size)
 
     metric = "file_size"
-    value_based_checks(check_cutoffs = cutoffs["raw_reads"][metric],
+    value_based_checks(partial_check_args = partial_check_args,
+                       check_cutoffs = cutoffs["raw_reads"],
                        value_mapping = filesize_mapping,
                        all_values = all_filesizes,
                        flagger = flagger,
-                       check_id = check_id,
                        value_alias = metric,
-                       middlepoint = cutoffs["middlepoint"]
+                       middlepoint = cutoffs["raw_reads"]["middlepoint"]
                        )
-    ### DONE R_0003 ###################################################
-
-def _check_headers(filename, check_proportion: float = 0.2):
-    """ Checks fastq lines for expected header content
-
-    Note: Example of header from GLDS-194
-
-    |  ``@J00113:376:HMJMYBBXX:3:1101:26666:1244 1:N:0:NCGCTCGA\n``
-
-    This also assumes the fastq file does NOT split sequence or quality lines
-    for any read
-
-    :param file: compressed fastq file to check
-    :param count_lines_to_check: number of lines to check. Special value: -1 means no limit, check all lines.
-    """
-    ###### Generate temporary gzipped file
-    assert 1 >= check_proportion > 0, "Check proportion must be  value between 0 and 1"
-    subsampled = subprocess.Popen(['seqtk', 'sample', '-s',
-                                   '777', filename, str(check_proportion)],
-                                   stdout=subprocess.PIPE)
-    #sampled_lines, _ = subsampled.communicate()
-    # decode binary and split
-    #sampled_lines = sampled_lines.decode().split("\n")
-    for i, line in enumerate(iter(subsampled.stdout.readline, None)):
-        # end of iteration returns None
-        if not line:
-            #print("Finished checking sample of header lines")
-            break
-        # this indicates the end of sampled lines
-        line = line.decode().rstrip()
-
-        #print(i, line) #DEBUG PRINT
-        # every fourth line should be an identifier
-        expected_identifier_line = (i % 4 == 0)
-        # check if line is actually an identifier line
-        if (expected_identifier_line and line[0] != "@"):
-            return False, "Expected header line missing"
-    return True, "NO ISSUES"
 
 def validate_verify_multiqc(multiqc_json: Path,
                             file_mapping: dict,
@@ -170,7 +129,7 @@ def validate_verify_multiqc(multiqc_json: Path,
                              check_id = check_id)
             else:
                 flagger.flag(entity = entity,
-                             debug_message = f"Total Count of reads does NOT matches between pairs.",
+                             debug_message = f"Total Count of reads does NOT match between pairs.",
                              severity = 90,
                              check_id = check_id)
     ### DONE R_1001 ###################################################
@@ -226,114 +185,29 @@ def validate_verify_multiqc(multiqc_json: Path,
 
 
     ################################################################
-    # Checks for each sample:file_label vs all samples
-    check_ids_to_keys = {"R_1003":("percent_duplicates", None, None),
-                         "R_1004":("percent_gc", None, None),
-                         "R_1011":("fastqc_overrepresented_sequencesi_plot-Top over-represented sequence", None, None),
-                         "R_1012":("fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences", None, None),
-                         "R_1009":("fastqc_per_base_n_content_plot", sum, "bin_sum"),
-                         "R_1010":("fastqc_per_base_n_content_plot", statistics.mean, "bin_mean"),
-                        }
-    for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
-        check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key] if cutoffs_key else cutoffs["raw_reads"][key]
-        check_args = dict()
-        check_args["check_id"] = check_id
-        check_args["outlier_comparison_type"] = "Across_Samples:By_File_Label"
-        # iterate through each sample:file_label
-        # test against all values from all file-labels
-        for sample in samples:
-            check_args["entity"] = sample
-            for file_label in mqc.file_labels:
-                check_args["sub_entity"] = file_label
-                # used to access the label wise values
-                full_key = f"{file_label}-{key}"
-                # note: this is just the sample to check for outliers!
-                value = mqc.compile_subset(samples_subset = [sample], key = full_key, aggregator = aggregator)
-                # additional unpacking if aggregator used
-                if isinstance(value,list):
-                    assert len(value) == 1, "Aggregation should return more than one value!"
-                     # an error here may indicate an issue generating a single value from the compile subset arg
-                    value = float(value[0])
-                # this is all values from all samples and the same filelabel
-                all_values = mqc.compile_subset(samples_subset = samples, key = full_key, aggregator = aggregator)
-                check_args["entity_value"] = value
-                value_check_direct(value = value,
-                                   all_values = all_values,
-                                   check_cutoffs = check_cutoffs,
-                                   flagger = flagger,
-                                   partial_check_args = check_args,
-                                   value_alias = key,
-                                   middlepoint = cutoffs["middlepoint"])
-
-    ### DONE R_1003 ###################################################
-    check_ids_to_keys = {"R_1005":"fastqc_per_base_sequence_quality_plot",
-                        "R_1006":"fastqc_per_sequence_quality_scores_plot",
-                        "R_1007":"fastqc_per_sequence_gc_content_plot-Percentages",
-                        "R_1008":"fastqc_sequence_duplication_levels_plot",
-                        }
-    for check_id, key in check_ids_to_keys.items():
-        check_cutoffs = cutoffs["raw_reads"][key]
-        for sample in samples:
-            for file_label in mqc.file_labels:
-                flagged = False
-                entity = f"{sample}:{file_label}"
-                cur_data_key = f"{file_label}-{key}"
-                bin_units = mqc.data[sample][cur_data_key].bin_units
-                # iterate through thresholds in descending order (more severe first)
-                thresholds = sorted(check_cutoffs["outlier_thresholds"], reverse=True)
-                for threshold in thresholds:
-                    outliers = mqc.detect_outliers(key = cur_data_key,
-                                                   deviation = threshold
-                                                 )
-                    outliers_for_sample = [index for _sample,index,_ in outliers if _sample == sample]
-                    if len(outliers_for_sample) != 0:
-                        flagger.flag(entity = entity,
-                                     debug_message = (f"<Sample:Filelabel:bin vs AllSamples:Filelabel:bin> Outliers detected by {bin_units} "
-                                              f" bin. This indicates {bin_units} "
-                                              f"distribution may vary by sample. "
-                                              f"See the following x-indices in {key} "
-                                              f"{outliers_for_sample}"),
-                                     severity = check_cutoffs["outlier_thresholds"][threshold],
-                                     check_id = check_id)
-                        flagged = True
-                # log passes
-                if not flagged:
-                    flagger.flag(entity = entity,
-                                 debug_message = (f"No outliers detected for {key} [deviation > {threshold}]."),
-                                 severity = 30,
-                                 check_id = check_id)
-
-    ### DONE R_1003 ###################################################
+    check_specific_args = [
+        {"check_id":"R_1003", "mqc_base_key":"percent_duplicates"},
+        {"check_id":"R_1004", "mqc_base_key":"percent_gc"},
+        {"check_id":"R_1005", "mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True},
+        {"check_id":"R_1006", "mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True},
+        {"check_id":"R_1007", "mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True},
+        {"check_id":"R_1008", "mqc_base_key":"fastqc_sequence_duplication_levels_plot", "by_indice":True},
+        {"check_id":"R_1009", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":sum, "cutoffs_subkey":"bin_sum"},
+        {"check_id":"R_1010", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"},
+        {"check_id":"R_1011", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"},
+        {"check_id":"R_1012", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"},
+        ]
+    for mqc_check_args in check_specific_args:
+        general_mqc_based_check(samples = samples,
+                                mqc = mqc,
+                                cutoffs = cutoffs["raw_reads"],
+                                flagger = flagger,
+                                **mqc_check_args)
+    ###################################################################
     # Checks that are performed across an aggregate value for indexed positions
     # for each file label
     #
     # format: { check_id: (key, aggregation_function, cutoffs_subkey)
-    check_ids_to_keys = {}
-    for check_id, (key, aggregator, cutoffs_key) in check_ids_to_keys.items():
-        check_cutoffs = cutoffs["raw_reads"][key][cutoffs_key]
-        for sample in samples:
-            for file_label in mqc.file_labels:
-                entity = f"{sample}:{file_label}"
-                cur_data_key = f"{file_label}-{key}"
-                bin_units = mqc.data[sample][cur_data_key].bin_units
-                all_values = mqc.compile_subset(samples_subset = samples,
-                                            key = cur_data_key,
-                                            aggregator = aggregator)
-                value = mqc.compile_subset(samples_subset = [sample], # note: this is just the sample to check for outliers!
-                                            key = cur_data_key,
-                                            aggregator = aggregator)
-                assert len(value) == 1, "Aggregation should return more than one value!"
-                value = float(value[0]) # an error here may indicate an issue generating a single value from the compile subset arg
-                value_check_direct(value = value,
-                                   all_values = all_values,
-                                   check_cutoffs = check_cutoffs,
-                                   flagger = flagger,
-                                   check_id = check_id,
-                                   entity = entity,
-                                   value_alias = f"{key}-aggregated by {cutoffs_key}",
-                                   middlepoint = cutoffs["middlepoint"],
-                                   debug_message_prefix = "Sample:File_Label vs Samples")
-    ### DONE R_1003 ###################################################
     # maps which codes to consider for assessing realized flags
     # from protoflags
     PROTOFLAG_MAP = {
