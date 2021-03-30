@@ -17,8 +17,7 @@ class RsemCounts():
         - <sample>.isoforms.results
     """
     def __init__(self,
-                 samples: str,
-                 dir_path: str,
+                 dir_mapping: dict,
                  flagger: Flagger,
                  cutoffs: dict,
                  has_ERCC: bool
@@ -31,11 +30,17 @@ class RsemCounts():
         flagger.set_step("RSEM")
         self.flagger = flagger
         self.cutoffs = cutoffs
+        self.cutoffs_subsection = "RSEM"
         self.has_ERCC = has_ERCC
 
         # start data extraction and VV
-        self.samples = samples
-        self.dir_path = Path(dir_path)
+        self.samples = list(dir_mapping.keys())
+        # generate expected files in the main sample directory
+        self.file_mapping = dict()
+        for sample, directory in dir_mapping.items():
+            self.file_mapping[sample] = dict()
+            self.file_mapping[sample][".genes.results"] = Path(directory) / f"{sample}.genes.results"
+            self.file_mapping[sample][".isoforms.results"] = Path(directory) / f"{sample}.isoforms.results"
 
         self.gene_counts = dict()
         self.isoform_counts = dict()
@@ -44,34 +49,25 @@ class RsemCounts():
         # a dictionary of results to pass to other processes for crossing checking steps
         self.cross_check = dict()
 
-        for sample in samples:
-            gene_count_path = self.dir_path  / f"{sample}.genes.results"
-            isoform_count_path = self.dir_path  / f"{sample}.isoforms.results"
+        for sample in self.samples:
+            gene_count_path = self.file_mapping[sample][".genes.results"]
+            isoform_count_path = self.file_mapping[sample][".isoforms.results"]
 
             # check if file exists
-            check_id = "M_0001"
-            if gene_count_path.is_file():
-                debug_message = f"Gene counts file found. {gene_count_path}"
-                self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 30, check_id = check_id
-                                )
-            else:
-                debug_message = f"Gene counts file NOT found. {gene_count_path}"
-                self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 90, check_id = check_id
-                                )
+            partial_check_args = dict()
+            partial_check_args["check_id"] = "M_0001"
+            partial_check_args["entity"] = sample
+            self.flagger.flag_file_exists(check_file = gene_count_path,
+                                          partial_check_args = partial_check_args)
+
             # check if file exists
-            check_id = "M_0002"
-            if isoform_count_path.is_file():
-                debug_message = f"Isoform counts file found. {isoform_count_path}"
-                self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 30, check_id = check_id
-                                )
-            else:
-                debug_message = f"Isoform counts file NOT found. {isoform_count_path}"
-                self.flagger.flag(entity = sample, debug_message = debug_message,
-                                  severity = 90, check_id = check_id
-                                )
+            partial_check_args = dict()
+            partial_check_args["check_id"] = "M_0002"
+            partial_check_args["entity"] = sample
+            self.flagger.flag_file_exists(check_file = isoform_count_path,
+                                          partial_check_args = partial_check_args)
+
+
             self.gene_counts[sample] = pd.read_csv(gene_count_path ,sep="\t")
             self.isoform_counts[sample] = pd.read_csv(isoform_count_path ,sep="\t")
 
@@ -108,65 +104,52 @@ class RsemCounts():
             counts_of_isoforms_expressed[sample] = len(df.loc[isExpressed])
 
         # flag if under average count
-        check_id = "M_0003"
+        partial_check_args = {"check_id":"M_0003"}
         mean_count = statistics.mean(counts_of_NonERCC_genes_expressed.values())
         for sample, count in counts_of_NonERCC_genes_expressed.items():
+            partial_check_args["entity"] = sample
             if count < mean_count:
-                debug_message = "Gene counts are less than the average."
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 50,
-                                  check_id = check_id
-                                )
+                partial_check_args["debug_message"] = "Gene counts are less than the average."
+                partial_check_args["severity"] = 50
             else:
-                debug_message = "Gene counts are not less than the average."
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 30,
-                                  check_id = check_id
-                                )
+                partial_check_args["debug_message"] = "Gene counts are not less than the average"
+                partial_check_args["severity"] = 30
+            self.flagger.flag(**partial_check_args)
+
         # flag if under average count
-        check_id = "M_0004"
+        partial_check_args = {"check_id":"M_0004"}
         mean_count = statistics.mean(counts_of_NonERCC_isoforms_expressed.values())
         for sample, count in counts_of_NonERCC_isoforms_expressed.items():
+            partial_check_args["entity"] = sample
             if count < mean_count:
-                debug_message = "Isoform counts are less than the average."
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 50,
-                                  check_id = check_id
-                                )
+                partial_check_args["debug_message"] = "Isoform counts are less than the average."
+                partial_check_args["severity"] = 50
             else:
-                debug_message = "Isoform counts are not less than the average."
-                self.flagger.flag(entity = sample,
-                                  debug_message = debug_message,
-                                  severity = 30,
-                                  check_id = check_id
-                                )
+                partial_check_args["debug_message"] = "Isoform counts are not less than the average"
+                partial_check_args["severity"] = 30
+            self.flagger.flag(**partial_check_args)
+
 
         ################################################################
         # Checks for each sample:file_label vs all samples
-        check_ids_to_keys = {"M_0005":("count_of_unique_genes_expressed", counts_of_genes_expressed),
-                            "M_0006":("count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
-                            }
+        check_specific_args = [
+            ({"check_id": "M_0005"}, "count_of_unique_genes_expressed", counts_of_genes_expressed),
+            ({"check_id": "M_0006"}, "count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
+                        ]
         if self.has_ERCC:
-            check_ids_to_keys["M_0007"] = ("count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected)
-        for check_id, (key, df_dict) in check_ids_to_keys.items():
-            # compile all values for all file labels
-            # e.g. for paired end, both forward and reverse reads
+            check_specific_args.append(({"check_id": "M_0007"}, "count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected))
+        for partial_arg_set, key, df_dict in check_specific_args:
             all_values = df_dict.values()
-
-            # iterate through each sample:file_label
-            # test against all values from all file-labels
-            for sample in samples:
-                    entity = f"{sample}"
-                    value = df_dict[sample]
-                    value_check_direct(value = value,
-                                       all_values = all_values,
-                                       check_cutoffs = cutoffs["RSEM"][key],
-                                       flagger = flagger,
-                                       check_id = check_id,
-                                       entity = entity,
-                                       value_alias = key,
-                                       middlepoint = cutoffs["middlepoint"],
-                                       debug_message_prefix = "Sample vs Samples")
+            for sample in self.samples:
+                value = df_dict[sample]
+                partial_arg_set["entity"] = sample
+                partial_arg_set["entity_value"] = df_dict[sample]
+                partial_arg_set["outlier_comparison_type"] = "Across-Samples"
+                value_check_direct(partial_check_args = partial_arg_set,
+                                   check_cutoffs = cutoffs[self.cutoffs_subsection][key],
+                                   value = value,
+                                   all_values = all_values,
+                                   flagger = flagger,
+                                   value_alias = key,
+                                   middlepoint = cutoffs[self.cutoffs_subsection]["middlepoint"],
+                                   )
