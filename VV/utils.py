@@ -145,7 +145,7 @@ def value_based_checks(check_cutoffs: dict,
                        value_mapping: dict,
                        all_values: list,
                        flagger: Flagger,
-                       checkID: str,
+                       check_id: str,
                        value_alias: str,
                        middlepoint: str):
     """ Performs checks and sends appropriate flag calls for a value.
@@ -171,7 +171,7 @@ def value_based_checks(check_cutoffs: dict,
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
                                         severity = check_cutoffs["max_thresholds"][threshold],
-                                        checkID = checkID)
+                                        check_id = check_id)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks)
 
@@ -184,7 +184,7 @@ def value_based_checks(check_cutoffs: dict,
                                                    f"[value: {value:.7f}][threshold: {threshold}]"
                                                    ),
                                         severity = check_cutoffs["min_thresholds"][threshold],
-                                        checkID = checkID)
+                                        check_id = check_id)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
 
@@ -202,7 +202,7 @@ def value_based_checks(check_cutoffs: dict,
                                                   f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
                                                   ),
                                         severity = check_cutoffs["outlier_thresholds"][threshold],
-                                        checkID = checkID)
+                                        check_id = check_id)
                         flagged = True
                         break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
 
@@ -210,17 +210,16 @@ def value_based_checks(check_cutoffs: dict,
                 flagger.flag(entity = entity,
                              debug_message = f"No issues with {value_alias}. [value: {value:.7f}]",
                              severity = 30,
-                             checkID = checkID)
+                             check_id = check_id)
 
-def value_check_direct(check_cutoffs: dict,
+def value_check_direct(partial_check_args: dict,
+                       check_cutoffs: dict,
                        value: dict,
                        all_values: list,
                        flagger: Flagger,
-                       checkID: str,
-                       entity: str,
                        value_alias: str,
-                       middlepoint: str,
-                       debug_message_prefix: str = None):
+                       middlepoint: str
+                       ):
     """ Performs checks and sends appropriate flag calls for a value.
     """
     # calculate middlepoint and standard deviation
@@ -230,58 +229,64 @@ def value_check_direct(check_cutoffs: dict,
     except KeyError:
         raise KeyError(f"Middlepoint named {middlepoint} not valid. Try from {list(MIDDLEPOINT_FUNC.keys())}")
     middlepoint = middlepoint_function(all_values)
+    ####################################################
+    # populate template check args with cutoffs
+    template_check_args = partial_check_args.copy()
+    if check_cutoffs["max_thresholds"]:
+        template_check_args["max_thresholds"] = check_cutoffs["max_thresholds"]
 
+    if check_cutoffs["min_thresholds"]:
+        template_check_args["min_thresholds"] = check_cutoffs["min_thresholds"]
+
+    if check_cutoffs["outlier_thresholds"]:
+        template_check_args["outlier_thresholds"] = check_cutoffs["outlier_thresholds"]
+    # TEMPLATE READY
+    ####################################################
     flagged = False
     # global maximum threshold checks
     if check_cutoffs["max_thresholds"]:
+        check_args = template_check_args.copy()
         for threshold in sorted(check_cutoffs["max_thresholds"], reverse=True):
             if value > threshold:
-                flagger.flag(   entity = entity,
-                                debug_message = (f"<{debug_message_prefix}> {value_alias} is over threshold of {threshold}. "
-                                           f"[value: {value:.7f}][threshold: {threshold}]"
-                                           ),
-                                severity = check_cutoffs["max_thresholds"][threshold],
-                                checkID = checkID)
+                check_args["debug_message"] = f"{value_alias} exceeds max threshold"
+                check_args["severity"] = check_cutoffs["max_thresholds"][threshold]
+                flagger.flag(**check_args)
                 flagged = True
-                break # end check for this sample's filelabel (note: break here exists the threshold checks)
+                break # end all checks for this value
 
     # global minimum threshold checks
     if check_cutoffs["min_thresholds"]:
+        check_args = template_check_args.copy()
         ascending_thresholds = sorted(check_cutoffs["min_thresholds"])
         for threshold in ascending_thresholds:
             if value < threshold:
-                flagger.flag(   entity = entity,
-                                debug_message = (f"<{debug_message_prefix}> {value_alias} is under threshold of {threshold}. "
-                                           f"[value: {value:.7f}][threshold: {threshold}]"
-                                           ),
-                                severity = check_cutoffs["min_thresholds"][threshold],
-                                checkID = checkID)
+                check_args["debug_message"] = f"{value_alias} is under min threshold"
+                check_args["severity"] = check_cutoffs["min_thresholds"][threshold]
+                flagger.flag(**check_args)
                 flagged = True
-                break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+                break # end all checks for this value
 
+    # global minimum thres
     # outlier by standard deviation threshold checks
     if check_cutoffs["outlier_thresholds"]:
+        check_args = template_check_args.copy()
         if stdev == 0:
             deviation = 0
         else:
             deviation = abs(value - middlepoint)/stdev
         for threshold in sorted(check_cutoffs["outlier_thresholds"], reverse=True):
             if deviation > threshold:
-                flagger.flag(   entity = entity,
-                                debug_message = (f"<{debug_message_prefix}> {value_alias} flagged as outlier. "\
-                                          f"Exceeds {middlepoint:.7f} by {threshold} standard deviations. "\
-                                          f"[value: {value:.7f}][deviation: {deviation:.7f}][threshold: {threshold}]"
-                                          ),
-                                severity = check_cutoffs["outlier_thresholds"][threshold],
-                                checkID = checkID)
+                check_args["debug_message"] = f"{value_alias} outlier"
+                check_args["severity"] = check_cutoffs["outlier_thresholds"][threshold]
+                flagger.flag(**check_args)
                 flagged = True
-                break # end check for this sample's filelabel (note: break here exists the threshold checks, most severe flag is caught)
+                break # end all checks for this value
 
     if not flagged:
-        flagger.flag(entity = entity,
-                     debug_message = f"<{debug_message_prefix}> No issues with {value_alias}. [value: {value:.7f}]",
-                     severity = 30,
-                     checkID = checkID)
+        check_args = template_check_args.copy()
+        check_args["debug_message"] = f"{value_alias} passes max, min, and outliers checks"
+        check_args["severity"] = 30
+        flagger.flag(**check_args)
 
 def bytes_to_gb(bytes: int) -> float:
     """ utility function, converts bytes to gb
