@@ -18,6 +18,14 @@ CUTOFFS = \
                     0 : 60,
                 },
             },
+            "fastqc_sequence_length_distribution_plot" : {
+                "max_thresholds" : {},
+                "min_thresholds" : {},
+                "outlier_thresholds" : {
+                    4 : 60,
+                    2 : 50,
+                },
+            },
             "fastqc_per_base_sequence_quality_plot" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
@@ -141,7 +149,7 @@ CUTOFFS = \
                     0 : 60,
                 },
             },
-            "sequence_length_dist" : {
+            "fastqc_sequence_length_distribution_plot" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
                 "outlier_thresholds" : {
