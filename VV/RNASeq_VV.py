@@ -81,11 +81,10 @@ def main(data_dir: Path,
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################
-    rsem_cross_check =   RsemCounts(samples= sample_sheet.samples,
-                                   dir_path= sample_sheet.RSEM_Counts_dir,
-                                   flagger = flagger,
-                                   has_ERCC = sample_sheet.has_ERCC,
-                                   cutoffs = cutoffs).cross_check
+    rsem_cross_check =   RsemCounts(dir_mapping = sample_sheet.RSEM_Counts_dir_mapping,
+                                    flagger = flagger,
+                                    has_ERCC = sample_sheet.has_ERCC,
+                                    cutoffs = cutoffs).cross_check
     cross_checks["RSEM"] = rsem_cross_check
     ###########################################################################
     # Deseq2 Normalized Counts VV
@@ -98,12 +97,10 @@ def main(data_dir: Path,
                        has_ERCC = sample_sheet.has_ERCC,
                        cross_checks = cross_checks)
 
-    print(f"{'='*40}")
-    print(f"VV complete: Full Results Saved To {flagger._log_file}")
-
     ###########################################################################
     # Generate derivative log files
     ###########################################################################
+    print(f"{'='*40}")
     for log_type in ["only-issues", "by-sample", "by-step","all-by-entity"]:
         flagger.generate_derivative_log(log_type = log_type,
                                         samples = sample_sheet.samples)
