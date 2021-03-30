@@ -220,11 +220,25 @@ def general_mqc_based_check(flagger: Flagger,
                             mqc_base_key: str,
                             aggregation_function: Callable = None,
                             cutoffs_subkey: str = None, # usually a string that references aggregation function
-                            by_indice: bool = False
+                            by_indice: bool = False,
+                            allow_missing_base_key: bool = False # this can happen in the case of plots like the fastqc adaptor and length dist plot.  Typically a missing key indicates the plot was not needed due to some positive reason. e.g. all sequence lengths were the same
                             ):
-    check_cutoffs = cutoffs[mqc_base_key][cutoffs_subkey] if cutoffs_subkey else cutoffs[mqc_base_key]
+    try:
+        check_cutoffs = cutoffs[mqc_base_key][cutoffs_subkey] if cutoffs_subkey else cutoffs[mqc_base_key]
+    except KeyError:
+        raise ValueError("ERROR: Could not find {mqc_base_key} in cutoffs! Ensure this exists")
     check_args = dict()
     check_args["check_id"] = check_id
+    # handle allow missing base keys
+    if allow_missing_base_key and not mqc.data[samples[0]].get(f"{mqc.file_labels[0]}-{mqc_base_key}"):
+        # this block indicates a special pass case
+        for sample in samples:
+            check_args["entity"] = sample
+            check_args["severity"] = 30
+            check_args["debug_message"] = f"Missing plot under {mqc_base_key}.  This check automatically passes in this case as this means the plot was replaced with a message indicating no issues in multiQC"
+            check_args["user_message"] = f"No issues for {mqc_base_key}."
+            flagger.flag(**check_args)
+            return # exit function
     # iterate through each sample:file_label
     # test against all values from all file-labels
     for sample in samples:
@@ -252,7 +266,7 @@ def general_mqc_based_check(flagger: Flagger,
                                    partial_check_args = check_args,
                                    value_alias = mqc_base_key,
                                    middlepoint = cutoffs["middlepoint"])
-            else:
+            elif by_indice:
                 flagged = False
                 bin_units = mqc.data[sample][full_key].bin_units
                 check_args["outlier_comparison_type"] = "Across-Samples:By-File_Label:By-Bin"
