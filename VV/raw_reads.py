@@ -28,6 +28,7 @@ def validate_verify(file_mapping: dict,
     ##############################################################
     flagger.set_script(__name__)
     flagger.set_step("Raw Reads")
+    cutoffs_subsection = "raw_reads"
 
     ###################################################################
     # PERFORM CHECKS
@@ -53,7 +54,7 @@ def validate_verify(file_mapping: dict,
         flagger.flag(**checkArgs)
 
     # R_0002 ##########################################################
-    check_proportion = cutoffs["raw_reads"]["fastq_proportion_to_check"]
+    check_proportion = cutoffs[cutoffs_subsection]["fastq_proportion_to_check"]
     for sample in file_mapping.keys():
         checkArgs = dict()
         checkArgs["check_id"] = "R_0002"
@@ -82,12 +83,12 @@ def validate_verify(file_mapping: dict,
 
     metric = "file_size"
     value_based_checks(partial_check_args = partial_check_args,
-                       check_cutoffs = cutoffs["raw_reads"],
+                       check_cutoffs = cutoffs[cutoffs_subsection],
                        value_mapping = filesize_mapping,
                        all_values = all_filesizes,
                        flagger = flagger,
                        value_alias = metric,
-                       middlepoint = cutoffs["raw_reads"]["middlepoint"]
+                       middlepoint = cutoffs[cutoffs_subsection]["middlepoint"]
                        )
 
 def validate_verify_multiqc(multiqc_json: Path,
@@ -106,6 +107,8 @@ def validate_verify_multiqc(multiqc_json: Path,
     ##############################################################
     flagger.set_script(__name__)
     flagger.set_step("Raw Reads [MultiQC]")
+    cutoffs_subsection = "raw_reads"
+
     ##############################################################
     # STAGE MULTIQC DATA FROM JSON
     ##############################################################
@@ -149,7 +152,7 @@ def validate_verify_multiqc(multiqc_json: Path,
     for mqc_check_args in check_specific_args:
         general_mqc_based_check(samples = samples,
                                 mqc = mqc,
-                                cutoffs = cutoffs["raw_reads"],
+                                cutoffs = cutoffs[cutoffs_subsection],
                                 flagger = flagger,
                                 **mqc_check_args)
     ###################################################################
@@ -169,5 +172,5 @@ def validate_verify_multiqc(multiqc_json: Path,
     }
     for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
         flagger.check_sample_proportions(check_id,
-                                         cutoffs["raw_reads"][cutoffs_key],
+                                         cutoffs[cutoffs_subsection][cutoffs_key],
                                          PROTOFLAG_MAP)
