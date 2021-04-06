@@ -8,6 +8,7 @@ import math
 from collections import OrderedDict
 
 import pandas as pd
+pd.set_option('mode.chained_assignment', None)
 
 from VV import __version__
 
@@ -298,15 +299,22 @@ class _Flagger():
 
         elif log_type == "all-by-entity":
             full_df = self._get_log_as_df()
-            output = self._log_folder / f"{log_type}__{Path(self._log_file.name).with_suffix('.txt')}"
+            output = self._log_folder / f"{log_type}__{Path(self._log_file.name).with_suffix('.tsv')}"
             filter_out = [severity for flag_code, severity
                           in FLAG_LEVELS.items()
                           if flag_code <= 30]
             # remove non-issue rows
             derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
-            # remove columns
-            derived_df = derived_df.drop(["full_path"], axis=1)
-            with open(output, "w") as f:
+
+            # create derived report message
+            def _make_report(row):
+                sub_entity_repr = f"({row['sub_entity']})" if row['sub_entity'] != "nan" else ""
+                return f"[{row['severity']}] {sub_entity_repr} {row['user_message']}"
+            derived_df["report"] = derived_df.apply(_make_report, axis="columns")
+            # only use columns
+            #derived_df = derived_df[["check_id","entity","report"]]
+            #derived_df = derived_df.drop_duplicates()
+            with open(output.with_suffix('.txt'), "w") as f:
                 # iterate by unique entities
                 for entity in derived_df["entity"].unique():
                     entity_df = derived_df.loc[derived_df["entity"] == entity]
@@ -321,8 +329,17 @@ class _Flagger():
                         message_line += message
                         details_line = f"Severity: {FLAG_LEVELS[int(row['flag_id'])]} ({row['flag_id']})  CheckID: {row['check_id']}"
                         f.write(f"  {message_line}\n    {details_line}\n\n")
+            print(f">>> Created {output.with_suffix('.txt').relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.2>")
 
+
+            # transpose and save
+            derived_df = derived_df.pivot(index=['step','check_id'], columns=['entity','sub_entity'], values='report')
+            #derived_df = derived_df.reindex(sorted(derived_df.columns), axis=1)
+            derived_df.to_csv(output, index=True, sep="\t", na_rep="NA")
             print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
+
+
+
         else:
             raise ValueError(f"{log_type} not implemented.  Try from {known_log_types}")
 
