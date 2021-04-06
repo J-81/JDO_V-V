@@ -42,8 +42,6 @@ FULL_LOG_HEADER = [
     "max_thresholds",
     "min_thresholds",
     "outlier_thresholds",
-    "unique_critera_results",
-    "check_function"
     ]
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
@@ -125,8 +123,6 @@ class _Flagger():
              max_thresholds: list = "NA",
              min_thresholds: list = "NA",
              outlier_thresholds: list = "NA",
-             unique_criteria_results: str = "NA",
-             check_function: str = "NA",
              position_units: str = "NA"
              ):
         """ Given an issue, logs a flag, prints human readable debug_message
@@ -180,8 +176,6 @@ class _Flagger():
                   "max_thresholds": max_thresholds,
                   "min_thresholds": min_thresholds,
                   "outlier_thresholds": outlier_thresholds,
-                  "unique_critera_results": unique_criteria_results,
-                  "check_function": check_function,
                   "position_units": position_units
                   })
 
