@@ -41,18 +41,9 @@ def validate_verify(file_mapping: dict,
         checkArgs["entity"] = sample
         missing_files = list()
         for filelabel, file in file_map.items():
-            if not file.is_file():
-                missing_files.append(file)
-        if len(missing_files) != 0:
-            checkArgs["debug_message"] = "Raw read files missing"
-            checkArgs["full_path"] = " ".join([str(missing.resolve()) for missing in missing_files])
-            checkArgs["relative_path"] = " ".join([missing.name for missing in missing_files])
-            checkArgs["severity"] = 90
-        else:
-            checkArgs["debug_message"] = "Raw read files exist"
-            checkArgs["severity"] = 30
-        flagger.flag(**checkArgs)
-
+            checkArgs["sub_entity"] = filelabel
+            flagger.flag_file_exists(check_file = file,
+                                     partial_check_args = checkArgs)
     # R_0002 ##########################################################
     num_lines_to_check = cutoffs[cutoffs_subsection]["fastq_lines_to_check"]
     for sample in file_mapping.keys():
@@ -62,7 +53,7 @@ def validate_verify(file_mapping: dict,
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
             checkArgs["full_path"] = Path(filename).resolve()
-            checkArgs["relative_path"] = Path(filename).name
+            checkArgs["filename"] = Path(filename).name
             passed, details = check_fastq_headers(filename, num_lines_to_check)
             if passed == True:
                 checkArgs["debug_message"] = f"No header issues after checking {num_lines_to_check} lines of the file"
