@@ -49,22 +49,23 @@ def validate_verify(file_mapping: dict,
             checkArgs["severity"] = 30
         flagger.flag(**checkArgs)
     # T_0002 ##########################################################
-    check_proportion = cutoffs[cutoffs_subsection]["fastq_proportion_to_check"]
+    num_lines_to_check = cutoffs[cutoffs_subsection]["fastq_lines_to_check"]
     for sample in file_mapping.keys():
         checkArgs = dict()
         checkArgs["check_id"] = "T_0002"
         checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
-            #passed, details = check_fastq_headers(filename, check_proportion)
-            passed, details = True, "DEBUG_SKIPPED"
+            checkArgs["full_path"] = Path(filelabel).resolve()
+            checkArgs["relative_path"] = Path(filelabel).name
+            passed, details = check_fastq_headers(filename, num_lines_to_check)
             if passed == True:
-                checkArgs["debug_message"] = f"No header issues after checking {check_proportion*100}% of the records"
-                checkArgs["user_message"] = f"Fastq.gz headers validated"
+                checkArgs["debug_message"] = f"No header issues after checking {num_lines_to_check} lines of the file"
+                checkArgs["user_message"] =  f"Fastq.gz headers validated"
                 checkArgs["severity"] = 30
             else:
-                checkArgs["debug_message"] = f"Found header issues after checking {check_proportion*100}% of the records"
-                checkArgs["user_message"] = f"Header issues"
+                checkArgs["debug_message"] = f"Found header issues after checking {num_lines_to_check} lines of the file"
+                checkArgs["user_message"] = f"Fastq.gz header issues found"
                 checkArgs["severity"] = 90
             flagger.flag(**checkArgs)
     # T_0003 ##########################################################

@@ -8,7 +8,7 @@ from typing import Tuple, Callable
 import statistics
 import configparser
 from pathlib import Path
-import subprocess
+import gzip
 
 from VV.flagging import Flagger
 from VV.multiqc import MultiQC
@@ -175,42 +175,55 @@ def value_based_checks(partial_check_args: dict,
                                middlepoint = check_cutoffs["middlepoint"]
                                )
 
-def check_fastq_headers(filename, check_proportion: float = 0.2):
+def check_fastq_headers(file, count_lines_to_check: int) -> int:
     """ Checks fastq lines for expected header content
-
     Note: Example of header from GLDS-194
-
     |  ``@J00113:376:HMJMYBBXX:3:1101:26666:1244 1:N:0:NCGCTCGA\n``
-
     This also assumes the fastq file does NOT split sequence or quality lines
     for any read
-
     :param file: compressed fastq file to check
     :param count_lines_to_check: number of lines to check. Special value: -1 means no limit, check all lines.
     """
-    ###### Generate temporary gzipped file
-    assert 1 >= check_proportion > 0, "Check proportion must be  value between 0 and 1"
-    subsampled = subprocess.Popen(['seqtk', 'sample', '-s',
-                                   '777', filename, str(check_proportion)],
-                                   stdout=subprocess.PIPE)
-    #sampled_lines, _ = subsampled.communicate()
-    # decode binary and split
-    #sampled_lines = sampled_lines.decode().split("\n")
-    for i, line in enumerate(iter(subsampled.stdout.readline, None)):
-        # end of iteration returns None
-        if not line:
-            #print("Finished checking sample of header lines")
-            break
-        # this indicates the end of sampled lines
-        line = line.decode().rstrip()
+    if count_lines_to_check == -1:
+        count_lines_to_check = float("inf")
 
-        #print(i, line) #DEBUG PRINT
-        # every fourth line should be an identifier
-        expected_identifier_line = (i % 4 == 0)
-        # check if line is actually an identifier line
-        if (expected_identifier_line and line[0] != "@"):
-            return False, "Expected header line missing"
-    return True, "NO ISSUES"
+    # TODO: add expected length check
+    expected_length = None
+
+    lines_with_issues = list()
+
+    passes = True
+    debug_message = ""
+    # truncated files raise EOFError
+    try:
+        with gzip.open(file, "rb") as f:
+            for i, line in enumerate(f):
+                # checks if lines counted equals the limit input
+                if i+1 == count_lines_to_check:
+                    #print(f"Reached {count_lines_to_check} lines, ending line check")
+                    break
+
+                line = line.decode()
+                # every fourth line should be an identifier
+                expected_identifier_line = (i % 4 == 0)
+                # check if line is actually an identifier line
+                if (expected_identifier_line and line[0] != "@"):
+                    lines_with_issues.append(i+1)
+                    print(f"FAIL: {checkname}: "
+                          f"Line {i+1} of {file} was not an identifier line as expected "
+                          f"LINE {i+1}: {line}")
+                # update every 20,000,000 reads
+                if i % 20000000 == 0:
+                    #print(f"Checked {i} lines for {file}")
+                    pass
+        if len(lines_with_issues) != 0:
+            passes = False
+            debug_message += f"for {file}, first ten lines with header issues: {lines_with_issues[0:10]} of {len(lines_with_issues)} header lines with issues: "
+        else:
+            debug_message += f"for {file}, No issues with headers checked up to line {count_lines_to_check}: "
+        return (passes, debug_message)
+    except EOFError:
+        return (-1, "EOFError raised, this indicates files may be corrupted")
 
 def general_mqc_based_check(flagger: Flagger,
                             samples: list,
