@@ -290,9 +290,9 @@ def general_mqc_based_check(flagger: Flagger,
                     outliers = mqc.detect_outliers(key = full_key,
                                                    deviation = threshold
                                                   )
-                    check_args["indices"] = [index for _sample,index,_ in outliers if _sample == sample]
+                    check_args["x_labels_of_outliers"] = [index for _sample,index,_ in outliers if _sample == sample]
                     # check if any outliers actually found for this sample
-                    if len(check_args["indices"]) != 0:
+                    if len(check_args["x_labels_of_outliers"]) != 0:
                         check_args["debug_message"] = f"Outliers detected by {bin_units}"
                         check_args["severity"] = check_cutoffs["outlier_thresholds"][threshold]
                         flagger.flag(**check_args)

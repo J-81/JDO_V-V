@@ -34,7 +34,7 @@ FULL_LOG_HEADER = [
     "check_id",
     "filename",
     "full_path",
-    "indices",
+    "x_labels_of_outliers",
     "entity_value",
     "outlier_comparison_type",
     "max_thresholds",
@@ -110,20 +110,20 @@ class _Flagger():
              debug_message: str,
              severity: int,
              check_id: str,
-             sub_entity: str = "",
-             user_message: str = "",
+             sub_entity: str = "NA",
+             user_message: str = "NA",
              preprocess_debug_messages: bool = True,
              convert_sub_entity: bool = True,
-             full_path: str = "",
-             filename: str = "",
-             indices: list = [],
-             entity_value: float = "NAN",
-             outlier_comparison_type: str = "",
-             max_thresholds: list = [],
-             min_thresholds: list = [],
-             outlier_thresholds: list = [],
-             unique_criteria_results: str = "",
-             check_function: str = "",
+             full_path: str = "NA",
+             filename: str = "NA",
+             x_labels_of_outliers: list = "NA",
+             entity_value: float = "NA",
+             outlier_comparison_type: str = "NA",
+             max_thresholds: list = "NA",
+             min_thresholds: list = "NA",
+             outlier_thresholds: list = "NA",
+             unique_criteria_results: str = "NA",
+             check_function: str = "NA",
              ):
         """ Given an issue, logs a flag, prints human readable debug_message
 
@@ -140,21 +140,20 @@ class _Flagger():
             # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
             debug_message = debug_message.replace("][","] [")
             # significant figure rounding for non-indice related flags
-            if "indices" not in debug_message:
+            if "x_labels_of_outliers" not in debug_message:
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        # convert sub entity labels according to a mapping
-        if convert_sub_entity and sub_entity:
+        # convert sub entity labels according to a mapping if supplied
+        if convert_sub_entity and sub_entity != "NA":
             CONVERT_DICT = {"forward":"R1","single":"R1","reverse":"R2"}
             if not (new_name := CONVERT_DICT.get(sub_entity)):
                 raise ValueError(f"Failed to convert {sub_entity} to new label")
             else:
                 sub_entity = new_name
 
-
         # replace user message with debug if user message not supplied
-        if not user_message:
+        if user_message == "NA":
             user_message = debug_message
 
         report = FULL_REPORT_LINE_TEMPLATE.copy()
@@ -170,7 +169,7 @@ class _Flagger():
                   "check_id": check_id,
                   "full_path": full_path,
                   "filename": filename,
-                  "indices": indices,
+                  "x_labels_of_outliers": x_labels_of_outliers,
                   "entity_value": entity_value,
                   "outlier_comparison_type": outlier_comparison_type,
                   "max_thresholds": max_thresholds,
