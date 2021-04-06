@@ -34,8 +34,10 @@ FULL_LOG_HEADER = [
     "check_id",
     "filename",
     "full_path",
-    "x_labels_of_outliers",
+    "flagged_positions",
+    "position_units",
     "entity_value",
+    "entity_value_units",
     "outlier_comparison_type",
     "max_thresholds",
     "min_thresholds",
@@ -116,14 +118,16 @@ class _Flagger():
              convert_sub_entity: bool = True,
              full_path: str = "NA",
              filename: str = "NA",
-             x_labels_of_outliers: list = "NA",
+             flagged_positions: list = "NA",
              entity_value: float = "NA",
+             entity_value_units: str = "NA",
              outlier_comparison_type: str = "NA",
              max_thresholds: list = "NA",
              min_thresholds: list = "NA",
              outlier_thresholds: list = "NA",
              unique_criteria_results: str = "NA",
              check_function: str = "NA",
+             position_units: str = "NA"
              ):
         """ Given an issue, logs a flag, prints human readable debug_message
 
@@ -140,7 +144,7 @@ class _Flagger():
             # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
             debug_message = debug_message.replace("][","] [")
             # significant figure rounding for non-indice related flags
-            if "x_labels_of_outliers" not in debug_message:
+            if "flagged_positions" not in debug_message:
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
@@ -169,14 +173,16 @@ class _Flagger():
                   "check_id": check_id,
                   "full_path": full_path,
                   "filename": filename,
-                  "x_labels_of_outliers": x_labels_of_outliers,
+                  "flagged_positions": flagged_positions,
                   "entity_value": entity_value,
+                  "entity_value_units": entity_value_units,
                   "outlier_comparison_type": outlier_comparison_type,
                   "max_thresholds": max_thresholds,
                   "min_thresholds": min_thresholds,
                   "outlier_thresholds": outlier_thresholds,
                   "unique_critera_results": unique_criteria_results,
-                  "check_function": check_function
+                  "check_function": check_function,
+                  "position_units": position_units
                   })
 
         # ensure report dict matches expected headers

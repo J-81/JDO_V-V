@@ -144,6 +144,7 @@ class RsemCounts():
                 value = df_dict[sample]
                 partial_arg_set["entity"] = sample
                 partial_arg_set["entity_value"] = df_dict[sample]
+                partial_arg_set["entity_value_units"] = key
                 partial_arg_set["outlier_comparison_type"] = "Across-Samples"
                 value_check_direct(partial_check_args = partial_arg_set,
                                    check_cutoffs = cutoffs[self.cutoffs_subsection][key],

@@ -272,6 +272,7 @@ def general_mqc_based_check(flagger: Flagger,
                 # this is all values from all samples and the same filelabel
                 all_values = mqc.compile_subset(samples_subset = samples, key = full_key, aggregator = aggregation_function)
                 check_args["entity_value"] = value
+                check_args["entity_value_units"] = f"{cutoffs_subkey}-{mqc_base_key}" if cutoffs_subkey else mqc_base_key
                 value_check_direct(value = value,
                                    all_values = all_values,
                                    check_cutoffs = check_cutoffs,
@@ -295,6 +296,7 @@ def general_mqc_based_check(flagger: Flagger,
                     if len(check_args["flagged_positions"]) != 0:
                         check_args["debug_message"] = f"Outliers detected by {bin_units}"
                         check_args["severity"] = check_cutoffs["outlier_thresholds"][threshold]
+                        check_args["position_units"] = bin_units
                         flagger.flag(**check_args)
                         flagged = True
                         # if one threshold is flagged
