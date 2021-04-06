@@ -39,9 +39,9 @@ FULL_LOG_HEADER = [
     "entity_value",
     "entity_value_units",
     "outlier_comparison_type",
-    "max_thresholds",
-    "min_thresholds",
-    "outlier_thresholds",
+    "max_thresholds_to_flag_ids",
+    "min_thresholds_to_flag_ids",
+    "outlier_thresholds_to_flag_ids",
     ]
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
@@ -173,9 +173,9 @@ class _Flagger():
                   "entity_value": entity_value,
                   "entity_value_units": entity_value_units,
                   "outlier_comparison_type": outlier_comparison_type,
-                  "max_thresholds": max_thresholds,
-                  "min_thresholds": min_thresholds,
-                  "outlier_thresholds": outlier_thresholds,
+                  "max_thresholds_to_flag_ids": max_thresholds,
+                  "min_thresholds_to_flag_ids": min_thresholds,
+                  "outlier_thresholds_to_flag_ids": outlier_thresholds,
                   "position_units": position_units
                   })
 
@@ -267,7 +267,7 @@ class _Flagger():
             derived_df = full_df.loc[~full_df["severity"].isin(filter_out)]
             # remove columns
             derived_df = derived_df.drop(["full_path"], axis=1)
-            derived_df.to_csv(output, index=False, sep="\t")
+            derived_df.to_csv(output, index=False, sep="\t", header=False, na_rep="NA")
             print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
@@ -278,7 +278,7 @@ class _Flagger():
             for sample in samples:
                 output = parent_dir / f"{sample}__{self._log_file.name}"
                 derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
-                derived_df.to_csv(output, index=False, sep="\t")
+                derived_df.to_csv(output, index=False, sep="\t", na_rep="NA")
                 print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
@@ -291,7 +291,7 @@ class _Flagger():
                 # remove spaces in step for filename
                 output = parent_dir / f"{step.replace(' ', '_')}__{self._log_file.name}"
                 derived_df = full_df.loc[full_df["step"] == step]
-                derived_df.to_csv(output, index=False, sep="\t")
+                derived_df.to_csv(output, index=False, sep="\t", na_rep="NA")
                 print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
