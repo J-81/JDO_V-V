@@ -5,6 +5,7 @@ from datetime import datetime
 import sys
 from pathlib import Path
 import math
+from collections import OrderedDict
 
 import pandas as pd
 
@@ -20,15 +21,30 @@ FLAG_LEVELS = {
     90:"Issue-Halt_Processing"
     }
 
+# order of the full report lines in the log
 FULL_LOG_HEADER = [
-    "severity",      "flag_id"      ,           "step",
-    "script",        "entity"       ,           "sub_entity",
-    "user_message",  "debug_message",           "check_id",
-    "full_path",     "relative_path",           "indices",
-    "entity_value",  "outlier_comparison_type", "max_thresholds",
-    "min_thresholds","outlier_thresholds",      "unique_critera_results",
+    "entity",
+    "severity",
+    "flag_id",
+    "step",
+    "script",
+    "sub_entity",
+    "user_message",
+    "debug_message",
+    "check_id",
+    "filename",
+    "full_path",
+    "indices",
+    "entity_value",
+    "outlier_comparison_type",
+    "max_thresholds",
+    "min_thresholds",
+    "outlier_thresholds",
+    "unique_critera_results",
     "check_function"
     ]
+
+FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 
 class VVError(Exception):
     pass
@@ -97,8 +113,9 @@ class _Flagger():
              sub_entity: str = "",
              user_message: str = "",
              preprocess_debug_messages: bool = True,
+             convert_sub_entity: bool = True,
              full_path: str = "",
-             relative_path: str = "",
+             filename: str = "",
              indices: list = [],
              entity_value: float = "NAN",
              outlier_comparison_type: str = "",
@@ -127,26 +144,44 @@ class _Flagger():
                 debug_message = self._parse_debug_message_and_round_values_to_sigfig(debug_message)
             #### END PREPROCESS MESSAGES ####
 
-        '''report = f"{self._severity[severity]}\t{severity}\t{self._step}\t{self._script}\t{entity}\t{sub_entity}\t{user_message}\t{debug_message}\t{check_id}\t{full_path}\t{relative_path}\t{indices}\t{entity_value}\t{outlier_comparison_type}\t{max_thresholds}\t{min_thresholds}\t{outlier_thresholds}\t{unique_criteria_results}\t{check_function}"
+        # convert sub entity labels according to a mapping
+        if convert_sub_entity and sub_entity:
+            CONVERT_DICT = {"forward":"R1","single":"R1","reverse":"R2"}
+            if not (new_name := CONVERT_DICT.get(sub_entity)):
+                raise ValueError(f"Failed to convert {sub_entity} to new label")
+            else:
+                sub_entity = new_name
 
-        with open(self._log_file, "a") as f:
-            f.write(report + "\n")'''
 
-        report = {"severity": self._severity[severity], "flag_id": severity,
-                  "step": self._step, "script":self._script, "entity": entity,
-                  "sub_entity": sub_entity,"user_message": user_message,
-                  "debug_message": debug_message, "check_id": check_id,
-                  "full_path": full_path, "relative_path": relative_path,
-                  "indices": indices, "entity_value": entity_value,
+        # replace user message with debug if user message not supplied
+        if not user_message:
+            user_message = debug_message
+
+        report = FULL_REPORT_LINE_TEMPLATE.copy()
+        report.update({
+                  "entity": entity,
+                  "severity": self._severity[severity],
+                  "flag_id": severity,
+                  "step": self._step,
+                  "script":self._script,
+                  "sub_entity": sub_entity,
+                  "user_message": user_message,
+                  "debug_message": debug_message,
+                  "check_id": check_id,
+                  "full_path": full_path,
+                  "filename": filename,
+                  "indices": indices,
+                  "entity_value": entity_value,
                   "outlier_comparison_type": outlier_comparison_type,
                   "max_thresholds": max_thresholds,
                   "min_thresholds": min_thresholds,
                   "outlier_thresholds": outlier_thresholds,
                   "unique_critera_results": unique_criteria_results,
-                  "check_function": check_function}
+                  "check_function": check_function
+                  })
 
         # ensure report dict matches expected headers
-        assert set(report.keys()) == set(FULL_LOG_HEADER), "Report keys MUST be the ones expected full log header."
+        assert report.keys() == FULL_REPORT_LINE_TEMPLATE.keys(), "Report keys MUST be the ones expected full log header."
         add_df = pd.DataFrame.from_records([report])
         # add to in memory log
         self.df = pd.concat([self.df, add_df])
@@ -169,12 +204,12 @@ class _Flagger():
         if not check_file.is_file():
             partial_check_args["debug_message"] = f"{check_file.name} not found"
             partial_check_args["full_path"] = str(check_file.resolve())
-            partial_check_args["relative_path"] = check_file.name
+            partial_check_args["filename"] = check_file.name
             partial_check_args["severity"] = 90
         else:
             partial_check_args["debug_message"] = f"{check_file.name} exists"
             partial_check_args["full_path"] = str(check_file.resolve())
-            partial_check_args["relative_path"] = check_file.name
+            partial_check_args["filename"] = check_file.name
             partial_check_args["severity"] = 30
         self.flag(**partial_check_args)
 

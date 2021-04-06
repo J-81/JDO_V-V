@@ -196,7 +196,7 @@ class Dataset():
             self.flagger.flag(entity = self.entity,
                          debug_message = f"Found ISA zip file",
                          full_path = self.isa_zip_path.resolve(),
-                         relative_path = self.isa_zip_path.name,
+                         filename = self.isa_zip_path.name,
                          severity = 30,
                          check_id = check_id
                         )
@@ -204,7 +204,7 @@ class Dataset():
             self.flagger.flag(entity = self.entity,
                          debug_message = f"Missing ISA zip file",
                          full_path = self.isa_zip_path.resolve(),
-                         relative_path = self.isa_zip_path.name,
+                         filename = self.isa_zip_path.name,
                          severity = 90,
                          check_id = check_id
                         )

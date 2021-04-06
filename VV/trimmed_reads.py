@@ -42,7 +42,7 @@ def validate_verify(file_mapping: dict,
         if len(missing_files) != 0:
             checkArgs["debug_message"] = "Trimmed read files missing"
             checkArgs["full_path"] = " ".join([str(missing.resolve()) for missing in missing_files])
-            checkArgs["relative_path"] = " ".join([missing.name for missing in missing_files])
+            checkArgs["filename"] = " ".join([missing.name for missing in missing_files])
             checkArgs["severity"] = 90
         else:
             checkArgs["debug_message"] = "Trimmed read files exist"
@@ -57,7 +57,7 @@ def validate_verify(file_mapping: dict,
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
             checkArgs["full_path"] = Path(filename).resolve()
-            checkArgs["relative_path"] = Path(filename).name
+            checkArgs["filename"] = Path(filename).name
             passed, details = check_fastq_headers(filename, num_lines_to_check)
             if passed == True:
                 checkArgs["debug_message"] = f"No header issues after checking {num_lines_to_check} lines of the file"
