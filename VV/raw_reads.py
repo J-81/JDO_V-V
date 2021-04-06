@@ -61,8 +61,8 @@ def validate_verify(file_mapping: dict,
         checkArgs["entity"] = sample
         for filelabel, filename in file_mapping[sample].items():
             checkArgs["sub_entity"] = filelabel
-            checkArgs["full_path"] = Path(filelabel).resolve()
-            checkArgs["relative_path"] = Path(filelabel).name
+            checkArgs["full_path"] = Path(filename).resolve()
+            checkArgs["relative_path"] = Path(filename).name
             passed, details = check_fastq_headers(filename, num_lines_to_check)
             if passed == True:
                 checkArgs["debug_message"] = f"No header issues after checking {num_lines_to_check} lines of the file"
