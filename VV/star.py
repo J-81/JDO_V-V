@@ -339,5 +339,5 @@ class StarAlignments():
             check_args = dict()
             check_args["check_id"] = check_id
             self.flagger.check_sample_proportions(check_args = check_args,
-                                             check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
-                                             protoflag_map = PROTOFLAG_MAP)
+                                                  check_cutoffs = self.cutoffs[cutoffs_subsection][cutoffs_key],
+                                                  protoflag_map = PROTOFLAG_MAP)
