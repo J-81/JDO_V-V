@@ -381,10 +381,10 @@ class _Flagger():
             with open(output_summary, "w") as f:
                 # write header
                 f.write(f"Step\tPercent_Samples_Red_Warning\tPercent_Samples_Yellow_Warning\n")
-                for step in derived_df["step"].unique():
+                for step in full_df["step"].unique():
                     if step == "step":
                         step = "any"
-                    if percents := _percent_flagged(step, derived_df):
+                    if percents := _percent_flagged(step, full_df):
                         f.write(f"{step}\t{percents[0]}\t{percents[1]}\n")
             print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
 
@@ -442,7 +442,7 @@ class NullFlagger(_Flagger):
     """
     def flag(*args,**kwargs):
         pass
-        
+
 _instance = None
 
 def Flagger(**kwargs):
