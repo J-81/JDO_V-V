@@ -338,6 +338,6 @@ class StarAlignments():
         for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
             check_args = dict()
             check_args["check_id"] = check_id
-            flagger.check_sample_proportions(check_args = check_args,
+            self.flagger.check_sample_proportions(check_args = check_args,
                                              check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
                                              protoflag_map = PROTOFLAG_MAP)
