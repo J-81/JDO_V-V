@@ -206,7 +206,7 @@ class Deseq2ScriptOutput():
                         [f"Sig.05_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"Sig.1_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"Log2_P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
-                        ["All.mean","stdev"] + \
+                        ["All.mean","All.stdev"] + \
                         ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
         expected_cols = set(expected_cols)
         missing_cols = expected_cols - set(visualization_df.columns)
