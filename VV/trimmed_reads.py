@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+}),#! /usr/bin/env python
 """ Validation/Verification for raw reads in RNASeq Concensus Pipeline
 """
 from __future__ import annotations
@@ -127,18 +127,18 @@ def validate_verify_multiqc(multiqc_json: Path,
 
     ################################################################
     check_specific_args = [
-        {"check_id":"T_1002", "mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True},
-        {"check_id":"T_1003", "mqc_base_key":"percent_duplicates"},
-        {"check_id":"T_1004", "mqc_base_key":"percent_gc"},
-        {"check_id":"T_1005", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"},
-        {"check_id":"T_1006", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"},
-        {"check_id":"T_1007", "mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True},
-        {"check_id":"T_1008", "mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True},
-        {"check_id":"T_1009", "mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True},
-        {"check_id":"T_1010", "mqc_base_key":"fastqc_sequence_duplication_levels_plot", "by_indice":True},
-        {"check_id":"T_1011", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":sum, "cutoffs_subkey":"bin_sum"},
-        {"check_id":"T_1012", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"},
-        {"check_id":"T_1013", "mqc_base_key":"fastqc_adapter_content_plot", "by_indice":True, "allow_missing_base_key":True},
+        ("T_1002", {"mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True}),
+        ("T_1003", {"mqc_base_key":"percent_duplicates"}),
+        ("T_1004", {"mqc_base_key":"percent_gc"}),
+        ("T_1005", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"}),
+        ("T_1006", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"}),
+        ("T_1007", {"mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True}),
+        ("T_1008", {"mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True}),
+        ("T_1009", {"mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True}),
+        ("T_1010", {"mqc_base_key":"fastqc_sequence_duplication_levels_plot", "by_indice":True}),
+        ("T_1011", {"mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":sum, "cutoffs_subkey":"bin_sum"}),
+        ("T_1012", {"mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"}),
+        ("T_1013", {"mqc_base_key":"fastqc_adapter_content_plot", "by_indice":True, "allow_missing_base_key":True}),
         ]
     for check_id, mqc_check_args in check_specific_args:
         check_args = dict()
