@@ -51,12 +51,6 @@ FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 class VVError(Exception):
     pass
 
-class NullFlagger(_Flagger):
-    """ A flagger that does not write output
-    """
-    def flag(*args,**kwargs):
-        pass
-
 class _Flagger():
     """ Flagging object
     """
@@ -442,6 +436,13 @@ class _Flagger():
             new_debug_message.append(word)
         return " ".join(new_debug_message)
 
+
+class NullFlagger(_Flagger):
+    """ A flagger that does not write output
+    """
+    def flag(*args,**kwargs):
+        pass
+        
 _instance = None
 
 def Flagger(**kwargs):
