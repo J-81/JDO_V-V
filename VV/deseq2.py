@@ -114,13 +114,13 @@ class Deseq2ScriptOutput():
 
             # file specific checks
             if expectedFile.name in ["contrasts.csv","ERCCnorm_contrasts.csv"]:
-                self._check_contrasts(expectedFile, partial_check_args)
+                self._check_contrasts(expectedFile, partial_check_args = check_args)
 
             elif expectedFile.name in ["differential_expression.csv","ERCCnorm_differential_expression.csv"]:
-                self._check_dge_table(expectedFile, partial_check_args)
+                self._check_dge_table(expectedFile, partial_check_args = check_args)
 
             elif expectedFile.name in ["visualization_output_table.csv","visualization_output_table_ERCCnorm.csv"]:
-                self._check_visualization_table(expectedFile, partial_check_args)
+                self._check_visualization_table(expectedFile, partial_check_args = check_args)
 
 
     def _check_dge_table(self, expectedFile, partial_check_args: dict):
@@ -172,7 +172,7 @@ class Deseq2ScriptOutput():
             partial_check_args["severity"] = 30
             self.flagger.flag(**partial_check_args)
 
-    def _check_visualization_table(self, expectedFile, check_id, entity):
+    def _check_visualization_table(self, expectedFile, partial_check_args: dict):
         visualization_df = pd.read_csv(expectedFile, index_col=None)
         flagged = False
         # check all samples have a column
@@ -226,7 +226,7 @@ class Deseq2ScriptOutput():
             partial_check_args["severity"] = 30
             self.flagger.flag(**partial_check_args)
 
-    def _check_counts_match_gene_results(self, unnorm_counts_file, partial_check_args):
+    def _check_counts_match_gene_results(self, unnorm_counts_file, partial_check_args: dict):
         """ Checks that the gene counts match on a per sample basis """
         # get by sample counts (from RSEM)
         bySample_summed_gene_counts = self.rsem_cross_checks["bySample_summed_gene_counts"]
@@ -249,7 +249,7 @@ class Deseq2ScriptOutput():
                 partial_check_args["severity"] = 90
             self.flagger.flag(**partial_check_args)
 
-    def _check_samples_match(self, expectedFile, partial_check_args):
+    def _check_samples_match(self, expectedFile, partial_check_args: dict):
         """ Checks that sample names match
         """
         # check if samples match expectation
@@ -266,7 +266,7 @@ class Deseq2ScriptOutput():
             partial_check_args["severity"] = 90
         self.flagger.flag(**partial_check_args)
 
-    def _check_contrasts(self, contrasts_file, partial_check_args):
+    def _check_contrasts(self, contrasts_file, partial_check_args: dict):
        """ Performs a check that appropriate number of contrasts generated.
 
        Also sets contrast groups
