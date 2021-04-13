@@ -1,4 +1,4 @@
-}),#! /usr/bin/env python
+#! /usr/bin/env python
 """ Validation/Verification for raw reads in RNASeq Concensus Pipeline
 """
 from __future__ import annotations
