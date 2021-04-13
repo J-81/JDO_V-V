@@ -149,7 +149,8 @@ def validate_verify_multiqc(multiqc_json: Path,
         check_args["check_id"] = check_id
         check_args["full_path"] = Path(multiqc_json).resolve()
         check_args["filename"] = Path(multiqc_json).name
-        general_mqc_based_check(samples = samples,
+        general_mqc_based_check(check_args=check_args,
+                                samples = samples,
                                 mqc = mqc,
                                 cutoffs = cutoffs[cutoffs_subsection],
                                 flagger = flagger,
