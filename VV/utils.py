@@ -139,7 +139,7 @@ def filevalues_from_mapping(file_mapping: dict,
             except TypeError:
                 raise TypeError(f"Error: {file_func} MUST return a numeric value.  Value returned: {file_value}. File: {file}")
             all_values.append(file_value)
-            file_value_mapping[sample][filelabel] = file_value
+            file_value_mapping[sample][file] = (filelabel, file_value)
 
     return file_value_mapping, all_values
 
@@ -164,7 +164,7 @@ def value_based_checks(partial_check_args: dict,
     """
     for sample in value_mapping.keys():
         partial_check_args["entity"] = sample
-        for filelabel, value in value_mapping[sample].items():
+        for filename, (filelabel, value) in value_mapping[sample].items():
             partial_check_args["sub_entity"] = filelabel
             partial_check_args["full_path"] = Path(filename).resolve()
             partial_check_args["filename"] = Path(filename).name
