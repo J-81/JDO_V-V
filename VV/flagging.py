@@ -352,14 +352,15 @@ class _Flagger():
                         message_line += message
                         details_line = f"Severity: {FLAG_LEVELS[int(row['flag_id'])]} ({row['flag_id']})  CheckID: {row['check_id']}"
                         f.write(f"  {message_line}\n    {details_line}\n\n")
-            print(f">>> Created {output.with_suffix('.txt').relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.2>")
+            print(f">>> Created {output.with_suffix('.txt').relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
             # transpose and save
             derived_df = derived_df.pivot(index=['step','check_id'], columns=['sample','sub_entity'], values='report')
+            print(derived_df.head())
             #derived_df = derived_df.reindex(sorted(derived_df.columns), axis=1)
             derived_df.to_csv(output, index=True, sep="\t", na_rep="NA")
-            print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
+            print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.2>")
 
 
 
