@@ -334,9 +334,9 @@ class StarAlignments():
         check_id_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
                                                      "S_0004":"mapped_to_multiple_loci-Percentage",
                                     }
-        check_args["full_path"] = "NA"
-        check_args["filename"] = "NA"
+
         for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
+            check_args = dict()
             check_args["check_id"] = check_id
             flagger.check_sample_proportions(check_args = check_args,
                                              check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
