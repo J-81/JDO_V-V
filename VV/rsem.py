@@ -149,8 +149,8 @@ class RsemCounts():
             for sample in self.samples:
                 value = df_dict[sample]
                 file_path = self.file_mapping[sample][filename_key]
-                partial_check_args["full_path"] = Path(file_path).resolve()
-                partial_check_args["filename"] = Path(file_path).name
+                partial_arg_set["full_path"] = Path(file_path).resolve()
+                partial_arg_set["filename"] = Path(file_path).name
                 partial_arg_set["entity"] = sample
                 partial_arg_set["entity_value"] = df_dict[sample]
                 partial_arg_set["entity_value_units"] = key
