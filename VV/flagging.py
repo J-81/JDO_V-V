@@ -248,7 +248,7 @@ class _Flagger():
                                  protoflag_map: dict):
         df = self._get_log_as_df()
         # filter by check_id
-        checkdf = df.loc[df["check_id"] == check_id]
+        checkdf = df.loc[df["check_id"] == check_args["check_id"]]
 
         check_args["entity"] = "All_Samples"
 
