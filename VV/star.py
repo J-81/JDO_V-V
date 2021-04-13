@@ -65,6 +65,9 @@ class StarAlignments():
                 partial_check_args["check_id"] = check_id
                 partial_check_args["entity"] = sample
                 partial_check_args["outlier_comparison_type"] = "Across-Samples"
+                file_path = self.file_mapping[sample]["_Log.final.out"]
+                partial_check_args["full_path"] = Path(file_path).resolve()
+                partial_check_args["filename"] = Path(file_path).name
                 value_check_direct(partial_check_args = partial_check_args,
                                    check_cutoffs = self.cutoffs[self.cutoffs_subsection][key],
                                    value = value,
@@ -189,6 +192,8 @@ class StarAlignments():
             partial_check_args["debug_message"] = None # created as issues arise. Overridden if no issues
             file_map = self.file_mapping[sample]
             check_file = file_map["_Log.out"]
+            partial_check_args["full_path"] = Path(check_file).resolve()
+            partial_check_args["filename"] = Path(check_file).name
             self.flagger.flag_file_exists(check_file = check_file,
                                           partial_check_args = partial_check_args)
 
@@ -216,6 +221,8 @@ class StarAlignments():
             ####################################################################
             # SJ.out.tab check
             sj_out_file = self.file_mapping[sample]["_SJ.out.tab"]
+            partial_check_args["full_path"] = Path(sj_out_file).resolve()
+            partial_check_args["filename"] = Path(sj_out_file).name
             self.flagger.flag_file_exists(check_file = sj_out_file,
                                           partial_check_args = partial_check_args)
             # check file contents
@@ -249,6 +256,8 @@ class StarAlignments():
             partial_check_args["debug_message"] = ""
             with log_progress_out_file.open() as f:
                 lines = f.readlines()
+            partial_check_args["full_path"] = Path(log_progress_out_file).resolve()
+            partial_check_args["filename"] = Path(log_progress_out_file).name
             if not lines[0].strip().startswith(EXPECTED_HEADER):
                 partial_check_args["debug_message"] += (f"First line does not "
                                                         f"start with {EXPECTED_HEADER}")
@@ -280,6 +289,8 @@ class StarAlignments():
             partial_check_args["debug_message"] = None # created as issues arise. Overridden if no issues
             file_map = self.file_mapping[sample]
             coord_file = file_map["_Aligned.sortedByCoord.out.bam"]
+            partial_check_args["full_path"] = Path(coord_file).resolve()
+            partial_check_args["filename"] = Path(coord_file).name
             self.flagger.flag_file_exists(check_file = coord_file,
                                           partial_check_args = partial_check_args)
 
@@ -323,7 +334,11 @@ class StarAlignments():
         check_id_with_samples_proportion_threshold = {"S_0003":"total_reads_mapped-Percentage",
                                                      "S_0004":"mapped_to_multiple_loci-Percentage",
                                     }
+        file_path = self.file_mapping[sample]["_Log.final.out"]
+        check_args["full_path"] = Path(file_path).resolve()
+        check_args["filename"] = Path(file_path).name
         for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
-            self.flagger.check_sample_proportions(check_id,
-                                                  self.cutoffs["STAR"][cutoffs_key],
-                                                  PROTOFLAG_MAP)
+            check_args["check_id"] = check_id
+            flagger.check_sample_proportions(check_args = check_args,
+                                             check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
+                                             protoflag_map = PROTOFLAG_MAP)

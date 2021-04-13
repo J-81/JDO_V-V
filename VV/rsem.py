@@ -105,6 +105,9 @@ class RsemCounts():
 
         # flag if under average count
         partial_check_args = {"check_id":"M_0003"}
+        file_path = self.file_mapping[sample][".genes.results"]
+        partial_check_args["full_path"] = Path(file_path).resolve()
+        partial_check_args["filename"] = Path(file_path).name
         mean_count = statistics.mean(counts_of_NonERCC_genes_expressed.values())
         for sample, count in counts_of_NonERCC_genes_expressed.items():
             partial_check_args["entity"] = sample
@@ -118,6 +121,9 @@ class RsemCounts():
 
         # flag if under average count
         partial_check_args = {"check_id":"M_0004"}
+        file_path = self.file_mapping[sample][".isoforms.results"]
+        partial_check_args["full_path"] = Path(file_path).resolve()
+        partial_check_args["filename"] = Path(file_path).name
         mean_count = statistics.mean(counts_of_NonERCC_isoforms_expressed.values())
         for sample, count in counts_of_NonERCC_isoforms_expressed.items():
             partial_check_args["entity"] = sample
@@ -133,15 +139,18 @@ class RsemCounts():
         ################################################################
         # Checks for each sample:file_label vs all samples
         check_specific_args = [
-            ({"check_id": "M_0005"}, "number_of_unique_genes_expressed", counts_of_genes_expressed),
-            ({"check_id": "M_0006"}, "count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
+            ({"check_id": "M_0005"}, "number_of_unique_genes_expressed", counts_of_genes_expressed, ".genes.results"),
+            ({"check_id": "M_0006"}, "count_of_unique_isoforms_expressed", counts_of_isoforms_expressed, ".isoforms.results"),
                         ]
         if self.has_ERCC:
-            check_specific_args.append(({"check_id": "M_0007"}, "number_of_ERCC_genes_detected", counts_of_ERCC_genes_detected))
-        for partial_arg_set, key, df_dict in check_specific_args:
+            check_specific_args.append(({"check_id": "M_0007"}, "number_of_ERCC_genes_detected", counts_of_ERCC_genes_detected, ".genes.results"))
+        for partial_arg_set, key, df_dict, filename_key in check_specific_args:
             all_values = df_dict.values()
             for sample in self.samples:
                 value = df_dict[sample]
+                file_path = self.file_mapping[sample][filename_key]
+                partial_check_args["full_path"] = Path(file_path).resolve()
+                partial_check_args["filename"] = Path(file_path).name
                 partial_arg_set["entity"] = sample
                 partial_arg_set["entity_value"] = df_dict[sample]
                 partial_arg_set["entity_value_units"] = key
