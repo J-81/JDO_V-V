@@ -63,8 +63,8 @@ class Deseq2ScriptOutput():
         check_args["entity"] = "All_Samples"
         for check_id, expectedFile in check_id_to_file.items():
             check_args["check_id"] = check_id
-            partial_check_args["full_path"] = Path(expectedFile).resolve()
-            partial_check_args["filename"] = Path(expectedFile).name
+            check_args["full_path"] = Path(expectedFile).resolve()
+            check_args["filename"] = Path(expectedFile).name
             # check file existence
             self.flagger.flag_file_exists(check_file = expectedFile,
                                           partial_check_args = check_args)
@@ -105,8 +105,8 @@ class Deseq2ScriptOutput():
         check_args["entity"] = "All_Samples"
         for check_id, expectedFile in check_id_to_file.items():
             check_args["check_id"] = check_id
-            partial_check_args["full_path"] = Path(expectedFile).resolve()
-            partial_check_args["filename"] = Path(expectedFile).name
+            check_args["full_path"] = Path(expectedFile).resolve()
+            check_args["filename"] = Path(expectedFile).name
             # check file existence
             self.flagger.flag_file_exists(check_file = expectedFile,
                                           partial_check_args = check_args)
@@ -122,12 +122,6 @@ class Deseq2ScriptOutput():
             elif expectedFile.name in ["visualization_output_table.csv","visualization_output_table_ERCCnorm.csv"]:
                 self._check_visualization_table(expectedFile, partial_check_args)
 
-            # no file specific checks needed
-            else:
-                debug_message = f"File exists. No other filespecific checks requested."
-                partial_check_args["debug_message"] = debug_message
-                partial_check_args["severity"] = 30
-                self.flagger.flag(**partial_check_args)
 
     def _check_dge_table(self, expectedFile, partial_check_args: dict):
         dge_df = pd.read_csv(expectedFile, index_col=None)
