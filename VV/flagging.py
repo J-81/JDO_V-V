@@ -355,17 +355,19 @@ class _Flagger():
             print(f">>> Created {output.with_suffix('.txt').relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
-            # create summary table for percentage of samples in certain flag categories
+            '''# create summary table for percentage of samples in certain flag categories
             red_filter = derived_df["severity"] == "Warning-Red"
             red_tally_df = derived_df.loc[red_filter].groupby(by=['sample','step']).agg('count')["severity"]
             yellow_filter = derived_df["severity"] == "Warning-Yellow"
             yellow_tally_df = derived_df.loc[yellow_filter].groupby(by=['sample','step']).agg('count')["severity"]
-
+            '''
 
             # create summary of percentages
             # adds in "All_Samples" to each set before subtracting it
             def _percent_flagged(step, df):
                 # skip this
+                red_filter = df["severity"] == "Warning-Red"
+                yellow_filter = df["severity"] == "Warning-Yellow"
                 total_samples = len(df["sample"][~df["sample"].isin(["All_Samples","sample"])].unique())
                 if step == "any":
                     percent_red_samples = len(df.loc[red_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
