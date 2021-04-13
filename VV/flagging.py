@@ -358,7 +358,7 @@ class _Flagger():
             # transpose and save
             derived_df = derived_df.pivot(index=['step','check_id'], columns=['sample','sub_entity'], values='report')
             # sort columns
-            derived_df = derived_df.sort(by=0,axis="columns")
+            derived_df = derived_df.sort_values(by=0,axis="columns")
             #derived_df = derived_df.reindex(sorted(derived_df.columns), axis=1)
             derived_df.to_csv(output, index=True, sep="\t", na_rep="NA")
             print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.2>")
