@@ -64,7 +64,7 @@ class StarAlignments():
                 partial_check_args = dict()
                 partial_check_args["check_id"] = check_id
                 partial_check_args["entity"] = sample
-                partial_check_args["outlier_comparison_type"] = "Across-Samples"
+                partial_check_args["outlier_comparison_type"] = "Across-All-Samples"
                 file_path = self.file_mapping[sample]["_Log.final.out"]
                 partial_check_args["full_path"] = Path(file_path).resolve()
                 partial_check_args["filename"] = Path(file_path).name

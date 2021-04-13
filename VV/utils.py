@@ -258,7 +258,7 @@ def general_mqc_based_check(flagger: Flagger,
         check_args["entity"] = sample
         for file_label in mqc.file_labels:
             check_args["sub_entity"] = file_label
-            check_args["outlier_comparison_type"] = "Across-Samples:By-File_Label"
+            check_args["outlier_comparison_type"] = "Across-All-Samples:By-File_Label"
             # used to access the label wise values
             full_key = f"{file_label}-{mqc_base_key}"
             if not by_indice:
