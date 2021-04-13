@@ -278,10 +278,7 @@ class _Flagger():
                                            f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
                                            )
             check_args["severity"] = 30
-            self.flag(entity = "All_Samples",
-                      debug_message = ,
-                      severity = 30,
-                      check_id = check_id)
+            self.flag(**check_args)
 
     def generate_derivative_log(self, log_type: str, samples: list):
         known_log_types = ["only-issues", "by-sample", "by-step", "all-by-entity"]
