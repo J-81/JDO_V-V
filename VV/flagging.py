@@ -331,8 +331,8 @@ class _Flagger():
 
             # create derived report message
             def _make_report(row):
-                sub_entity_repr = f"({row['sub_entity']})" if row['sub_entity'] != "nan" else ""
-                return f"[{row['severity']}] {sub_entity_repr} {row['user_message']}"
+                #sub_entity_repr = f"({row['sub_entity']})" if row['sub_entity'] != "nan" else ""
+                return f"[{row['severity']}] {row['user_message']}"
             derived_df["report"] = derived_df.apply(_make_report, axis="columns")
             # only use columns
             #derived_df = derived_df[["check_id","sample","report"]]
