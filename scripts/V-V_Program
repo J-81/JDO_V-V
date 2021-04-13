@@ -38,7 +38,7 @@ def _parse_args():
                         help='Directory containing the data to V&V.  The sample sheet paths MUST be relative to this directory.')
 
     parser_RNASeq.add_argument('--halt-severity', metavar='{1..100}', default=90,
-                        help=f"The minimum level of severity that will raise a V&V based program halt.  Levels are defined as follows: {FLAG_LEVELS}")
+                        help=f"The minimum level of severity that will raise a V&V based program halt. DEFAULT: 90  Levels are defined as follows: {FLAG_LEVELS}")
 
     parser_RNASeq.add_argument('--output', metavar='VV_log.tsv', default="VV_Log/VV_log.tsv",
                         help='Output path for log files. Derivate log files will also be generated in the same directory as the full log file.')
@@ -46,8 +46,8 @@ def _parse_args():
     parser_RNASeq.add_argument('--overwrite', action='store_true', default=False,
                         help='Allows the program to overwrite an existing log at the log output path')
 
-    parser_RNASeq.add_argument('--sample-sheet', metavar='file.csv', required=True,
-                        help='RNASeq Sample Sheet')
+    parser_RNASeq.add_argument('--run-sheet', metavar='file.csv', required=True,
+                        help='RNASeq run Sheet')
 
     parser_RNASeq.add_argument('--cutoffs-file', metavar='file.py', default=None,
                         help=f"Override cutoffs set with custom file. " \
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         RNASeq_VV.main(data_dir = Path(args.data_dir),
                        halt_severity = int(args.halt_severity),
                        output_path = Path(args.output),
-                       sample_sheet_path = Path(args.sample_sheet),
+                       sample_sheet_path = Path(args.run_sheet),
                        cutoffs = load_cutoffs(args.cutoffs_file, args.cutoffs_set)
                        )
 
