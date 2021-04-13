@@ -166,6 +166,8 @@ def value_based_checks(partial_check_args: dict,
         partial_check_args["entity"] = sample
         for filelabel, value in value_mapping[sample].items():
             partial_check_args["sub_entity"] = filelabel
+            partial_check_args["full_path"] = Path(filename).resolve()
+            partial_check_args["filename"] = Path(filename).name
             value_check_direct(value = value,
                                all_values = all_values,
                                check_cutoffs = check_cutoffs[value_alias],
@@ -229,7 +231,7 @@ def general_mqc_based_check(flagger: Flagger,
                             samples: list,
                             mqc: MultiQC,
                             cutoffs: dict,
-                            check_id: str,
+                            check_args: dict,
                             mqc_base_key: str,
                             aggregation_function: Callable = None,
                             cutoffs_subkey: str = None, # usually a string that references aggregation function
@@ -240,8 +242,6 @@ def general_mqc_based_check(flagger: Flagger,
         check_cutoffs = cutoffs[mqc_base_key][cutoffs_subkey] if cutoffs_subkey else cutoffs[mqc_base_key]
     except KeyError:
         raise ValueError("ERROR: Could not find {mqc_base_key} in cutoffs! Ensure this exists")
-    check_args = dict()
-    check_args["check_id"] = check_id
     # handle allow missing base keys
     if allow_missing_base_key and not mqc.data[samples[0]].get(f"{mqc.file_labels[0]}-{mqc_base_key}"):
         # this block indicates a special pass case
@@ -283,7 +283,7 @@ def general_mqc_based_check(flagger: Flagger,
             elif by_indice:
                 flagged = False
                 bin_units = mqc.data[sample][full_key].bin_units
-                check_args["outlier_comparison_type"] = "Across-Samples:By-File_Label:By-Bin"
+                check_args["outlier_comparison_type"] = "Across-All-Samples:By-File_Label:By-Bin"
                 # iterate through thresholds in descending order (more severe first)
                 thresholds = sorted(check_cutoffs["outlier_thresholds"], reverse=True)
                 check_args["outlier_thresholds"] = check_cutoffs["outlier_thresholds"]

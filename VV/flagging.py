@@ -24,12 +24,12 @@ FLAG_LEVELS = {
 
 # order of the full report lines in the log
 FULL_LOG_HEADER = [
-    "entity",
+    "sample",
+    "sub_entity",
     "severity",
     "flag_id",
     "step",
     "script",
-    "sub_entity",
     "user_message",
     "debug_message",
     "check_id",
@@ -42,6 +42,7 @@ FULL_LOG_HEADER = [
     "outlier_comparison_type",
     "max_thresholds_to_flag_ids",
     "min_thresholds_to_flag_ids",
+    "thresholds_units",
     "outlier_thresholds_to_flag_ids",
     ]
 
@@ -111,12 +112,12 @@ class _Flagger():
              debug_message: str,
              severity: int,
              check_id: str,
+             full_path: str,
+             filename: str,
              sub_entity: str = "NA",
              user_message: str = "NA",
              preprocess_debug_messages: bool = True,
              convert_sub_entity: bool = True,
-             full_path: str = "NA",
-             filename: str = "NA",
              flagged_positions: list = "NA",
              entity_value: float = "NA",
              entity_value_units: str = "NA",
@@ -124,6 +125,7 @@ class _Flagger():
              max_thresholds: list = "NA",
              min_thresholds: list = "NA",
              outlier_thresholds: list = "NA",
+             units_for_thresholds: str = "NA",
              position_units: str = "NA"
              ):
         """ Given an issue, logs a flag, prints human readable debug_message
@@ -157,14 +159,33 @@ class _Flagger():
         if user_message == "NA":
             user_message = debug_message
 
+
+        # masks for entity_value_units
+        # mainly to improve end user readability
+        # but still use automatically parsed keys
+        ENTITY_VALUE_UNITS_MASKS = {
+            "bin_sum-fastqc_per_base_n_content_plot" : "sum_percent_of_n_per_base",
+            "bin_mean-fastqc_per_base_n_content_plot" : "mean_percent_of_n_per_base",
+            "fastqc_overrepresented_sequencesi_plot-Top over-represented sequence" : "percent_of_top_over-represented_sequence_per_total",
+            "fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences" : "percent_of_remaining_over-represented_sequences_per_total",
+        }
+        if mask_for_entity_value_units := ENTITY_VALUE_UNITS_MASKS.get(entity_value_units, None):
+            print(f"Masking entity_value_units key '{entity_value_units}' with '{mask_for_entity_value_units}'")
+            entity_value_units = mask_for_entity_value_units
+
+        # in most cases, make threshold units the same as the entity units
+        if units_for_thresholds == "NA":
+            units_for_thresholds = entity_value_units # should be safe in most cases, even where entity value units is NA (just replaces NA with NA)
+
+
         report = FULL_REPORT_LINE_TEMPLATE.copy()
         report.update({
-                  "entity": entity,
+                  "sample": entity,
+                  "sub_entity": sub_entity,
                   "severity": self._severity[severity],
                   "flag_id": severity,
                   "step": self._step,
                   "script":self._script,
-                  "sub_entity": sub_entity,
                   "user_message": user_message,
                   "debug_message": debug_message,
                   "check_id": check_id,
@@ -176,6 +197,7 @@ class _Flagger():
                   "outlier_comparison_type": outlier_comparison_type,
                   "max_thresholds_to_flag_ids": max_thresholds,
                   "min_thresholds_to_flag_ids": min_thresholds,
+                  "thresholds_units": units_for_thresholds,
                   "outlier_thresholds_to_flag_ids": outlier_thresholds,
                   "position_units": position_units
                   })
@@ -228,6 +250,9 @@ class _Flagger():
         # filter by check_id
         checkdf = df.loc[df["check_id"] == check_id]
 
+        check_args = dict()
+        check_args["entity"] = All_Samples
+
         # compute proportion with proto flags
         flagged = False
         for flag_id in sorted(protoflag_map, reverse=True):
@@ -238,21 +263,23 @@ class _Flagger():
             proportion = valid_proto_count / total_count
             # check if exceeds threshold
             if proportion > threshold:
-                self.flag(entity = "FULL_DATASET",
-                          debug_message = (f"{proportion*100}% of samples:files "
-                                    f"({valid_proto_count} of {total_count}) "
-                                    f"meet criteria for flagging. [threshold: {threshold*100}%]"
-                                    ),
-                          severity = flag_id,
-                          check_id = check_id)
+                check_args["debug_message"] = (f"{proportion*100}% of samples:files "
+                          f"({valid_proto_count} of {total_count}) "
+                          f"meet criteria for flagging. [threshold: {threshold*100}%]"
+                          )
+                check_args["severity"] = flag_id
+                self.flag(**check_args)
                 flagged = True
                 break
+
         if not flagged:
-            self.flag(entity = "FULL_DATASET",
-                      debug_message = (f"{proportion*100}% of samples:files "
-                                f"({valid_proto_count} of {total_count}) "
-                                f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
-                                ),
+            check_args["debug_message"] = (f"{proportion*100}% of samples:files "
+                                           f"({valid_proto_count} of {total_count}) "
+                                           f" does not meet criteria for flagging. [threshold: {threshold*100}%]"
+                                           )
+            check_args["severity"] = 30
+            self.flag(entity = "All_Samples",
+                      debug_message = ,
                       severity = 30,
                       check_id = check_id)
 

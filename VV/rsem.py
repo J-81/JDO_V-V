@@ -133,11 +133,11 @@ class RsemCounts():
         ################################################################
         # Checks for each sample:file_label vs all samples
         check_specific_args = [
-            ({"check_id": "M_0005"}, "count_of_unique_genes_expressed", counts_of_genes_expressed),
+            ({"check_id": "M_0005"}, "number_of_unique_genes_expressed", counts_of_genes_expressed),
             ({"check_id": "M_0006"}, "count_of_unique_isoforms_expressed", counts_of_isoforms_expressed),
                         ]
         if self.has_ERCC:
-            check_specific_args.append(({"check_id": "M_0007"}, "count_of_ERCC_genes_detected", counts_of_ERCC_genes_detected))
+            check_specific_args.append(({"check_id": "M_0007"}, "number_of_ERCC_genes_detected", counts_of_ERCC_genes_detected))
         for partial_arg_set, key, df_dict in check_specific_args:
             all_values = df_dict.values()
             for sample in self.samples:

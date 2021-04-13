@@ -114,6 +114,8 @@ def validate_verify_multiqc(multiqc_json: Path,
     if paired_end:
         check_args = dict()
         check_args["check_id"] = "R_1001"
+        check_args["full_path"] = Path(multiqc_json).resolve()
+        check_args["filename"] = Path(multiqc_json).name
         for sample in samples:
             check_args["entity"] = sample
             forward_count = mqc.data[sample]["forward-total_sequences"].value
@@ -130,19 +132,23 @@ def validate_verify_multiqc(multiqc_json: Path,
 
     ################################################################
     check_specific_args = [
-        {"check_id":"R_1002", "mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True},
-        {"check_id":"R_1003", "mqc_base_key":"percent_duplicates"},
-        {"check_id":"R_1004", "mqc_base_key":"percent_gc"},
-        {"check_id":"R_1005", "mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True},
-        {"check_id":"R_1006", "mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True},
-        {"check_id":"R_1007", "mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True},
-        {"check_id":"R_1008", "mqc_base_key":"fastqc_sequence_duplication_levels_plot", "by_indice":True},
-        {"check_id":"R_1009", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":sum, "cutoffs_subkey":"bin_sum"},
-        {"check_id":"R_1010", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"},
-        {"check_id":"R_1011", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"},
-        {"check_id":"R_1012", "mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"},
+        ("R_1002", {"mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True}),
+        ("R_1003", {"mqc_base_key":"percent_duplicates"}),
+        ("R_1004", {"mqc_base_key":"percent_gc"}),
+        ("R_1005", {"mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True}),
+        ("R_1006", {"mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True}),
+        ("R_1007", {"mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True}),
+        ("R_1008", {"mqc_base_key":"fastqc_sequence_duplication_levels_plot", "by_indice":True}),
+        ("R_1009", {"mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":sum, "cutoffs_subkey":"bin_sum"}),
+        ("R_1010", {"mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"}),
+        ("R_1011", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"}),
+        ("R_1012", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"}),
         ]
-    for mqc_check_args in check_specific_args:
+    for check_id, mqc_check_args in check_specific_args:
+        check_args = dict()
+        check_args["check_id"] = check_id
+        check_args["full_path"] = Path(multiqc_json).resolve()
+        check_args["filename"] = Path(multiqc_json).name
         general_mqc_based_check(samples = samples,
                                 mqc = mqc,
                                 cutoffs = cutoffs[cutoffs_subsection],

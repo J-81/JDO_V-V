@@ -324,7 +324,7 @@ CUTOFFS = \
         },
         "RSEM" : {
             "middlepoint": "median",
-            "count_of_unique_genes_expressed" : {
+            "number_of_unique_genes_expressed" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {},
                 "outlier_thresholds" : {
@@ -342,7 +342,7 @@ CUTOFFS = \
                 },
                 "sample_proportion_thresholds" : {},
             },
-            "count_of_ERCC_genes_detected" : {
+            "number_of_ERCC_genes_detected" : {
                 "max_thresholds" : {},
                 "min_thresholds" : {
                     1 : 60,
