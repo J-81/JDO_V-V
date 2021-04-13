@@ -361,22 +361,21 @@ class _Flagger():
             yellow_filter = derived_df["severity"] == "Warning-Yellow"
             yellow_tally_df = derived_df.loc[yellow_filter].groupby(by=['sample','step']).agg('count')["severity"]
 
-            print(f"RED")
-            print(red_tally_df.head())
-            print(f"YELLOW")
-            print(yellow_tally_df.head())
 
             # create summary of percentages
             # adds in "All_Samples" to each set before subtracting it
             def _percent_flagged(step, df):
                 # skip this
-                if step == "all":
-                    step_filter = True
-                step_filter = (df["step"] == step)
                 total_samples = len(df["sample"][~df["sample"].isin(["All_Samples","sample"])].unique())
-                percent_red_samples = len(df.loc[red_filter & step_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
-                percent_yellow_samples = len(df.loc[yellow_filter & step_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
-                return (percent_red_samples, percent_yellow_samples)
+                if step == "any":
+                    percent_red_samples = len(df.loc[red_filter["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    percent_yellow_samples = len(df.loc[yellow_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    return (percent_red_samples, percent_yellow_samples)
+                else:
+                    step_filter = (df["step"] == step)
+                    percent_red_samples = len(df.loc[red_filter["sample" & step_filter][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    percent_yellow_samples = len(df.loc[yellow_filter]["sample" & step_filter][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    return (percent_red_samples, percent_yellow_samples)
 
             output_summary = self._log_folder /"Summary.tsv"
             with open(output_summary, "w") as f:
@@ -384,7 +383,7 @@ class _Flagger():
                 f.write(f"Step,Percent_Samples_Red_Warning,Percent_Samples_Yellow_Warning\n")
                 for step in derived_df["step"].unique():
                     if step == "step":
-                        step = "all"
+                        step = "any"
                     if percents := _percent_flagged(step, derived_df):
                         f.write(f"{step},{percents[0]},{percents[1]}\n")
             print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
