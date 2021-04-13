@@ -368,24 +368,24 @@ class _Flagger():
                 # skip this
                 total_samples = len(df["sample"][~df["sample"].isin(["All_Samples","sample"])].unique())
                 if step == "any":
-                    percent_red_samples = len(df.loc[red_filter["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    percent_red_samples = len(df.loc[red_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
                     percent_yellow_samples = len(df.loc[yellow_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
                     return (percent_red_samples, percent_yellow_samples)
                 else:
                     step_filter = (df["step"] == step)
-                    percent_red_samples = len(df.loc[red_filter["sample" & step_filter][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
-                    percent_yellow_samples = len(df.loc[yellow_filter]["sample" & step_filter][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    percent_red_samples = len(df.loc[red_filter & step_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
+                    percent_yellow_samples = len(df.loc[yellow_filter & step_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
                     return (percent_red_samples, percent_yellow_samples)
 
             output_summary = self._log_folder /"Summary.tsv"
             with open(output_summary, "w") as f:
                 # write header
-                f.write(f"Step,Percent_Samples_Red_Warning,Percent_Samples_Yellow_Warning\n")
+                f.write(f"Step\tPercent_Samples_Red_Warning\tPercent_Samples_Yellow_Warning\n")
                 for step in derived_df["step"].unique():
                     if step == "step":
                         step = "any"
                     if percents := _percent_flagged(step, derived_df):
-                        f.write(f"{step},{percents[0]},{percents[1]}\n")
+                        f.write(f"{step}\t{percents[0]}\t{percents[1]}\n")
             print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
 
 
