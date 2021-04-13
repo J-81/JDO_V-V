@@ -335,8 +335,8 @@ class StarAlignments():
                                                      "S_0004":"mapped_to_multiple_loci-Percentage",
                                     }
         file_path = self.file_mapping[sample]["_Log.final.out"]
-        check_args["full_path"] = Path(file_path).resolve()
-        check_args["filename"] = Path(file_path).name
+        check_args["full_path"] = "NA"
+        check_args["filename"] = "NA"
         for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
             check_args["check_id"] = check_id
             flagger.check_sample_proportions(check_args = check_args,
