@@ -170,7 +170,7 @@ class _Flagger():
             "fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences" : "percent_of_remaining_over-represented_sequences_per_total",
         }
         if mask_for_entity_value_units := ENTITY_VALUE_UNITS_MASKS.get(entity_value_units, None):
-            print(f"Masking entity_value_units key '{entity_value_units}' with '{mask_for_entity_value_units}'")
+            #print(f"Masking entity_value_units key '{entity_value_units}' with '{mask_for_entity_value_units}'")
             entity_value_units = mask_for_entity_value_units
 
         # in most cases, make threshold units the same as the entity units
