@@ -169,7 +169,11 @@ def validate_verify_multiqc(multiqc_json: Path,
     check_id_with_samples_proportion_threshold = {"R_1011":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "R_1012":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
+    check_args = dict()
+    check_args["full_path"] = Path(multiqc_json).resolve()
+    check_args["filename"] = Path(multiqc_json).name
     for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
-        flagger.check_sample_proportions(check_id,
-                                         cutoffs[cutoffs_subsection][cutoffs_key],
-                                         PROTOFLAG_MAP)
+        check_args["check_id"] = check_id
+        flagger.check_sample_proportions(check_args = check_args,
+                                         check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
+                                         protoflag_map = PROTOFLAG_MAP)

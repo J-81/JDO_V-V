@@ -243,15 +243,14 @@ class _Flagger():
                            )
 
     def check_sample_proportions(self,
-                                 check_id: str,
+                                 check_args: dict,
                                  check_cutoffs: dict,
                                  protoflag_map: dict):
         df = self._get_log_as_df()
         # filter by check_id
         checkdf = df.loc[df["check_id"] == check_id]
 
-        check_args = dict()
-        check_args["entity"] = All_Samples
+        check_args["entity"] = "All_Samples"
 
         # compute proportion with proto flags
         flagged = False

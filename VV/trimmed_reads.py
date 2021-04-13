@@ -109,6 +109,8 @@ def validate_verify_multiqc(multiqc_json: Path,
     if paired_end:
         check_args = dict()
         check_args["check_id"] = "T_1001"
+        check_args["full_path"] = Path(multiqc_json).resolve()
+        check_args["filename"] = Path(multiqc_json).name
         for sample in samples:
             check_args["entity"] = sample
             forward_count = mqc.data[sample]["forward-total_sequences"].value
@@ -138,7 +140,11 @@ def validate_verify_multiqc(multiqc_json: Path,
         {"check_id":"T_1012", "mqc_base_key":"fastqc_per_base_n_content_plot", "aggregation_function":statistics.mean, "cutoffs_subkey":"bin_mean"},
         {"check_id":"T_1013", "mqc_base_key":"fastqc_adapter_content_plot", "by_indice":True, "allow_missing_base_key":True},
         ]
-    for mqc_check_args in check_specific_args:
+    for check_id, mqc_check_args in check_specific_args:
+        check_args = dict()
+        check_args["check_id"] = check_id
+        check_args["full_path"] = Path(multiqc_json).resolve()
+        check_args["filename"] = Path(multiqc_json).name
         general_mqc_based_check(samples = samples,
                                 mqc = mqc,
                                 cutoffs = cutoffs[cutoffs_subsection],
@@ -155,7 +161,11 @@ def validate_verify_multiqc(multiqc_json: Path,
     check_id_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
                                                  "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
     }
+    check_args = dict()
+    check_args["full_path"] = Path(multiqc_json).resolve()
+    check_args["filename"] = Path(multiqc_json).name
     for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
-        flagger.check_sample_proportions(check_id,
-                                         cutoffs["trimmed_reads"][cutoffs_key],
-                                         PROTOFLAG_MAP)
+        check_args["check_id"] = check_id
+        flagger.check_sample_proportions(check_args = check_args,
+                                         check_cutoffs = cutoffs[cutoffs_subsection][cutoffs_key],
+                                         protoflag_map = PROTOFLAG_MAP)
