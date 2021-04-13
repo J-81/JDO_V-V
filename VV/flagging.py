@@ -301,7 +301,7 @@ class _Flagger():
             parent_dir.mkdir(exist_ok=True)
             for sample in samples:
                 output = parent_dir / f"{sample}__{self._log_file.name}"
-                derived_df = full_df.loc[full_df["entity"].str.contains(sample)]
+                derived_df = full_df.loc[full_df["sample"].str.contains(sample)]
                 derived_df.to_csv(output, index=False, sep="\t", na_rep="NA")
                 print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
@@ -335,12 +335,12 @@ class _Flagger():
                 return f"[{row['severity']}] {sub_entity_repr} {row['user_message']}"
             derived_df["report"] = derived_df.apply(_make_report, axis="columns")
             # only use columns
-            #derived_df = derived_df[["check_id","entity","report"]]
+            #derived_df = derived_df[["check_id","sample","report"]]
             #derived_df = derived_df.drop_duplicates()
             with open(output.with_suffix('.txt'), "w") as f:
                 # iterate by unique entities
-                for entity in derived_df["entity"].unique():
-                    entity_df = derived_df.loc[derived_df["entity"] == entity]
+                for entity in derived_df["sample"].unique():
+                    entity_df = derived_df.loc[derived_df["sample"] == entity]
                     f.write(f"SAMPLE: {entity}\n")
                     for i, (_, row) in enumerate(entity_df.iterrows()):
                         if i == 0:
