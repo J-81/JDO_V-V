@@ -242,23 +242,22 @@ def general_mqc_based_check(flagger: Flagger,
         check_cutoffs = cutoffs[mqc_base_key][cutoffs_subkey] if cutoffs_subkey else cutoffs[mqc_base_key]
     except KeyError:
         raise ValueError("ERROR: Could not find {mqc_base_key} in cutoffs! Ensure this exists")
-    # handle allow missing base keys
-    if allow_missing_base_key and not mqc.data[samples[0]].get(f"{mqc.file_labels[0]}-{mqc_base_key}"):
-        # this block indicates a special pass case
-        for sample in samples:
-            check_args["entity"] = sample
-            check_args["severity"] = 30
-            check_args["debug_message"] = f"Missing plot under {mqc_base_key}.  This check automatically passes in this case as this means the plot was replaced with a message indicating no issues in multiQC"
-            check_args["user_message"] = f"No issues for {mqc_base_key}."
-            flagger.flag(**check_args)
-            return # exit function
     # iterate through each sample:file_label
     # test against all values from all file-labels
+    check_args["outlier_comparison_type"] = "Across-All-Samples:By-File_Label"
     for sample in samples:
         check_args["entity"] = sample
         for file_label in mqc.file_labels:
             check_args["sub_entity"] = file_label
-            check_args["outlier_comparison_type"] = "Across-All-Samples:By-File_Label"
+            # handle allow missing base keys
+            if allow_missing_base_key and not mqc.data[sample].get(f"{file_label}-{mqc_base_key}"):
+                # this block indicates a special pass case
+                flagger.flag(**check_args,
+                            severity=30,
+                            debug_message=f"Missing plot under {mqc_base_key}.  This check automatically passes in this case as this means the plot was replaced with a message indicating no issues in multiQC",
+                            user_message=f"No issues for {mqc_base_key}."
+                            )
+                continue # start next sub entity check
             # used to access the label wise values
             full_key = f"{file_label}-{mqc_base_key}"
             if not by_indice:
