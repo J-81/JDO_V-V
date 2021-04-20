@@ -249,7 +249,11 @@ def general_mqc_based_check(flagger: Flagger,
         check_args["entity"] = sample
         for file_label in mqc.file_labels:
             check_args["sub_entity"] = file_label
+            # used to access the label wise values
+            full_key = f"{file_label}-{mqc_base_key}"
             # handle allow missing base keys
+            print(f"Data below for {sample}, {full_key}")
+            print(mqc.data[sample].get(full_key))
             if allow_missing_base_key and not mqc.data[sample].get(f"{file_label}-{mqc_base_key}"):
                 # this block indicates a special pass case
                 flagger.flag(**check_args,
@@ -258,8 +262,7 @@ def general_mqc_based_check(flagger: Flagger,
                             user_message=f"No issues for {mqc_base_key}."
                             )
                 continue # start next sub entity check
-            # used to access the label wise values
-            full_key = f"{file_label}-{mqc_base_key}"
+
             if not by_indice:
                 # note: this is just the sample to check for outliers!
                 value = mqc.compile_subset(samples_subset = [sample], key = full_key, aggregator = aggregation_function)
