@@ -70,7 +70,13 @@ class MultiQC():
         assert key in self.sample_wise_data_keys, f"Missing key {key}"
 
         for sample in samples_subset:
-            data = self.data[sample][key]
+            # handle cases where not every sample is plotted
+            # this occurs for instance when only a limited number of samples
+            # have adapter content, while are adapter-free and unplotted
+            data = self.data[sample].get(key)
+            if data == None:
+                print(f"No data for {sample} for {key}")
+                continue # skip this sample, unplotted and data does not exist
             if isinstance(data, OneValueData):
                 data = data.value
                 # initiate aggregate data type to match
