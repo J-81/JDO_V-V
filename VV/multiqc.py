@@ -67,7 +67,8 @@ class MultiQC():
         assert set(self.samples).issuperset(set(samples_subset)), \
                f"Samples supplied ({set(samples_subset)}) are not a subset of {self.samples}"
         # check key is in extracted data
-        assert key in self.sample_wise_data_keys, f"Missing key {key}"
+        # removed as this check is sample-wise
+        # assert key in self.sample_wise_data_keys, f"Missing key {key}"
 
         for sample in samples_subset:
             # handle cases where not every sample is plotted
