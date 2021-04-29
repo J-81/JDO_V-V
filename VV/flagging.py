@@ -149,7 +149,7 @@ class _Flagger():
 
         # convert sub entity labels according to a mapping if supplied
         if convert_sub_entity and sub_entity != "NA":
-            CONVERT_DICT = {"forward":"R1","single":"R1","reverse":"R2"}
+            CONVERT_DICT = {"forward":"R1","read":"R1","reverse":"R2"}
             if not (new_name := CONVERT_DICT.get(sub_entity)):
                 raise ValueError(f"Failed to convert {sub_entity} to new label")
             else:
