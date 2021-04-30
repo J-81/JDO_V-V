@@ -322,7 +322,7 @@ class _Flagger():
 
         elif log_type == "all-by-entity":
             full_df = self._get_log_as_df()
-            output = self._log_folder / f"{log_type}__{Path(self._log_file.name).with_suffix('.tsv')}"
+            output = self._log_folder / f"all-by-sample.tsv"
             filter_out = [severity for flag_code, severity
                           in FLAG_LEVELS.items()
                           if flag_code <= 30]
