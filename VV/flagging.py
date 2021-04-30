@@ -387,7 +387,7 @@ class _Flagger():
                     if step == "step":
                         step = "any"
                     if percents := _percent_flagged(step, full_df):
-                        f.write(f"{step}\t{percents[0]}\t{percents[1]}\n")
+                        f.write(f"{step}\t{percents[0]:.2f}\t{percents[1]:.2f}\n")
             print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
 
 
