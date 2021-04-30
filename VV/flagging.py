@@ -42,8 +42,8 @@ FULL_LOG_HEADER = [
     "outlier_comparison_type",
     "max_thresholds_to_flag_ids",
     "min_thresholds_to_flag_ids",
-    "thresholds_units",
-    "outlier_thresholds_to_flag_ids",
+    "max_min_thresholds_units",
+    "outlier_stdev_thresholds_to_flag_ids",
     ]
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
@@ -197,8 +197,8 @@ class _Flagger():
                   "outlier_comparison_type": outlier_comparison_type,
                   "max_thresholds_to_flag_ids": max_thresholds,
                   "min_thresholds_to_flag_ids": min_thresholds,
-                  "thresholds_units": units_for_thresholds,
-                  "outlier_thresholds_to_flag_ids": outlier_thresholds,
+                  "max_min_thresholds_units": units_for_thresholds,
+                  "outlier_stdev_thresholds_to_flag_ids": outlier_thresholds,
                   "position_units": position_units
                   })
 
