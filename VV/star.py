@@ -338,8 +338,8 @@ class StarAlignments():
         for check_id, cutoffs_key in check_id_with_samples_proportion_threshold.items():
             check_args = dict()
             check_args["check_id"] = check_id
-            check_args["full_path"] = "NA"
-            check_args["filename"] = "NA"
+            check_args["full_path"] = "Multiple Files"
+            check_args["filename"] = "*Log.final.out"
             self.flagger.check_sample_proportions(check_args = check_args,
                                                   check_cutoffs = self.cutoffs[self.cutoffs_subsection][cutoffs_key],
                                                   protoflag_map = PROTOFLAG_MAP)
