@@ -32,7 +32,7 @@ class Deseq2ScriptOutput():
         self.counts_dir_path = counts_dir_path
         self.dge_dir_path = dge_dir_path
         self.has_ERCC = has_ERCC
-        self.rsem_cross_checks = cross_checks["RSEM"]
+        self.rsem_cross_checks = cross_checks.get("RSEM", None)
         self.samplesheet_cross_checks = cross_checks["SampleSheet"]
         self._check_counts_csv_files()
         self._check_dge_files()
@@ -229,6 +229,9 @@ class Deseq2ScriptOutput():
     def _check_counts_match_gene_results(self, unnorm_counts_file, partial_check_args: dict):
         """ Checks that the gene counts match on a per sample basis """
         # get by sample counts (from RSEM)
+        if not self.rsem_cross_checks:
+            print(f"Skipping check {partial_check_args['check_id']}: Reason: relies on skipped rsem VV data")
+            return
         bySample_summed_gene_counts = self.rsem_cross_checks["bySample_summed_gene_counts"]
 
         unnorm_df = pd.read_csv(unnorm_counts_file, index_col=0)
