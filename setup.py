@@ -11,7 +11,7 @@ long_description = (
 
 setup(
    name='VV',
-   version='0.4.9-dev',
+   version='0.4.0',
    description='VV for RNASeq raw and processed data.',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
