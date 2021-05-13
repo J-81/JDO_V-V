@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Uses seqtk to perform proportion based subsampling.
 
 ### Fixed
+  - 0.4.1 : Summary.tsv error when no single sample flags found (case: skipped VV steps)
 
 ### Removed
 
