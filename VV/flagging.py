@@ -370,7 +370,7 @@ class _Flagger():
                 yellow_filter = df["severity"] == "Warning-Yellow"
                 total_samples = len(df["sample"][~df["sample"].isin(["All_Samples","sample"])].unique())
                 if total_samples == 0:
-                    return ("Not assessed, no single sample flags","Not assessed, no single sample flags")
+                    return None
                 if step == "any":
                     percent_red_samples = len(df.loc[red_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
                     percent_yellow_samples = len(df.loc[yellow_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
@@ -390,7 +390,9 @@ class _Flagger():
                         step = "any"
                     if percents := _percent_flagged(step, full_df):
                         f.write(f"{step}\t{percents[0]:.2f}\t{percents[1]:.2f}\n")
-            print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
+                    else:
+                        f.write(f"{step}\t{"Not assessed: No single sample flags for this step found"}\t{"Not assessed: No single sample flags for this step found"}\n")
+            print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
             # transpose and save
@@ -399,7 +401,7 @@ class _Flagger():
                 derived_df = derived_df.sort_values(by="sample",axis="columns")
                 #derived_df = derived_df.reindex(sorted(derived_df.columns), axis=1)
                 derived_df.to_csv(output, index=True, sep="\t", na_rep="NA")
-                print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)} <NEW in version 0.4.3>")
+                print(f">>> Created {output.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
             except ValueError: # raised as Index contains duplicate entries, cannot reshape
                 pass
             # sort columns
