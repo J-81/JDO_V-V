@@ -369,6 +369,8 @@ class _Flagger():
                 red_filter = df["severity"] == "Warning-Red"
                 yellow_filter = df["severity"] == "Warning-Yellow"
                 total_samples = len(df["sample"][~df["sample"].isin(["All_Samples","sample"])].unique())
+                if total_samples == 0:
+                    return ("Not assessed, no single sample flags","Not assessed, no single sample flags")
                 if step == "any":
                     percent_red_samples = len(df.loc[red_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
                     percent_yellow_samples = len(df.loc[yellow_filter]["sample"][~df["sample"].isin(["All_Samples","sample"])].unique()) / total_samples * 100
