@@ -391,7 +391,7 @@ class _Flagger():
                     if percents := _percent_flagged(step, full_df):
                         f.write(f"{step}\t{percents[0]:.2f}\t{percents[1]:.2f}\n")
                     else:
-                        f.write(f"{step}\t{"Not assessed: No single sample flags for this step found"}\t{"Not assessed: No single sample flags for this step found"}\n")
+                        f.write(f"{step}\t{'Not assessed: No single sample flags for this step found'}\t{'Not assessed: No single sample flags for this step found'}\n")
             print(f">>> Created {output_summary.relative_to(self._cwd)}: Derived from {self._log_file.relative_to(self._cwd)}")
 
 
