@@ -118,11 +118,11 @@ if __name__ == '__main__':
             Path(args.output).unlink()
 
         # set up steps to skip
+        # default is to not skip
+        skip = {step:False for step in RNASEQ_STEPS}
         if args.skip:
             if not set(args.skip).issubset(RNASEQ_STEPS):
                 raise ValueError(f"Error: requested skipped steps must be in {RNASEQ_STEPS}")
-            # default is to not skip
-            skip = {step:False for step in RNASEQ_STEPS}
             # set to skip for steps requested
             for step in args.skip:
                 skip[step] = True
