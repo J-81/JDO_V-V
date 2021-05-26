@@ -7,7 +7,7 @@
 # TOP LEVEL MUST BE NAMED CUTOFFS
 CUTOFFS = \
 {
-    "DEFAULT" : {
+    "DEFAULT_RNASEQ" : {
         "raw_reads": {
             "middlepoint": "median",
             "fastq_lines_to_check" : 4000000,
@@ -354,5 +354,16 @@ CUTOFFS = \
                 "sample_proportion_thresholds" : {},
             },
         },
-    }
+    },
+    "DEFAULT_MICROARRAY" : {
+        "raw_files" : {
+            "middlepoint": "median",
+        },
+        "normalized_data" : {
+            "middlepoint": "median",
+        },
+        "limma_dge" : {
+            "middlepoint": "median",
+        },
+    },
 }
