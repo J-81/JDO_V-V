@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 
 from VV.flagging import Flagger
+from VV.runsheets import MicroarrayRunsheet
 
 def main(data_dir: Path,
          halt_severity: int,
@@ -25,13 +26,14 @@ def main(data_dir: Path,
     # set up flagger
     flagger = Flagger(script = __file__,
                       log_to = output_path,
-                      halt_level = halt_severity)
+                      halt_level = halt_severity,
+                      force_new_flagger = True)
     ########################################################################
     # RNASeqSampleSheet Parsing
     ########################################################################
     cross_checks = dict()
     print(cutoffs)
-    #sample_sheet = MicroarrayRunsheet(sample_sheet = sample_sheet_path)
+    sample_sheet = MicroarrayRunsheet(sample_sheet = sample_sheet_path)
     #cross_checks["SampleSheet"] = sample_sheet
     # switch working directory to where data is located
     if data_dir != Path(os.getcwd()):
