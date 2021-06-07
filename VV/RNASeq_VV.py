@@ -34,7 +34,8 @@ def main(data_dir: Path,
     # set up flagger
     flagger = Flagger(script = __file__,
                       log_to = output_path,
-                      halt_level = halt_severity)
+                      halt_level = halt_severity,
+                      force_new_flagger = True)
     ########################################################################
     # RNASeqSampleSheet Parsing
     ########################################################################
