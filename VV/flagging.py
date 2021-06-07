@@ -19,6 +19,7 @@ FLAG_LEVELS = {
     50:"Warning-Yellow",
     59:"Proto-Warning-Red",
     60:"Warning-Red",
+    80:"Issue-Unable_To_Check",
     90:"Issue-Halt_Processing"
     }
 
@@ -456,6 +457,7 @@ _instance = None
 
 def Flagger(**kwargs):
     global _instance
-    if not _instance:
+    if not _instance or kwargs.get("force_new_flagger"):
+        kwargs.pop("force_new_flagger")
         _instance = _Flagger(**kwargs)
     return _instance
