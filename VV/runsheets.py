@@ -18,7 +18,7 @@ class MicroarrayRunsheet():
         df = pd.read_csv(self.sample_sheet_path)
         self.df = df
         self.contrasts_table, self.expected_contrasts = self.generate_contrasts_table()
-        self.samples = df["Sample Name"].tolist()
+        self.samples = df["sample_name"].tolist()
         # set attributes for columns with a single unique value
         for col in df.columns:
             unique_values = df[col].unique()
@@ -27,12 +27,12 @@ class MicroarrayRunsheet():
                 setattr(self, col, unique_value)
 
         # setup filemappings
-        self.raw_files = {sample:{"array_data_file":Path(df["array_data_file"][i])} for i,sample in enumerate(self.samples)}
+        self.raw_files = {sample:{"array_data_file":Path(self.raw_data) / Path(df["array_data_file"][i])} for i,sample in enumerate(self.samples)}
 
         # set to path
-        self.Normalized = Path(self.normalized)
-        self.Limma_DGE = Path(self.limma_dge)
-        self.Raw_QA = Path(self.raw_qa)
+        self.Raw_Data_Dir = Path(self.raw_data)
+        self.Normalized_Data_Dir = Path(self.normalized_data)
+        self.Limma_DGE_Dir = Path(self.limma_dge)
 
     def generate_contrasts_table(self) -> DataFrame:
         """ Generates a contrast table that should be similar to the one created by RISA
