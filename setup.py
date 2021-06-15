@@ -1,6 +1,6 @@
 import codecs
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 dirname = os.path.dirname(__file__)
 
@@ -15,11 +15,12 @@ setup(
    description='VV for RNASeq raw and processed data.',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
-   packages=['VV'],  #same as name
+   packages=find_packages(),  #same as name
    scripts=[
             'scripts/V-V_Program',
            ],
    python_requires='>=3.8',
+   install_requires=['pandas','isatools'],
    setup_requires=['pytest-runner'],
    tests_require=['pytest']
 )
