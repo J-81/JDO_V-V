@@ -358,6 +358,14 @@ CUTOFFS = \
     "DEFAULT_MICROARRAY" : {
         "raw_files" : {
             "middlepoint": "median",
+            "file_size" : {
+                "max_thresholds" : {},
+                "min_thresholds" : {},
+                "outlier_thresholds" : {
+                    2 : 50,
+                    4 : 60,
+                },
+            },
         },
         "normalized_data" : {
             "middlepoint": "median",

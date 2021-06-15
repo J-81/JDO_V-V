@@ -8,6 +8,7 @@ import os
 
 from VV.flagging import Flagger
 from VV.runsheets import MicroarrayRunsheet
+from VV.microarray.raw_files import RawFilesVV
 
 def main(data_dir: Path,
          halt_severity: int,
@@ -44,6 +45,9 @@ def main(data_dir: Path,
     ########################################################################
     if not skip['raw_files']:
         print("Running VV for Raw Files")
+        RawFilesVV(file_mapping = sample_sheet.raw_files,
+                   cutoffs = cutoffs,
+                   flagger = flagger)
     else:
         print(f"Skipping VV for Raw Files")
 
