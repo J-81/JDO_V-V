@@ -6,22 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- #### STAR
-  - MultiQC based checks
+#### STAR
+  - MultiQC existence checks
 
 ### Changed
-  - Moved the following values from cutoffs.py to samplesheet as they match the scope better 'middlePoint'.
-
-- #### Raw Reads [Fastq.gz]
-  - 'fastq_lines_to_check' cutoff changed to 'fastq_proportion_to_check'.
-    - Uses seqtk to perform proportion based subsampling.
-
-- #### Trimmed Reads [Fastq.gz]
-  - 'fastq_lines_to_check' cutoff changed to 'fastq_proportion_to_check'.
-    - Uses seqtk to perform proportion based subsampling.
+#### All
+  - Moved direct data based checks from multiqc to reference data files
 
 ### Fixed
+  - (microarray) Reverted developer flags to halt flags in dge
+
+## [0.5.0] - 2021-06-28
+### Added
+  - Development support for V&V of microarray datasets
+  - Development flags, useful for clearly temporarily de-escalating flags while issues exist in test datasets
+  - File based checks now include an optional 'optional' argument that changes the flag level from halting to yellow
+
+## [0.4.1c] - 2021-05-25
+### Fixed
   - 0.4.1 : Summary.tsv error when no single sample flags found (case: skipped VV steps)
+  - Expected contrasts calculation, based on actual unique combinations in samples now
 
 ### Removed
 
