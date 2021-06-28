@@ -61,6 +61,26 @@ class RawFilesVV():
         flagger.flag_file_exists(check_file = file,
                                  partial_check_args = checkArgs,
                                  optional = False)
+        ###################################################################
+        ### UNIQUE IMPLEMENTATION CHECKS ##################################
+        # T_0001 ##########################################################
+        file = raw_file_dir / "md5sum.txt"
+        checkArgs["check_id"] = "MICROARRAY_R_0007a"
+        checkArgs["convert_sub_entity"] = False
+        checkArgs["entity"] = sample
+        checkArgs["sub_entity"] = filelabel
+        flagger.flag_file_exists(check_file = file,
+                                 partial_check_args = checkArgs,
+                                 optional = False)
+        # T_0001 ##########################################################
+        file = raw_file_dir / "visualization_PCA_table.csv"
+        checkArgs["check_id"] = "MICROARRAY_R_0007b"
+        checkArgs["convert_sub_entity"] = False
+        checkArgs["entity"] = sample
+        checkArgs["sub_entity"] = filelabel
+        flagger.flag_file_exists(check_file = file,
+                                 partial_check_args = checkArgs,
+                                 optional = False)
 
         # R_0003 ##########################################################
         partial_check_args = dict()
