@@ -46,7 +46,6 @@ def main(data_dir: Path,
     # Raw Read VV
     ########################################################################
     if not skip['raw_files']:
-        print("Running VV for Raw Files")
         RawFilesVV(file_mapping = sample_sheet.raw_files,
                    raw_file_dir = sample_sheet.Raw_Data_Dir,
                    cutoffs = cutoffs,
@@ -58,7 +57,6 @@ def main(data_dir: Path,
     # Trimmed Read VV
     ########################################################################
     if not skip['normalized_data']:
-        print("Running VV for Normalized Data Files")
         NormalizedFilesVV(normalized_file_dir = sample_sheet.Normalized_Data_Dir,
                           cutoffs = cutoffs,
                           flagger = flagger)
@@ -68,7 +66,6 @@ def main(data_dir: Path,
     # STAR Alignment VV
     ###########################################################################
     if not skip['limma_dge']:
-        print("Running VV for LIMMA DGE")
         DGEFilesVV(samples = sample_sheet.samples,
                    expected_contrasts = sample_sheet.expected_contrasts,
                    dge_file_dir = sample_sheet.Limma_DGE_Dir,

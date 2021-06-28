@@ -14,7 +14,7 @@ class RawFilesVV():
                  ):
         """ Performs VV for trimmed reads for checks involving trimmed reads files directly
         """
-        print("Running VV for Raw Files <INCOMPLETE IMPLEMENTATION>")
+        print("Running VV for Raw Files")
 
         ##############################################################
         # SET FLAGGING OUTPUT ATTRIBUTES
