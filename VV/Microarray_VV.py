@@ -9,6 +9,8 @@ import os
 from VV.flagging import Flagger
 from VV.runsheets import MicroarrayRunsheet
 from VV.microarray.raw_files import RawFilesVV
+from VV.microarray.normalized_files import NormalizedFilesVV
+from VV.microarray.dge_files import DGEFilesVV
 
 def main(data_dir: Path,
          halt_severity: int,
@@ -57,6 +59,9 @@ def main(data_dir: Path,
     ########################################################################
     if not skip['normalized_data']:
         print("Running VV for Normalized Data Files")
+        NormalizedFilesVV(normalized_file_dir = sample_sheet.Normalized_Data_Dir,
+                          cutoffs = cutoffs,
+                          flagger = flagger)
     else:
         print(f"Skipping VV for Normalized Data Files")
     ###########################################################################
@@ -64,15 +69,13 @@ def main(data_dir: Path,
     ###########################################################################
     if not skip['limma_dge']:
         print("Running VV for LIMMA DGE")
+        DGEFilesVV(samples = sample_sheet.samples,
+                   expected_contrasts = sample_sheet.expected_contrasts,
+                   dge_file_dir = sample_sheet.Limma_DGE_Dir,
+                   cutoffs = cutoffs,
+                   flagger = flagger)
     else:
         print(f"Skipping VV for LIMMA DGE")
-    ###########################################################################
-    # RSEM Counts VV
-    ###########################################################################
-
-    ###########################################################################
-    # Deseq2 Normalized Counts VV
-    ###########################################################################
 
     ###########################################################################
     # Generate derivative log files
