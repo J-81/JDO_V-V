@@ -46,6 +46,7 @@ def main(data_dir: Path,
     if not skip['raw_files']:
         print("Running VV for Raw Files")
         RawFilesVV(file_mapping = sample_sheet.raw_files,
+                   raw_file_dir = sample_sheet.Raw_Data_Dir,
                    cutoffs = cutoffs,
                    flagger = flagger)
     else:
