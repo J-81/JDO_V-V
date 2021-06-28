@@ -80,7 +80,7 @@ class TestClass:
             dict(
               accession='121',
               halt_severity=90,
-              expected_flag_count=12,
+              expected_flag_count=13,
               ),
         ],
     }
