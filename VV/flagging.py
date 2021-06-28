@@ -5,7 +5,7 @@ from datetime import datetime
 import sys
 from pathlib import Path
 import math
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
@@ -61,6 +61,7 @@ class _Flagger():
                  log_to: Path,
                  step: str = "General VV"):
         self._cwd = Path.cwd()
+        self._flag_dict = defaultdict(lambda: 0)
         self._script = script # location of flagging script
         self._step = step # location of flagging script
         self._severity = FLAG_LEVELS
@@ -139,6 +140,7 @@ class _Flagger():
         override works great!
         """
         self._flag_count += 1
+        self._flag_dict[severity] += 1
         # not required but provides some quality of life improvements in the log debug_messages
         if preprocess_debug_messages:
             # space out consecutive [Number: 1][value: 2] -> [Number: 1] [value: 2]
