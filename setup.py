@@ -11,8 +11,8 @@ long_description = (
 
 setup(
    name='VV',
-   version='0.4.1c',
-   description='VV for RNASeq raw and processed data.',
+   version='0.5.0',
+   description='VV for raw and processed data. Includes RNASeq and Microarray',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
    packages=find_packages(),  #same as name
