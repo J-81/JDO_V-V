@@ -223,12 +223,13 @@ class _Flagger():
     def flag_file_exists(self,
                          check_file: Path,
                          partial_check_args: dict,
+                         optional: bool = False
                          ):
         if not check_file.is_file():
             partial_check_args["debug_message"] = f"{check_file.name} not found"
             partial_check_args["full_path"] = str(check_file.resolve())
             partial_check_args["filename"] = check_file.name
-            partial_check_args["severity"] = 90
+            partial_check_args["severity"] = 90 if not optional else 50
         else:
             partial_check_args["debug_message"] = f"{check_file.name} exists"
             partial_check_args["full_path"] = str(check_file.resolve())
