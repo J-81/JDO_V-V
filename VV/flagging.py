@@ -19,6 +19,7 @@ FLAG_LEVELS = {
     50:"Warning-Yellow",
     59:"Proto-Warning-Red",
     60:"Warning-Red",
+    70: "DEVELOPER-ONLY: TEMPORARY RELAXED FLAG",
     80:"Issue-Unable_To_Check",
     90:"Issue-Halt_Processing"
     }
