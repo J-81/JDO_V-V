@@ -43,17 +43,28 @@ class RawFilesVV():
         ### UNIQUE IMPLEMENTATION CHECKS ##################################
         # T_0001 ##########################################################
         file = self.check_for_annotation_file(raw_file_dir)
-        checkArgs["check_id"] = "MICROARRAY_R_0004"
+        checkArgs["check_id"] = "MICROARRAY_R_0003"
         checkArgs["convert_sub_entity"] = False
         checkArgs["entity"] = sample
         checkArgs["sub_entity"] = filelabel
         flagger.flag_file_exists(check_file = file,
                                  partial_check_args = checkArgs,
                                  optional = True)
+        ###################################################################
+        ### UNIQUE IMPLEMENTATION CHECKS ##################################
+        # T_0001 ##########################################################
+        file = self.check_for_raw_qa_file(raw_file_dir)
+        checkArgs["check_id"] = "MICROARRAY_R_0004"
+        checkArgs["convert_sub_entity"] = False
+        checkArgs["entity"] = sample
+        checkArgs["sub_entity"] = filelabel
+        flagger.flag_file_exists(check_file = file,
+                                 partial_check_args = checkArgs,
+                                 optional = False)
 
         # R_0003 ##########################################################
         partial_check_args = dict()
-        partial_check_args["check_id"] = "MICROARRAY_R_0003"
+        partial_check_args["check_id"] = "MICROARRAY_R_0002"
         partial_check_args["convert_sub_entity"] = False
         def file_size(file: Path):
             """ Returns filesize for a Path object
@@ -78,3 +89,8 @@ class RawFilesVV():
         putative_file = list(path.glob("*annotation.adf.txt"))
         assert len(putative_file) < 2
         return putative_file if putative_file else path / "*annotation.adf.txt"
+
+    def check_for_raw_qa_file(self, path):
+        """ Checklist #4
+        """
+        return path / "raw_qa.html"
