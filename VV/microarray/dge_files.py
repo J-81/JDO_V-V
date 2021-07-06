@@ -79,9 +79,14 @@ class DGEFilesVV():
                             [f"Sig.1_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                             [f"Log2_P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                             ["All.mean","All.stdev"] + \
-                            ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
+                            ["SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
             expected_cols = set(expected_cols)
             missing_cols = expected_cols - set(visualization_df.columns)
+            # Allow optional columns
+            MUST_INCLUDE_ONE = {"ENSEMBL","TAIR"}
+            if not set(visualization_df.columns).intersection(MUST_INCLUDE_ONE):
+                missing_cols.add("ENSEMBL or TAIR")
+
             if missing_cols:
                 flagged = True
                 debug_message = f"Missing columns ({missing_cols})"
@@ -155,9 +160,14 @@ class DGEFilesVV():
                         [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         ["All.mean","All.stdev"] + \
-                        ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
+                        ["SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
         expected_cols = set(expected_cols)
         missing_cols = expected_cols - set(dge_df.columns)
+        # Allow optional columns
+        MUST_INCLUDE_ONE = {"ENSEMBL","TAIR"}
+        if not set(dge_df.columns).intersection(MUST_INCLUDE_ONE):
+            missing_cols.add("ENSEMBL or TAIR")
+
         if missing_cols:
             flagged = True
             debug_message = f"Missing expected data columns ({missing_cols})"
