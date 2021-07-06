@@ -295,7 +295,7 @@ class Deseq2ScriptOutput():
        contrasts_df = pd.read_csv(contrasts_file, index_col=0)
        self.factor_groups_versus = set(contrasts_df.columns)
        self.factor_groups = list()
-       parsed_factor_groups = [group_versus for group_versus in self.factor_groups_versus.copy()]
+       parsed_factor_groups = [get_factor_groups(group_versus) for group_versus in self.factor_groups_versus.copy()]
        for factor_group in parsed_factor_groups:
            self.factor_groups.extend(factor_group)
        self.factor_groups = set(self.factor_groups)
