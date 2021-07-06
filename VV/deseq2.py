@@ -142,9 +142,14 @@ class Deseq2ScriptOutput():
                         [f"P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"Adj.p.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         ["All.mean","All.stdev"] + \
-                        ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
+                        ["SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
         expected_cols = set(expected_cols)
         missing_cols = expected_cols - set(dge_df.columns)
+        # Allow optional columns
+        MUST_INCLUDE_ONE = {"ENSEMBL","TAIR"}
+        if not set(dge_df.columns).intersection(MUST_INCLUDE_ONE):
+            missing_cols.add("ENSEMBL or TAIR")
+
         if missing_cols:
             flagged = True
             debug_message = f"Missing expected data columns ({missing_cols})"
@@ -195,9 +200,14 @@ class Deseq2ScriptOutput():
                         [f"Sig.1_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         [f"Log2_P.value_{factor_groups_versus}" for factor_groups_versus in self.factor_groups_versus] + \
                         ["All.mean","All.stdev"] + \
-                        ["ENSEMBL","SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
+                        ["SYMBOL","GENENAME","REFSEQ","ENTREZID","STRING_id","GOSLIM_IDS"]
         expected_cols = set(expected_cols)
         missing_cols = expected_cols - set(visualization_df.columns)
+        # Allow optional columns
+        MUST_INCLUDE_ONE = {"ENSEMBL","TAIR"}
+        if not set(visualization_df.columns).intersection(MUST_INCLUDE_ONE):
+            missing_cols.add("ENSEMBL or TAIR")
+
         if missing_cols:
             flagged = True
             debug_message = f"Missing columns ({missing_cols})"
@@ -274,10 +284,18 @@ class Deseq2ScriptOutput():
 
        Also sets contrast groups
        """
+       def get_factor_groups(versus_string: str) -> (str, str):
+           """ For a factor group like: '(Space Flight)v(Vivarium Control)'
+           Split on ")v("
+           Return (Space Flight) and (Vivarium Control)
+           """
+           group_1, group_2 = versus_string[1:-1].split(")v(")
+           return f"({group_1})", f"({group_2})"
+
        contrasts_df = pd.read_csv(contrasts_file, index_col=0)
        self.factor_groups_versus = set(contrasts_df.columns)
        self.factor_groups = list()
-       parsed_factor_groups = [group_versus.split("v") for group_versus in self.factor_groups_versus.copy()]
+       parsed_factor_groups = [group_versus for group_versus in self.factor_groups_versus.copy()]
        for factor_group in parsed_factor_groups:
            self.factor_groups.extend(factor_group)
        self.factor_groups = set(self.factor_groups)
