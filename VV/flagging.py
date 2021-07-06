@@ -462,7 +462,7 @@ _instance = None
 def Flagger(**kwargs):
     global _instance
     if not _instance or kwargs.get("force_new_flagger"):
-        if kwargs.get("force_new_flagger":
+        if kwargs.get("force_new_flagger"):
             kwargs.pop("force_new_flagger")
         _instance = _Flagger(**kwargs)
     return _instance
