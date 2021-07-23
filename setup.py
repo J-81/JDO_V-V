@@ -11,7 +11,7 @@ long_description = (
 
 setup(
    name='VV',
-   version='0.4.1d',
+   version='0.5.1',
    description='VV for raw and processed data. Includes RNASeq and Microarray',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
@@ -20,7 +20,7 @@ setup(
             'scripts/V-V_Program',
            ],
    python_requires='>=3.8',
-   install_requires=['pandas','isatools'],
+   install_requires=['pandas==1.2.5','isatools'],
    setup_requires=['pytest-runner'],
    tests_require=['pytest']
 )

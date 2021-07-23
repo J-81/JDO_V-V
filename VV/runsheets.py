@@ -18,7 +18,7 @@ class MicroarrayRunsheet():
         df = pd.read_csv(self.sample_sheet_path)
         self.df = df
         self.contrasts_table, self.expected_contrasts = self.generate_contrasts_table()
-        self.samples = df["Sample Name"].tolist()
+        self.samples = df["sample_name"].tolist()
         # set attributes for columns with a single unique value
         for col in df.columns:
             unique_values = df[col].unique()
