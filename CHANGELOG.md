@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### STAR
   - MultiQC existence checks
 
-### Changed
-#### All
-  - Moved direct data based checks from multiqc to reference data files
-
 ### Fixed
   - (microarray) Reverted developer flags to halt flags in dge
+
+## [0.6.0] - 2021-10-12
+### Added
+#### RSeQC
+  - Added outlier and custom average strand selection based checks
+
 
 ## [0.5.0] - 2021-06-28
 ### Added
