@@ -3,3 +3,4 @@ scratch.py
 .eggs
 build
 VV.egg-info
+*.swp
