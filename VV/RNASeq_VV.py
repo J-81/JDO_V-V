@@ -14,6 +14,7 @@ from VV.star import StarAlignments
 from VV.data import Dataset
 from VV.rnaseq_samplesheet import RNASeqSampleSheet
 from VV.rsem import RsemCounts
+from VV.rseqc import Rseqc
 from VV.deseq2 import Deseq2ScriptOutput
 from VV.flagging import Flagger
 
@@ -88,6 +89,16 @@ def main(data_dir: Path,
                        cutoffs = cutoffs)
     else:
         print(f"Skipping VV for Star Alignments")
+    ###########################################################################
+    # RSeQC Output VV
+    ###########################################################################
+    if not skip['rseqc']:
+        Rseqc(multiqc_json = sample_sheet.rseqc_multiqc,
+              samples = sample_sheet.samples,
+              flagger = flagger,
+              cutoffs = cutoffs)
+    else:
+        print(f"Skipping VV for RSeQC")
     ###########################################################################
     # RSEM Counts VV
     ###########################################################################

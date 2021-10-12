@@ -23,7 +23,7 @@ from VV.flagging import FLAG_LEVELS
 # Utility Functions To Handle Logging, Config and CLI Arguments
 ##############################################################
 
-RNASEQ_STEPS =  ("raw_reads", "trimmed_reads", "star_align", "rsem_count", "deseq2")
+RNASEQ_STEPS =  ("raw_reads", "trimmed_reads", "star_align", "rseqc", "rsem_count", "deseq2")
 MICROARRAY_STEPS =  ("raw_files", "normalized_data", "limma_dge")
 
 def _parse_args():

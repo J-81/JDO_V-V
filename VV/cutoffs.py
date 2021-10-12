@@ -139,6 +139,36 @@ CUTOFFS = \
                 },
             },
         },
+        "rseqc": {
+            "middlepoint": "median",
+            "rseqc_infer_experiment_plot-Sense" : {
+                "max_thresholds" : {},
+                "min_thresholds" : {},
+                "outlier_thresholds" : {
+                    4 : 60,
+                    2 : 50,
+                },
+            },
+            "rseqc_infer_experiment_plot-Antisense" : {
+                "max_thresholds" : {},
+                "min_thresholds" : {},
+                "outlier_thresholds" : {
+                    4 : 60,
+                    2 : 50,
+                },
+            },
+            "rseqc_infer_experiment_plot-Undetermined" : {
+                "max_thresholds" : {
+                    0.4 : 60,
+                    0.2 : 50,
+                    },
+                "min_thresholds" : {},
+                "outlier_thresholds" : {
+                    4 : 60,
+                    2 : 50,
+                },
+            },
+        },
         "trimmed_reads": {
             "middlepoint": "median",
             "fastq_lines_to_check" : 4000000,

@@ -1,11 +1,13 @@
 """ Functions to create a consistent system for flagging issues found during
 the V-V checks.  Uses logging
 """
+from typing import Callable
 from datetime import datetime
 import sys
 from pathlib import Path
 import math
 from collections import OrderedDict, defaultdict
+from functools import wraps, partial
 
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
@@ -21,7 +23,9 @@ FLAG_LEVELS = {
     60:"Warning-Red",
     70: "DEVELOPER-ONLY: TEMPORARY RELAXED FLAG",
     80:"Issue-Unable_To_Check",
-    90:"Issue-Halt_Processing"
+    90:"Issue-Halt_Processing",
+    94:"Check did not know how to handle return",
+    95:"Check function raised unhandled exception",
     }
 
 # order of the full report lines in the log
@@ -49,6 +53,8 @@ FULL_LOG_HEADER = [
     ]
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
+
+
 
 class VVError(Exception):
     pass
@@ -465,3 +471,43 @@ def Flagger(**kwargs):
         kwargs.pop("force_new_flagger")
         _instance = _Flagger(**kwargs)
     return _instance
+
+def check(flagger: _Flagger, 
+          return_interactions: dict,
+          check_id: str = "not suppied",
+          full_path: str = "not supplied",
+          file_name: str = "not supplied",
+          entity: str = "not supplied"):
+    """ Generic check that generates flags based on output from a function """
+    code = 0
+    def inner_function(function: Callable):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            try:
+                result = function(*args, **kwargs)
+                print(code)
+                severity, formatter = return_interactions.get(code, None)
+                debug_message = formatter(result)
+                if response == None:
+                    # i.e. function ran but response not programmed
+                    severity = 94
+                    debug_message = f"Check function: {function} returned, but check doesn't know how to handle returned result: {result}"
+            except Exception as e:
+                raise e
+                # uncaught issues are flagged
+                severity = 95
+                debug_message = f"Unhandled Exception: {e}, refer to V&V developer"
+            flagger.flag(check_id=check_id, 
+                         full_path=full_path, 
+                         debug_message=debug_message, 
+                         filename=file_name,
+                         severity=severity, 
+                         entity=entity)
+        
+        return wrapper
+    return inner_function
+
+def init_check(flagger):
+    """ Returns a check decorator with a supplied flagger object attached """
+    
+    return partial(check, flagger=flagger)
