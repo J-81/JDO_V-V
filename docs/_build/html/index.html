@@ -146,12 +146,92 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-VV.raw_reads">
-<span id="welcome-to-jdo-v-v-s-documentation"></span><h1>Welcome to JDO_V-V’s documentation!<a class="headerlink" href="#module-VV.raw_reads" title="Permalink to this headline">¶</a></h1>
-<p>V-V for raw reads.</p>
+  <div class="section" id="module-VV.fastqc">
+<span id="welcome-to-jdo-v-v-s-documentation"></span><h1>Welcome to JDO_V-V’s documentation!<a class="headerlink" href="#module-VV.fastqc" title="Permalink to this headline">¶</a></h1>
+<p>Validation and Verification for FastQC files generated through the RNASeq
+pipeline.</p>
+<dl class="py function">
+<dt id="VV.fastqc.validate_verify">
+<code class="sig-prename descclassname">VV.fastqc.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">samples</span></em>, <em class="sig-param"><span class="n">input_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em>, <em class="sig-param"><span class="n">expected_suffix</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.fastqc.validate_verify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks fastqc files match what is expected given a set of samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>[</em><em>&lt;class 'str'&gt;</em><em>]</em>) – sample names, should be extracted from ISA file</p></li>
+<li><p><strong>input_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – directory containing output from fastQC</p></li>
+<li><p><strong>paired_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if paired end, False if single end reads</p></li>
+<li><p><strong>expected_suffix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Added by fastQC (e.g. ‘_raw_fastqc’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-VV.multiqc"></span><dl class="py function">
+<dt id="VV.multiqc.validate_verify">
+<code class="sig-prename descclassname">VV.multiqc.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">multiQC_zip_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em>, <em class="sig-param"><span class="n">sequence_length_tolerance</span><span class="o">=</span><span class="default_value">0.05</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.multiqc.validate_verify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks multiQC data to ensure a metrics about raw reads are reasonable.</p>
+<p>Logs an error if the average sequence length of any sample significantly
+different than the rest of the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multiQC_zip_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path to multiQC zip file</p></li>
+<li><p><strong>paired_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True for assessing paired end reads, False for single end</p></li>
+<li><p><strong>sequence_length_tolerance</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Percent allowed smaller or greater than the median before error is logged</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-VV.parse_isa"></span><dl class="py function">
+<dt id="VV.parse_isa.get_sample_names">
+<code class="sig-prename descclassname">VV.parse_isa.</code><code class="sig-name descname">get_sample_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">isa_zip_path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.parse_isa.get_sample_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts investigation sample names given a GLDS isa zip file path.
+Returns a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>isa_zip_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path to isa zip file</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="VV.parse_isa.parse_isa_dir_from_zip">
+<code class="sig-prename descclassname">VV.parse_isa.</code><code class="sig-name descname">parse_isa_dir_from_zip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">isa_zip_path</span></em>, <em class="sig-param"><span class="n">pretty_print</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.parse_isa.parse_isa_dir_from_zip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unzips ISA zip files as found in GLDS metadata folders.</p>
+<p>ISA record metadata signature should match the specs here:
+<a class="reference external" href="https://isa-specs.readthedocs.io/en/latest/isamodel.html">https://isa-specs.readthedocs.io/en/latest/isamodel.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>isa_zip_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path to isa zip file</p></li>
+<li><p><strong>pretty_print</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – print contents of parsed file, useful for debugging</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ISATabRecord</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-VV.raw_reads"></span><p>V-V for raw reads.</p>
+<dl class="py class">
+<dt id="VV.raw_reads.rawReadsInfo">
+<em class="property">class </em><code class="sig-prename descclassname">VV.raw_reads.</code><code class="sig-name descname">rawReadsInfo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample_names</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.raw_reads.rawReadsInfo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="VV.raw_reads.rawReadsInfo.sample_names">
+<em class="property">property </em><code class="sig-name descname">sample_names</code><a class="headerlink" href="#VV.raw_reads.rawReadsInfo.sample_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt id="VV.raw_reads.validate_verify">
-<code class="sig-prename descclassname">VV.raw_reads.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em>, <em class="sig-param"><span class="n">md5sums</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.raw_reads.validate_verify" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">VV.raw_reads.</code><code class="sig-name descname">validate_verify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_path</span></em>, <em class="sig-param"><span class="n">paired_end</span></em>, <em class="sig-param"><span class="n">check_lines</span></em>, <em class="sig-param"><span class="n">md5sums</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#VV.raw_reads.validate_verify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs validation and verification for input of RNASeq datasets.
 Additionally checks for FastQC file existence.</p>
 <p>This assumes the following file format:</p>
@@ -163,17 +243,20 @@ Additionally checks for FastQC file existence.</p>
 <p>&lt;SAMPLE NAME&gt;_R1_raw.fastq.gz
 and &lt;SAMPLE NAME&gt; never includes “_R1_raw.fastq.gz”</p>
 <p>Performs the following checks:
-1. File name enumeration
-2. File Size stats
-3. Sample name extraction
-4. md5sum check (if expected md5sums are supplied)
-5. FastQC file count check</p>
+#. File name enumeration
+#. Sample name extraction
+#. Checks for appropriate number of raw read files (2x samples for Paired, 1x samples for Single)
+#. Check every identifier lines appear every four lines as expect TODO: parse identifier lines for UMI
+#. md5sum check (if expected md5sums are supplied)
+#. FastQC file count check
+#. File Size stats</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – path where the raw read files are location</p></li>
 <li><p><strong>paired_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True for paired end, False for single reads</p></li>
 <li><p><strong>md5sums</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>) – dictionary of raw read file to md5sum, e.g. Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz : b21ca61d56208d49b9422a1306d0a0f1</p></li>
+<li><p><strong>check_lines</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – checks identifier lines if True, takes around 10 min per file with GLDS-194</p></li>
 </ul>
 </dd>
 </dl>

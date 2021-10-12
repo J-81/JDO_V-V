@@ -1,5 +1,5 @@
 *__pycache__*
 scratch.py
-build/*
-*.swp
-.eggs/*
+.eggs
+build
+VV.egg-info
