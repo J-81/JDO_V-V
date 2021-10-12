@@ -39,6 +39,10 @@ class RNASeqSampleSheet():
         self.STAR_Alignment_dir_mapping = df.set_index("sample_name")["STAR_Alignment"].to_dict()
         self.RSEM_Counts_dir_mapping = df.set_index("sample_name")["RSEM_Counts"].to_dict()
 
+        # set up RSeQC output mapping
+        print(list(df.columns))
+        self.RSeQC_infer_experiment = {sample:{"infer_experiment":Path(df["rseqc_output__infer_experiment"][i])} for i,sample in enumerate(self.samples)}
+
         # set to path
         self.DESeq2_NormCount = Path(self.DESeq2_NormCount)
         self.DESeq2_DGE = Path(self.DESeq2_DGE)
