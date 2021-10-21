@@ -202,13 +202,17 @@ class MultiQC():
         ### extract plot data
 
         # extract fastqc_sequence_counts_plot
-        for plot_name, data in raw_data["report_plot_data"].items():
+        for plot_name, plot_data in raw_data["report_plot_data"].items():
             # different kinds of plot data need to be extracted with different methods
-            plot_type = data["plot_type"]
+            plot_type = plot_data["plot_type"]
             if plot_type == "bar_graph":
-                data_mapping = self._extract_from_bar_graph(data, plot_name, data_mapping, samples)
+                data_mapping = self._extract_from_bar_graph(plot_data, plot_name, data_mapping, samples)
             elif plot_type == "xy_line":
-                data_mapping = self._extract_from_xy_line_graph(data, plot_name, data_mapping, samples)
+                data_mapping = self._extract_from_xy_line_graph(plot_data, plot_name, data_mapping, samples)
+            elif plot_type == "heatmap":
+                print(f"Warning: plot type 'heatmap' is not yet implemented: data_mapping will NOT include {plot_name}")
+                continue
+                #data_mapping = self._extract_from_heatmap(plot_data, plot_name, data_mapping, samples)
             else:
                 raise ValueError(f"Unknown plot type {plot_type}. Data parsing not implemented for multiQC {plot_type}")
 
@@ -217,6 +221,36 @@ class MultiQC():
         for sample in self.samples:
             data_mapping[sample] = dict(data_mapping[sample])
         return data_mapping
+
+    """
+    def _extract_from_heatmap(self, data, plot_name, data_mapping, samples):
+        # determine data mapping for samples in multiqc (which are files)
+        # and samples in a dataset (which may have a forward and reverse read file)
+        mqc_samples_to_samples = dict()
+        # this should be a list with one entry
+        assert len(data["ycats"]) == 1
+        for i, mqc_sample in enumerate(data["ycats"][0]):
+            matching_samples = [sample for sample in samples if sample in mqc_sample]
+            # only one sample should map
+            assert len(matching_samples) == 1
+
+            sample = matching_samples[0]
+            mqc_samples_to_samples[i] = (self._sample_filelabel_from_filename(mqc_sample))
+
+        # iterate through data from datasets
+        # this should be a list with one entry
+        assert len(data["datasets"]) == 1
+        units = data["config"]["ylab"]
+        for sub_data in data["datasets"][0]:
+            name = sub_data["name"]
+            values = sub_data["data"]
+            for i, value in enumerate(values):
+                sample, sample_file = mqc_samples_to_samples[i]
+                key = f"{sample_file}-{plot_name}-{name}"
+                data_mapping[sample][key] = \
+                    OneValueData( datakey = key, units = units , value = values[i])
+        return data_mapping
+    """
 
     def _extract_from_bar_graph(self, data, plot_name, data_mapping, samples):
         # determine data mapping for samples in multiqc (which are files)

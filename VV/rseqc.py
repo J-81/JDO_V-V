@@ -30,7 +30,6 @@ class Rseqc():
         # STAGE MULTIQC DATA FROM JSON
         ############################################################## 
         # TODO: replace after general MQC parsing rework
-        samples = [f"{sample}_infer_experiment" for sample in samples]
         file_mapping = {sample:{"infer_experiment":Path(f"01-TG_Preproc/RSeQC_Reports/{sample}_infer_experiment.out")} for sample in samples}
                 
         mqc = multiqc.MultiQC(multiQC_json = multiqc_json,

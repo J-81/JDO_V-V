@@ -130,8 +130,8 @@ def validate_verify_multiqc(multiqc_json: Path,
         ("T_1002", {"mqc_base_key":"fastqc_sequence_length_distribution_plot", "by_indice":True, "allow_missing_base_key":True}),
         ("T_1003", {"mqc_base_key":"percent_duplicates"}),
         ("T_1004", {"mqc_base_key":"percent_gc"}),
-        ("T_1005", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence"}),
-        ("T_1006", {"mqc_base_key":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences"}),
+        ("T_1005", {"mqc_base_key":"fastqc_overrepresented_sequences_plot-Top over-represented sequence"}),
+        ("T_1006", {"mqc_base_key":"fastqc_overrepresented_sequences_plot-Sum of remaining over-represented sequences"}),
         ("T_1007", {"mqc_base_key":"fastqc_per_base_sequence_quality_plot", "by_indice":True}),
         ("T_1008", {"mqc_base_key":"fastqc_per_sequence_quality_scores_plot", "by_indice":True}),
         ("T_1009", {"mqc_base_key":"fastqc_per_sequence_gc_content_plot-Percentages", "by_indice":True}),
@@ -159,8 +159,8 @@ def validate_verify_multiqc(multiqc_json: Path,
         50 : [59,49]
     }
     ### Check if any sample proportion related flags should be raised
-    check_id_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequencesi_plot-Top over-represented sequence",
-                                                 "T_1006":"fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences",
+    check_id_with_samples_proportion_threshold = {"T_1005":"fastqc_overrepresented_sequences_plot-Top over-represented sequence",
+                                                 "T_1006":"fastqc_overrepresented_sequences_plot-Sum of remaining over-represented sequences",
     }
     check_args = dict()
     check_args["full_path"] = Path(multiqc_json).resolve()

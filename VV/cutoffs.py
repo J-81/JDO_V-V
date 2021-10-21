@@ -81,7 +81,7 @@ CUTOFFS = \
                     2 : 60,
                 },
             },
-            "fastqc_overrepresented_sequencesi_plot-Top over-represented sequence" : {
+            "fastqc_overrepresented_sequences_plot-Top over-represented sequence" : {
                 "max_thresholds" : {
                     40 : 49,
                     60 : 59,
@@ -96,7 +96,7 @@ CUTOFFS = \
                     50 : 0.80,
                 },
             },
-            "fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences" : {
+            "fastqc_overrepresented_sequences_plot-Sum of remaining over-represented sequences" : {
                 "max_thresholds" : {
                     40 : 49,
                     60 : 59
@@ -214,7 +214,7 @@ CUTOFFS = \
                     2 : 50,
                 },
             },
-            "fastqc_overrepresented_sequencesi_plot-Top over-represented sequence" : {
+            "fastqc_overrepresented_sequences_plot-Top over-represented sequence" : {
                 "max_thresholds" : {
                     40 : 49,
                     60 : 59,
@@ -229,7 +229,7 @@ CUTOFFS = \
                     50 : 0.80,
                 },
             },
-            "fastqc_overrepresented_sequencesi_plot-Sum of remaining over-represented sequences" : {
+            "fastqc_overrepresented_sequences_plot-Sum of remaining over-represented sequences" : {
                 "max_thresholds" : {
                     40 : 49,
                     60 : 59
