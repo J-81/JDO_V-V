@@ -54,7 +54,14 @@ FULL_LOG_HEADER = [
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 
+class Flag():
+    """ An object representing a flag """
+    def __init__(self, code: int, msg: str = "No Message"):
+        self.code = code
+        self.msg = msg
 
+    def __repr__(self):
+        return f"Flag code: {self.code}. Message: '{self.msg}'"
 
 class VVError(Exception):
     pass
