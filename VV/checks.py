@@ -2,16 +2,36 @@
 Defines base class for check class
 """
 import abc
+import importlib.resources
+import traceback
+
+import yaml
 
 from VV.flagging import Flag
+
+with importlib.resources.path("VV.config", "Test_defaults.yaml") as f:
+    config_file = f
 
 class BaseCheck(abc.ABC):
     """ A check performed as part of Validation and Verification task """
     globalPerformedLog = list()
+    # load all config
+    with open(config_file, 'r') as f:
+        globalConfig = yaml.safe_load(f)
 
     def __init__(self):
         self._performedLog = list()
         self._dependencies = set()
+        self.config = self.globalConfig.get(self.checkID, None)
+        if self.config:
+            print(f"Loaded configuration for {self.checkID} from {config_file}")
+            # override class-defined description with one in config if present
+            if self.config.get('description'):
+                print(f"Found description in config, overriding if the one defined in the class")
+                self.description = self.config.get('description')
+        else:
+            print(f"No configuration for {self.checkID} found in {config_file}")
+
 
     @abc.abstractproperty
     def checkID(self):
@@ -73,6 +93,7 @@ class BaseCheck(abc.ABC):
         try:
             result = self.perform_function(*args, **kwargs)
         except Exception as e:
+            traceback.print_exc()
             # make the result the exception and wrap in a failing Flag
             result = self.flag(code = 91, msg = f"Bad peform_function. Function raised an exception: {e}")
 

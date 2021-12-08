@@ -125,3 +125,48 @@ def test_TCheck_iterative_perform():
     testCheck.perform(100,y=100)
     assert testCheck.performedLog[-1]['args'] == (100,)
     assert testCheck.performedLog[-1]['kwargs'] == {'y':100}
+
+class TCheck_with_config(BaseCheck):
+    checkID = "T_000C"
+    description = "Test desc." #this should be explicitly overridden by config
+
+    def perform_function(self, x, y):
+        """ if sum is greater than 100, return a yellow flag """
+        _sum = x+y
+        if not float(_sum).is_integer() and not self.config["flag_non_wholenumber"]:
+            result = self.flag(code = self.config["non_wholenumber_flag_code"], msg = f"Sum was not a whole number: {_sum}")
+        elif not _sum > self.config["sum_max"]:
+            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
+        else:
+            result = self.flag(code = self.config["sum_max_flag_code"], msg = f"Sum: x+y = {x+y}")
+
+        return result 
+
+def test_TCheck_with_config_iterative_perform():
+    """ You should NOT be able to instantiate the base check class """
+    testCheck = TCheck_with_config()
+    print(testCheck)
+
+    for i in range(10):
+        result = testCheck.perform(i,2)
+        print(testCheck.performedLog)
+        assert result.code == 10
+
+    assert len(testCheck.performedLog) == 10
+    assert len(testCheck.globalPerformedLog) > 10
+
+    testCheck.perform(100,y=100)
+    assert testCheck.performedLog[-1]['args'] == (100,)
+    assert testCheck.performedLog[-1]['kwargs'] == {'y':100}
+
+    # this should trigger a 75 flag
+    result = testCheck.perform(100,200)
+    assert testCheck.performedLog[-1]['result'].code == 75
+    assert result.code == 75
+
+
+def test_TCheck_with_config_description():
+    """ Check if the class defined description is overwritten by the config one """
+    testCheck = TCheck_with_config()
+
+    assert testCheck.description == "This is a description from the config file.\nPretty neat and readable.\n"
