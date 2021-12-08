@@ -13,6 +13,7 @@ import pandas as pd
 pd.set_option('mode.chained_assignment', None)
 
 from VV import __version__
+#from VV.checks import BaseCheck
 
 FLAG_LEVELS = {
     20:"Info-Only",
@@ -56,12 +57,28 @@ FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 
 class Flag():
     """ An object representing a flag """
-    def __init__(self, code: int, msg: str = "No Message"):
+    allFlags = list()
+
+    def __init__(self, 
+                 code: int,
+                 check, #TODO fix BaseCheck type hint here
+                 entity: str = "none supplied",
+                 msg: str = "No Message Supplied",
+                 short_msg: str = None,
+                 data: dict = None):
+        self.entity = entity
         self.code = code
-        self.msg = msg
+        self.check = check # a Check instance, includes data about the check itself
+        self.msg = msg # a verbose message describing the flag
+        self.short_msg = short_msg if short_msg else msg # fallback on msg if short msg is not supplied, optional
+        self.data = data # detailed data used to produce a given flag conclusion, optional
+        
+        # add to running list of generated flags
+        self.allFlags.append(self)
 
     def __repr__(self):
         return f"Flag code: {self.code}. Message: '{self.msg}'"
+
 
 class VVError(Exception):
     pass

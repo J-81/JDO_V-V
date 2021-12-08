@@ -1,14 +1,19 @@
 import pytest
 
+import VV
 from VV.checks import BaseCheck
-from VV.flagging import Flag
 
 class TCheck(BaseCheck):
     checkID = "T_001"
     description = "Test desc."
 
     def perform_function(self, x, y):
-        result = Flag(code = 10, msg = f"Sum: x+y = {x+y}")
+        """ if sum is greater than 100, return a yellow flag """
+        _sum = x+y
+        if not _sum > 100:
+            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
+        else:
+            result = self.flag(code = 50, msg = f"Sum: x+y = {x+y}")
         return result 
 
 def test_abc_BaseCheck():
@@ -24,7 +29,7 @@ def test_TCheck_missing_dep():
         dependencies = {'T_00F'}
 
         def perform_function(self, x, y):
-            result = Flag(code = 10, msg = f"Sum: x+y = {x+y}")
+            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
             return result 
     # perform the prereq check 'Test_001'
     TCheck().perform(x=2,y=3)
@@ -77,7 +82,7 @@ def test_TCheck_has_dep():
         dependencies = {'T_001'}
 
         def perform_function(self, x, y):
-            result = Flag(code = 10, msg = f"Sum: x+y = {x+y}")
+            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
             return result 
     # perform the prereq check 'Test_001'
     TCheck().perform(x=2,y=3)
@@ -91,3 +96,32 @@ def test_TCheck_has_dep():
 
     print(testCheck.globalPerformedLog)
 
+def test_TCheck_flags():
+    """ You should NOT be able to instantiate the base check class """
+    testCheck = TCheck()
+    print(testCheck)
+
+    result = testCheck.perform(1,2)
+    print(testCheck.performedLog)
+    assert result.code == 10
+
+    assert len(result.allFlags) == 8
+    assert isinstance(result.allFlags[-1], VV.flagging.Flag)
+    assert result.allFlags[0].msg == "Sum: x+y = 5"
+
+def test_TCheck_iterative_perform():
+    """ You should NOT be able to instantiate the base check class """
+    testCheck = TCheck()
+    print(testCheck)
+
+    for i in range(10):
+        result = testCheck.perform(i,2)
+        print(testCheck.performedLog)
+        assert result.code == 10
+
+    assert len(testCheck.performedLog) == 10
+    assert len(testCheck.globalPerformedLog) > 10
+
+    testCheck.perform(100,y=100)
+    assert testCheck.performedLog[-1]['args'] == (100,)
+    assert testCheck.performedLog[-1]['kwargs'] == {'y':100}
