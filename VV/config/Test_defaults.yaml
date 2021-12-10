@@ -1,3 +1,7 @@
+Flagging:
+        output_tsv: "DEFAULT_VV_LOG.tsv"
+
+
 T_000C:
         description: |
                 This is a description from the config file.

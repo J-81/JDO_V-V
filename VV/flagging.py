@@ -8,7 +8,9 @@ from pathlib import Path
 import math
 from collections import OrderedDict, defaultdict
 from functools import wraps, partial
+import importlib.resources
 
+import yaml
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
 
@@ -40,33 +42,40 @@ FULL_LOG_HEADER = [
     "user_message",
     "debug_message",
     "check_id",
-    "filename",
-    "full_path",
-    "flagged_positions",
-    "position_units",
-    "entity_value",
-    "entity_value_units",
-    "outlier_comparison_type",
-    "max_thresholds_to_flag_ids",
-    "min_thresholds_to_flag_ids",
-    "max_min_thresholds_units",
-    "outlier_stdev_thresholds_to_flag_ids",
+    #"filename",
+    #"full_path",
+    #"flagged_positions",
+    #"position_units",
+    #"entity_value",
+    #"entity_value_units",
+    #"outlier_comparison_type",
+    #"max_thresholds_to_flag_ids",
+    #"min_thresholds_to_flag_ids",
+    #"max_min_thresholds_units",
+    #"outlier_stdev_thresholds_to_flag_ids",
     ]
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 
+with importlib.resources.path("VV.config", "Test_defaults.yaml") as f:
+    config_file = f
+
 class Flag():
     """ An object representing a flag """
     allFlags = list()
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)["Flagging"]
 
     def __init__(self, 
                  code: int,
                  check, #TODO fix BaseCheck type hint here
                  entity: str = "none supplied",
+                 sub_entity: str = "none supplied",
                  msg: str = "No Message Supplied",
                  short_msg: str = None,
-                 data: dict = None):
+                 data: dict = dict()):
         self.entity = entity
+        self.sub_entity = sub_entity
         self.code = code
         self.check = check # a Check instance, includes data about the check itself
         self.msg = msg # a verbose message describing the flag
@@ -76,8 +85,57 @@ class Flag():
         # add to running list of generated flags
         self.allFlags.append(self)
 
+        # add to dataframe
+        #self.df = self.flush_to_df()
+
     def __repr__(self):
         return f"Flag code: {self.code}. Message: '{self.msg}'"
+
+    @classmethod
+    def to_df(cls, data_to_column: list = None):
+        """ Writes all Flags to a log file """
+        if not data_to_column:
+            data_to_column = list()
+        report = FULL_REPORT_LINE_TEMPLATE.copy()
+        print(cls.allFlags)
+        reports = list()
+        for flag in cls.allFlags:
+            report = FULL_REPORT_LINE_TEMPLATE.copy()
+            # add base columns
+            report.update({
+                      "sample": flag.entity,
+                      "sub_entity": flag.sub_entity,
+                      "severity": flag.code,
+                      "flag_id": flag.code,
+                      "step": flag.check.step,
+                      "script":flag.check.step,
+                      "user_message": flag.short_msg,
+                      "debug_message": flag.msg,
+                      "check_id": flag.check.checkID,
+                      "data": flag.data,
+                      })
+            # add data columns, if the flag data doesn't contain the key, None is logged
+            for datum in data_to_column:
+                print(datum)
+                print(flag.data)
+                report.update({datum: flag.data.get(datum,"Not in flag data")})
+            reports.append(report)
+        return pd.DataFrame.from_records(reports)
+
+    @classmethod
+    def dump(cls, purge_flags: bool = False):
+        """ Dumps all flags to a csv file 
+        params:
+          purge_flags: if true, removes all flags from internal flag list after saving to file
+        """
+        df = cls.to_df()
+        df.to_csv(cls.config["output_tsv"], sep="\t")
+        if purge_flags:
+            cls.allFlags = list()
+        return cls.config["output_tsv"]
+
+
+
 
 
 class VVError(Exception):
