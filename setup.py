@@ -18,13 +18,14 @@ setup(
    packages=['VV','VV.config'],  #same as name
    include_package_data=True,
    package_data={
-       "": ['config/Test_defaults.yaml']
+       "": ['config/Test_defaults.yaml',
+            'config/RNASeq_sp.yaml']
        },
    scripts=[
             'scripts/V-V_Program',
            ],
    python_requires='>=3.8',
-   install_requires=['pandas','isatools'],
+   install_requires=['pandas','isatools','multiqc'],
    setup_requires=['pytest-runner'],
    tests_require=['pytest']
 )
