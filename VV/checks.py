@@ -22,6 +22,8 @@ class BaseCheck(abc.ABC):
     def __init__(self):
         self._performedLog = list()
         self._dependencies = set()
+        self._step = "No Step Defined"
+        self._description = "No Description Defined"
         self.config = self.globalConfig.get(self.checkID, None)
         if self.config:
             print(f"Loaded configuration for {self.checkID} from {config_file}")
@@ -29,8 +31,14 @@ class BaseCheck(abc.ABC):
             if self.config.get('description'):
                 print(f"Found description in config, overriding if the one defined in the class")
                 self.description = self.config.get('description')
+
+            if self.config.get('step'):
+                print(f"Found description in config, overriding if the one defined in the class")
+                self.step = self.config.get('step')
+
         else:
             print(f"No configuration for {self.checkID} found in {config_file}")
+
 
 
     @abc.abstractproperty
@@ -38,10 +46,25 @@ class BaseCheck(abc.ABC):
         """ The checkID """
         return
 
-    @abc.abstractproperty
+    @property
     def description(self):
-        """ The description """
-        return
+        """ A set of other checks required to perform this one """
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        """ A set of other checks required to perform this one """
+        self._description = description
+
+    @property
+    def step(self):
+        """ A set of other checks required to perform this one """
+        return self._step
+
+    @step.setter
+    def step(self, step):
+        """ A set of other checks required to perform this one """
+        self._step = step
 
     @property
     def dependencies(self):
