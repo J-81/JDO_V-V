@@ -134,4 +134,12 @@ class BaseCheck(abc.ABC):
         ...
 
 
+class DummyCheck(BaseCheck):
+    """ A minimally implemented dummy check, useful for testing """
+    checkID = "DUMMY_000C"
+    description = "This is a dummy check"
+
+    def perform_function(self, message: str = "no message given to dummy"):
+        """ if sum is greater than 100, return a yellow flag """
+        return self.flag(code = 10, message = message)
 
