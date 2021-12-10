@@ -2,10 +2,10 @@ import pytest
 
 import VV
 from VV.checks import BaseCheck
+from VV.flagging import Flag
 
 class TCheck(BaseCheck):
     checkID = "T_001"
-    description = "Test desc."
 
     def perform_function(self, x, y):
         """ if sum is greater than 100, return a yellow flag """
@@ -126,19 +126,20 @@ def test_TCheck_iterative_perform():
     assert testCheck.performedLog[-1]['args'] == (100,)
     assert testCheck.performedLog[-1]['kwargs'] == {'y':100}
 
-class TCheck_with_config(BaseCheck):
+class TCheck_with_config(TCheck):
     checkID = "T_000C"
     description = "Test desc." #this should be explicitly overridden by config
+    step = "override_me"
 
     def perform_function(self, x, y):
         """ if sum is greater than 100, return a yellow flag """
         _sum = x+y
         if not float(_sum).is_integer() and not self.config["flag_non_wholenumber"]:
-            result = self.flag(code = self.config["non_wholenumber_flag_code"], msg = f"Sum was not a whole number: {_sum}")
+            result = self.flag(code = self.config["non_wholenumber_flag_code"], msg = f"Sum was not a whole number: {_sum}", data={'sum':_sum})
         elif not _sum > self.config["sum_max"]:
-            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
+            result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}", data={'sum':_sum})
         else:
-            result = self.flag(code = self.config["sum_max_flag_code"], msg = f"Sum: x+y = {x+y}")
+            result = self.flag(code = self.config["sum_max_flag_code"], msg = f"Sum: x+y = {x+y}", data={'sum':_sum})
 
         return result 
 
@@ -170,3 +171,22 @@ def test_TCheck_with_config_description():
     testCheck = TCheck_with_config()
 
     assert testCheck.description == "This is a description from the config file.\nPretty neat and readable.\n"
+
+
+def test_TCheck_with_config_description():
+    """ Check if the class defined description is overwritten by the config one """
+    testCheck = TCheck_with_config()
+
+    df = Flag.to_df()
+
+    print(df.head())
+    # check dataframe as created after all prior tests
+    assert len(df) == 31 
+    assert len(df.columns) == 10
+
+    # check dataframe created with arguments
+    df = Flag.to_df(data_to_column=['sum'])
+    assert len(df) == 31
+    assert len(df.columns) == 11
+    assert df.iloc[-1]['sum'] == 300
+    assert df.iloc[0]['sum'] == 'Not in flag data' 
