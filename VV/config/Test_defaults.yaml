@@ -1,0 +1,13 @@
+T_000C:
+        description: |
+                This is a description from the config file.
+                Pretty neat and readable.
+        step: "Test_step_1"
+        # maximum sum before a red flag is raised
+        sum_max: 100
+        # flag code raised if above sum_max
+        sum_max_flag_code: 75
+        # indicates if a flag should be raised 
+        flag_non_wholenumber: false
+        # only used if non_wholenumber_ok is false, code of flag raised
+        non_wholenumber_flag_code: 75
