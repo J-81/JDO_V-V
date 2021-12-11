@@ -102,6 +102,7 @@ class Flag():
         for flag in cls.allFlags:
             report = FULL_REPORT_LINE_TEMPLATE.copy()
             # add base columns
+            print(flag)
             report.update({
                       "sample": flag.entity,
                       "sub_entity": flag.sub_entity,
@@ -129,13 +130,10 @@ class Flag():
           purge_flags: if true, removes all flags from internal flag list after saving to file
         """
         df = cls.to_df()
-        df.to_csv(cls.config["output_tsv"], sep="\t")
+        df.to_csv(cls.config["output_tsv"], sep="\t", index=False)
         if purge_flags:
             cls.allFlags = list()
         return cls.config["output_tsv"]
-
-
-
 
 
 class VVError(Exception):
