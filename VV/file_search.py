@@ -9,7 +9,7 @@ from multiqc.utils import report
 import yaml
 
 
-def monkey_path_search_file(pattern, f, module_key):
+def monkey_patch_search_file(pattern, f, module_key):
     """ Adds in additional search pattern methods """
     original_matched = report._search_file_original(pattern, f, module_key)
     dir_fn_matched = False
@@ -23,7 +23,7 @@ def monkey_path_search_file(pattern, f, module_key):
 
 # add in additional match methods
 report._search_file_original = report.search_file
-report.search_file = monkey_path_search_file
+report.search_file = monkey_patch_search_file
 
 class FileSearcher():
 
