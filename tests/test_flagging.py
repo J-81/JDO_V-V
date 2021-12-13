@@ -40,3 +40,19 @@ def test_dumped_tsv():
     assert len(df.loc[df["filter_value"] == 100]) == 2
     # check column order is consistent
     assert list(df.columns) == ['sample', 'sub_entity', 'severity', 'flag_id', 'step', 'script', 'user_message', 'debug_message', 'check_id', 'data', 'filter_value']
+    
+    assert lines[-1].split('\t') == ['none supplied', 'none supplied', '10', '10', 'No Step Defined', 'No Step Defined', 'No Message Supplied', 'No Message Supplied', 'DUMMY_000C', "{'filter_value': 100, 'random': 2}\n"] 
+
+def test_dump_in_append_mode():
+    output_path = Flag.dump(append=False)
+    with open(output_path, "r") as f:
+        original_report_len = len(f.readlines())
+
+    output_path = Flag.dump(append=True)
+    with open(output_path, "r") as f:
+        appended_report_len = len(f.readlines())
+
+    assert original_report_len == 10
+    assert appended_report_len == 20
+
+
