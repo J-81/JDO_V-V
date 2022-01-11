@@ -124,13 +124,15 @@ class Flag():
         return pd.DataFrame.from_records(reports)
 
     @classmethod
-    def dump(cls, purge_flags: bool = False):
+    def dump(cls, purge_flags: bool = False, append: bool = False):
         """ Dumps all flags to a csv file 
         params:
           purge_flags: if true, removes all flags from internal flag list after saving to file
+          append: if true, extends output file rather than overwrites
         """
+        write_mode = 'a' if append else 'w'
         df = cls.to_df()
-        df.to_csv(cls.config["output_tsv"], sep="\t", index=False)
+        df.to_csv(cls.config["output_tsv"], sep="\t", index=False, mode=write_mode)
         if purge_flags:
             cls.allFlags = list()
         return cls.config["output_tsv"]

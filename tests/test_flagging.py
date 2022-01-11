@@ -52,7 +52,7 @@ def test_dump_in_append_mode():
     with open(output_path, "r") as f:
         appended_report_len = len(f.readlines())
 
-    assert original_report_len == 10
-    assert appended_report_len == 20
+    assert original_report_len == 5
+    assert appended_report_len == 10
 
 
