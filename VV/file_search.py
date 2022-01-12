@@ -35,26 +35,38 @@ class FileSearcher():
           sp_config: path to a search_patterns.yaml config file. See: https://github.com/ewels/MultiQC/blob/master/multiqc/utils/search_patterns.yaml for formatting example
           analsis_dir: list of paths to search for files within
         """
-        with importlib.resources.path("VV.config", sp_config) as fpath:
-            with open(fpath, "r") as f:
-                self.search_patterns = yaml.safe_load(f)
-        
-        # replace default search patterns with custom ones
-        report.config.sp = self.search_patterns
-
         # replace search location
         if not analysis_dir:
             analysis_dir = [os.getcwd()]
-        report.config.analysis_dir = analysis_dir
+        # if a single analysis_dir is supplied, wrap it into a list
+        if isinstance(analysis_dir,str):
+            analysis_dir = [analysis_dir]
+        elif isinstance(analysis_dir,list):
+            pass
+        else:
+            raise TypeError(f"Analysis dir must be a string or list of string denoting a paths to search: Found {type(analysis_dir)}:{analysis_dir} instead")
 
+        self.sp_config_f = sp_config
+        with open(sp_config, "r") as f:
+            self.search_patterns = yaml.safe_load(f)
+        
+        # replace default search patterns with custom ones
+        report.config.sp = self.search_patterns
+        # replace default search directories
+        report.config.analysis_dir = analysis_dir
 
         # replace default ignore files
         report.config.fn_ignore_files = ['*.DS_Store','*.py[cod]','*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html']
         self.report = report
 
+    def __str__(self):
+        return f"File searcher:\n\tSearch Pattern Config File: {self.sp_config_f}\n\tSearch Directory: {report.config.analysis_dir}"
+
     def get_files(self, modules: list = None):
         # search all modules if not specified
         if not modules:
             modules = list(self.search_patterns)
+        self.report.searchfiles = list() # THIS IS REQUIRED AS THE SEARCHFILES ATTRIBUTE IS SET AS A GLOBAL ENV IN MULTIQC
+        print(self.report.searchfiles)
         self.report.get_filelist(modules)
-        self.files = self.report.files
+        self.files = self.report.files.copy()
