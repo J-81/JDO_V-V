@@ -30,7 +30,7 @@ for resource in importlib.resources.contents("VV.config"):
 
 class BaseProtocol(abc.ABC):
 
-    def __init__(self, check_config, sp_config):
+    def __init__(self, check_config, sp_config, vv_dir):
         # check if yaml files exist first
         assert Path(check_config).is_file(), "Check Config file supplied doesn't exist!"
         assert Path(sp_config).is_file(), "Check Config file supplied doesn't exist!"
@@ -38,6 +38,7 @@ class BaseProtocol(abc.ABC):
         self.sp_config_f = str(sp_config)
         self.check_config = yaml.safe_load(Path(check_config).open().read())
         self.sp_config = yaml.safe_load(Path(sp_config).open().read())
+        self.vv_dir = vv_dir
 
     @abc.abstractmethod
     def run_function(self):
