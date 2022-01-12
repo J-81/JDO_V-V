@@ -44,14 +44,25 @@ class BaseProtocol(abc.ABC):
         """ The actual runtime 'script' """
         ...
 
+    @abc.abstractproperty
+    def protocolID(self):
+        """ The protocolID """
+        return
+
+    @abc.abstractproperty
+    def description(self):
+        """ The description """
+        return
+
     def run(self):
         """ Runs the runtime script """
-        print(f"Running protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
+        print(f"Protocol ID: {self.protocolID}\nProtocol Description: {self.description}\nRunning protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
         self.run_function() 
 
-    def describe(self):
+    def describe(self) -> str:
         """ Prints all the V&V checks that will be performed """
-        print(f"This protocol runs the following: \n {inspect.getsource(self.run_function)}") 
+        description = f"Protocol:\n\tID: {self.protocolID}\n\tDescription: {self.description}\nConfiguration: \n\tchecks: {self.check_config_f}\n\tsearch_patterns: {self.sp_config_f}\n Protocol runs the following: \n {inspect.getsource(self.run_function)}"
+        return description 
         
 
     def document(self):

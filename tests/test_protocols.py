@@ -21,7 +21,9 @@ def test_test_protocol_with_good_config():
     sp_confs = list_sp_configs()
     proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0])
 
-    proto.describe()
+    desc = proto.describe()
+    print(desc)
+    assert len(desc) == 605
     proto.run()
 
 
