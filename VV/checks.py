@@ -92,7 +92,6 @@ class BaseCheck(abc.ABC):
     def flag(self, **kwargs) -> Flag:
         """ A wrapper that automatically adds the check to the flag instance """
         kwargs["check"] = self
-        print(kwargs)
         return Flag(**kwargs)
 
 

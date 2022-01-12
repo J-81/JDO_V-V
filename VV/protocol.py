@@ -17,6 +17,7 @@ import importlib
 from pathlib import Path
 import inspect
 import re
+import datetime
 
 import yaml
 
@@ -37,6 +38,7 @@ class BaseProtocol(abc.ABC):
         self.check_config_f = str(check_config)
         self.sp_config_f = str(sp_config)
         self.check_config = yaml.safe_load(Path(check_config).open().read())
+        Flag.config = self.check_config["Flagging"]
         self.sp_config = yaml.safe_load(Path(sp_config).open().read())
         self.vv_dir = vv_dir
 
@@ -59,7 +61,7 @@ class BaseProtocol(abc.ABC):
         """ Runs the runtime script """
         print(f"Protocol ID: {self.protocolID}\nProtocol Description: {self.description}\nRunning protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
         self.run_function()
-        Flag.dump()
+        Flag.dump(comment=f"Next rows generated at {datetime.datetime.now()} by protocolID: '{self.protocolID}' with config files: '{self.check_config_f}' '{self.sp_config_f}'")
 
     def describe(self) -> str:
         """ Prints all the V&V checks that will be performed """
@@ -74,7 +76,6 @@ class BaseProtocol(abc.ABC):
 
 def _list_configs(pattern, search_paths: list = []):
     """ Returns a list of all protocols that are findable """
-    print(_PACKAGED_CONFIG_FILES)
     found = [f for f in _PACKAGED_CONFIG_FILES.copy() if str(f).endswith(pattern)]
     for path in search_paths:
         found_yml = list(Path(path).glob(pattern))

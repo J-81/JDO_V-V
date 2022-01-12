@@ -61,7 +61,8 @@ class Flag():
     """ An object representing a flag """
     allFlags = list()
     # set class attribute default, should never be written here for protocls
-    config = {"output_tsv":"DEFAULT_VV_LOG.tsv"}
+    # config = {"output_tsv":"DEFAULT_VV_LOG.tsv"}
+    # Removing as config NEEDS to be set from a protocol
 
     def __init__(self, 
                  code: int,
@@ -94,12 +95,10 @@ class Flag():
         if not data_to_column:
             data_to_column = list()
         report = FULL_REPORT_LINE_TEMPLATE.copy()
-        print(cls.allFlags)
         reports = list()
         for flag in cls.allFlags:
             report = FULL_REPORT_LINE_TEMPLATE.copy()
             # add base columns
-            print(flag)
             report.update({
                       "sample": flag.entity,
                       "sub_entity": flag.sub_entity,
@@ -114,22 +113,29 @@ class Flag():
                       })
             # add data columns, if the flag data doesn't contain the key, None is logged
             for datum in data_to_column:
-                print(datum)
-                print(flag.data)
                 report.update({datum: flag.data.get(datum,"Not in flag data")})
             reports.append(report)
         return pd.DataFrame.from_records(reports)
 
     @classmethod
-    def dump(cls, purge_flags: bool = False, append: bool = False):
+    def dump(cls, comment: str, purge_flags: bool = False, append: bool = False):
         """ Dumps all flags to a csv file 
         params:
+          comment: a required comment to be written before the current Flag records, often supplied by the handling protocol
           purge_flags: if true, removes all flags from internal flag list after saving to file
           append: if true, extends output file rather than overwrites
         """
+        output_f = cls.config["output_tsv"]
         write_mode = 'a' if append else 'w'
+        write_header = False if append else True
+
+        # write comment line, often documents the protocol that generated the lines following
+        # also controls whether a file is appended to or overwritten
+        with open(output_f, mode=write_mode) as f:
+            f.write(f"# {comment}\n")
+
         df = cls.to_df()
-        df.to_csv(cls.config["output_tsv"], sep="\t", index=False, mode=write_mode)
+        df.to_csv(output_f, sep="\t", index=False, mode='a') # always append as the will at least be a comment line
         if purge_flags:
             cls.allFlags = list()
         return cls.config["output_tsv"]
