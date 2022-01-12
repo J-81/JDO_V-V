@@ -2,31 +2,25 @@
 Defines base class for check class
 """
 import abc
-import importlib.resources
 import traceback
 
 import yaml
 
 from VV.flagging import Flag
 
-with importlib.resources.path("VV.config", "Test_defaults.yaml") as f:
-    config_file = f
 
 class BaseCheck(abc.ABC):
     """ A check performed as part of Validation and Verification task """
     globalPerformedLog = list()
-    # load all config
-    with open(config_file, 'r') as f:
-        globalConfig = yaml.safe_load(f)
 
-    def __init__(self):
+    def __init__(self, config):
         self._performedLog = list()
         self._dependencies = set()
         self._step = "No Step Defined"
         self._description = "No Description Defined"
-        self.config = self.globalConfig.get(self.checkID, None)
+        self.config = config.get(self.checkID, None)
         if self.config:
-            print(f"Loaded configuration for {self.checkID} from {config_file}")
+            print(f"Loaded configuration for {self.checkID}")
             # override class-defined description with one in config if present
             if self.config.get('description'):
                 print(f"Found description in config, overriding if the one defined in the class")
@@ -37,7 +31,7 @@ class BaseCheck(abc.ABC):
                 self.step = self.config.get('step')
 
         else:
-            print(f"No configuration for {self.checkID} found in {config_file}")
+            print(f"No configuration for {self.checkID}")
 
 
 

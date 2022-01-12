@@ -4,6 +4,9 @@ import pandas as pd
 from VV.flagging import Flag
 from VV.checks import DummyCheck
 
+
+## This module has been reworked in such a way that direct invocation of Check and Flag are no longer needed or possible
+"""
 dCheck = DummyCheck()
 def test_flags_recorded():
     Flag.dump(purge_flags=True)
@@ -56,3 +59,5 @@ def test_dump_in_append_mode():
     assert appended_report_len == 10
 
 
+"""
+    

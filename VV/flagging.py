@@ -57,14 +57,11 @@ FULL_LOG_HEADER = [
 
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
 
-with importlib.resources.path("VV.config", "Test_defaults.yaml") as f:
-    config_file = f
-
 class Flag():
     """ An object representing a flag """
     allFlags = list()
-    with open(config_file, 'r') as f:
-        config = yaml.safe_load(f)["Flagging"]
+    # set class attribute default, should never be written here for protocls
+    config = {"output_tsv":"DEFAULT_VV_LOG.tsv"}
 
     def __init__(self, 
                  code: int,
