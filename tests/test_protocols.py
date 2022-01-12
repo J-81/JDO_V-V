@@ -23,7 +23,7 @@ def test_test_protocol_with_good_config():
 
     desc = proto.describe()
     print(desc)
-    assert len(desc) == 605
+    assert len(desc) == 887
     proto.run()
 
 

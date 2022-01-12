@@ -15,3 +15,22 @@ T_000C:
         flag_non_wholenumber: false
         # only used if non_wholenumber_ok is false, code of flag raised
         non_wholenumber_flag_code: 75
+
+TCheck1:
+        description: |
+                This is a description from the config file.
+                Pretty neat and readable.
+        step: "Test_step_3"
+        high_threshold: 5
+        high_threshold_flag: 70
+        low_threshold: 1
+        low_threshold_flag: 70
+        
+
+TCheck3:
+        description: |
+                This is a description from the config file.
+                Pretty neat and readable.
+        step: "Test_step_3"
+        flag_code: 30
+

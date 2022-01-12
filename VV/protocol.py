@@ -57,7 +57,8 @@ class BaseProtocol(abc.ABC):
     def run(self):
         """ Runs the runtime script """
         print(f"Protocol ID: {self.protocolID}\nProtocol Description: {self.description}\nRunning protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
-        self.run_function() 
+        self.run_function()
+        Flag.dump()
 
     def describe(self) -> str:
         """ Prints all the V&V checks that will be performed """
