@@ -55,7 +55,31 @@ FULL_LOG_HEADER = [
     #"outlier_stdev_thresholds_to_flag_ids",
     ]
 
+DEP_FULL_LOG_HEADER = [
+    "sample",
+    "sub_entity",
+    "severity",
+    "flag_id",
+    "step",
+    "script",
+    "user_message",
+    "debug_message",
+    "check_id",
+    "filename",
+    "full_path",
+    "flagged_positions",
+    "position_units",
+    "entity_value",
+    "entity_value_units",
+    "outlier_comparison_type",
+    "max_thresholds_to_flag_ids",
+    "min_thresholds_to_flag_ids",
+    "max_min_thresholds_units",
+    "outlier_stdev_thresholds_to_flag_ids",
+    ]
+
 FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(FULL_LOG_HEADER)
+DEP_FULL_REPORT_LINE_TEMPLATE = OrderedDict.fromkeys(DEP_FULL_LOG_HEADER)
 
 class Flag():
     """ An object representing a flag """
@@ -273,7 +297,7 @@ class _Flagger():
             units_for_thresholds = entity_value_units # should be safe in most cases, even where entity value units is NA (just replaces NA with NA)
 
 
-        report = FULL_REPORT_LINE_TEMPLATE.copy()
+        report = DEP_FULL_REPORT_LINE_TEMPLATE.copy()
         report.update({
                   "sample": entity,
                   "sub_entity": sub_entity,
@@ -298,7 +322,7 @@ class _Flagger():
                   })
 
         # ensure report dict matches expected headers
-        assert report.keys() == FULL_REPORT_LINE_TEMPLATE.keys(), "Report keys MUST be the ones expected full log header."
+        assert report.keys() == DEP_FULL_REPORT_LINE_TEMPLATE.keys(), "Report keys MUST be the ones expected full log header."
         add_df = pd.DataFrame.from_records([report])
         # add to in memory log
         self.df = pd.concat([self.df, add_df])
@@ -335,7 +359,7 @@ class _Flagger():
         return pd.read_csv(self._log_file,
                            sep="\t",
                            comment="#",
-                           names=FULL_LOG_HEADER,
+                           names=DEP_FULL_LOG_HEADER,
                            )
 
     def check_sample_proportions(self,
