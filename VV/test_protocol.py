@@ -39,6 +39,7 @@ DATA = {
 class TProtocol(BaseProtocol):
     protocolID = "TestProtocol"
     description = "This protocol is used solely for testing this package and serves a template for writing production protocols"
+    checks = [TCheck1, TCheck2, TCheck3]
 
     # OPTIONAL METHOD
     # METHOD IS USED FOR AUTOMATED DATA EXTRACTION AND LEVERAGES FILE SEARCHING
@@ -56,22 +57,19 @@ class TProtocol(BaseProtocol):
         self.data = DATA # replace with actually parsing the files for data
 
     def run_function(self):
-        # Init all checks, MUST include check_config as below
-        tc1 = TCheck1(config=self.check_config)
-        tc2 = TCheck2(config=self.check_config)
-        tc3 = TCheck3(config=self.check_config)
-
         # Perform checks with appropriate arguments for the perform function (defined within the check)
+        print(self.checks)
         for sample, metrics in DATA.items():
-            tc1.perform(sample=sample, max=metrics['max'])
-            tc2.perform(sample=sample)
-            tc3.perform(sample=sample)
+            self.checks['TCheck1'].perform(sample=sample, max=metrics['max'])
+            self.checks['TCheck2'].perform(sample=sample)
+            self.checks['TCheck3'].perform(sample=sample)
 
 
 
 class TProtocol2(BaseProtocol):
     protocolID = "TestProtocol2"
     description = "This protocol is used solely for testing this package and serves a template for writing production protocols"
+    checks = [TCheck3]
 
     # OPTIONAL METHOD
     # METHOD IS USED FOR AUTOMATED DATA EXTRACTION AND LEVERAGES FILE SEARCHING

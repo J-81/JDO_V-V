@@ -22,6 +22,7 @@ import datetime
 import yaml
 
 from VV.flagging import Flag
+from VV.checks import BaseCheck
 
 _PACKAGED_CONFIG_FILES = list()
 for resource in importlib.resources.contents("VV.config"):
@@ -41,6 +42,14 @@ class BaseProtocol(abc.ABC):
         Flag.config = self.check_config["Flagging"]
         self.sp_config = yaml.safe_load(Path(sp_config).open().read())
         self.vv_dir = vv_dir
+    
+        # pass config into checks as well as convert into a dictionary of check class name and check instance
+        self.checks_reformat = dict()
+        for check in self.checks:
+            assert issubclass(check,BaseCheck) # ensure all checks are actually BaseCheck derived objects
+            check_instance = check(config=self.check_config)
+            self.checks_reformat[check.__name__] = check_instance
+        self.checks = self.checks_reformat
 
     @abc.abstractmethod
     def run_function(self):
@@ -50,6 +59,11 @@ class BaseProtocol(abc.ABC):
     @abc.abstractproperty
     def protocolID(self):
         """ The protocolID """
+        return
+
+    @abc.abstractproperty
+    def checks(self):
+        """ The checks to be performed """
         return
 
     @abc.abstractproperty
@@ -76,7 +90,14 @@ class BaseProtocol(abc.ABC):
 
     def document(self):
         """ Write protocol to a human readable file.  This combines general checks and specific configuration into one report """
-        print("Generating protocol document to file: ")
+        out_f = Path(f"{self.protocolID}_Conf-{Path(self.check_config_f).name.replace('.yml','')}_Documentation.txt")
+        print(f"Generating protocol document to file: {out_f}")
+        with open(out_f, "w") as f:
+            f.write(f"ProtocolID: {self.protocolID}\n")
+            for i, (check_name, check) in enumerate(self.checks.items()):
+                f.write(f"{i}. {check.checkID} {check.description}\n")
+        return out_f
+            
 
 
 def _list_configs(pattern, search_paths: list = []):

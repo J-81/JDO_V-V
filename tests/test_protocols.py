@@ -32,7 +32,7 @@ def test_test_protocol_with_good_config():
 
     desc = proto.describe()
     print(desc)
-    assert len(desc) == 887
+    assert len(desc) == 764
     proto.run()
 
 def test_test_protocol_filesearching_bad_analysis_dir():
@@ -100,3 +100,16 @@ def test_test_protocol_append_to_log():
     assert len(lines) == 20
     assert lines[0].startswith("# Next rows")
     assert lines[14].startswith("# Next rows")
+
+def test_autodoc_generation():
+    """ Without running, a protocol should be able to generate a summary of what it will run, i.e. what it will do to V&V """
+    check_confs = list_check_configs()
+    sp_confs = list_sp_configs()
+    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+
+    out_f = proto.document()
+    assert str(out_f) == f"TestProtocol_Conf-{Path(proto.check_config_f).name.replace('.yml','')}_Documentation.txt"
+
+
+
+    
