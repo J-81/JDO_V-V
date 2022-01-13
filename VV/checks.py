@@ -109,9 +109,6 @@ class BaseCheck(abc.ABC):
         try:
             result = self.perform_function(*args, **kwargs)
         except Exception as e:
-            #DEBUG
-            raise e
-            #DEUBG END
             traceback.print_exc()
             # make the result the exception and wrap in a failing Flag
             result = self.flag(code = 91, msg = f"Bad peform_function. Function raised an exception: {e}")

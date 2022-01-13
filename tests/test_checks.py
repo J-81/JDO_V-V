@@ -1,9 +1,15 @@
 import pytest
+import yaml
 
 import VV
 from VV.checks import BaseCheck
 from VV.flagging import Flag
-'''
+from VV.protocol import list_check_configs
+
+check_config_f = list_check_configs()[0]
+with open(check_config_f, "r") as f:
+    check_config = yaml.safe_load(f)
+
 class TCheck(BaseCheck):
     checkID = "T_001"
 
@@ -32,9 +38,9 @@ def test_TCheck_missing_dep():
             result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
             return result 
     # perform the prereq check 'Test_001'
-    TCheck().perform(x=2,y=3)
+    TCheck(config = check_config).perform(x=2,y=3)
     
-    testCheck = TCheck_needs_T_00F()
+    testCheck = TCheck_needs_T_00F(config = check_config)
     
 
     result = testCheck.perform(x=3,y=5)
@@ -45,7 +51,7 @@ def test_TCheck_missing_dep():
 
 def test_TCheck():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck()
+    testCheck = TCheck(config = check_config)
     print(testCheck)
 
     result = testCheck.perform(1,2)
@@ -54,7 +60,7 @@ def test_TCheck():
 
 def test_TCheck_bad_return():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck()
+    testCheck = TCheck(config = check_config)
     testCheck.perform_function = lambda x: x
     print(testCheck)
 
@@ -64,7 +70,7 @@ def test_TCheck_bad_return():
 
 def test_TCheck_exception():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck()
+    testCheck = TCheck(config = check_config)
     testCheck.perform_function = lambda x: 1/0
     print(testCheck)
 
@@ -85,9 +91,9 @@ def test_TCheck_has_dep():
             result = self.flag(code = 10, msg = f"Sum: x+y = {x+y}")
             return result 
     # perform the prereq check 'Test_001'
-    TCheck().perform(x=2,y=3)
+    TCheck(config = check_config).perform(x=2,y=3)
     
-    testCheck = TCheck_needs_T_001()
+    testCheck = TCheck_needs_T_001(config = check_config)
     
 
     result = testCheck.perform(x=3,y=5)
@@ -98,7 +104,7 @@ def test_TCheck_has_dep():
 
 def test_TCheck_flags():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck()
+    testCheck = TCheck(config = check_config)
     print(testCheck)
 
     result = testCheck.perform(1,2)
@@ -111,7 +117,7 @@ def test_TCheck_flags():
 
 def test_TCheck_iterative_perform():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck()
+    testCheck = TCheck(config = check_config)
     print(testCheck)
 
     for i in range(10):
@@ -145,7 +151,7 @@ class TCheck_with_config(TCheck):
 
 def test_TCheck_with_config_iterative_perform():
     """ You should NOT be able to instantiate the base check class """
-    testCheck = TCheck_with_config()
+    testCheck = TCheck_with_config(config = check_config)
     print(testCheck)
 
     for i in range(10):
@@ -168,14 +174,14 @@ def test_TCheck_with_config_iterative_perform():
 
 def test_TCheck_with_config_description():
     """ Check if the class defined description is overwritten by the config one """
-    testCheck = TCheck_with_config()
+    testCheck = TCheck_with_config(config = check_config)
 
     assert testCheck.description == "This is a description from the config file.\nPretty neat and readable.\n"
 
 
 def test_TCheck_with_config_description():
     """ Check if the class defined description is overwritten by the config one """
-    testCheck = TCheck_with_config()
+    testCheck = TCheck_with_config(config = check_config)
 
     df = Flag.to_df()
 
@@ -190,5 +196,3 @@ def test_TCheck_with_config_description():
     assert len(df.columns) == 11
     assert df.iloc[-1]['sum'] == 300
     assert df.iloc[0]['sum'] == 'Not in flag data' 
-
-'''
