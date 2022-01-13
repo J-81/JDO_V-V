@@ -57,11 +57,16 @@ class BaseProtocol(abc.ABC):
         """ The description """
         return
 
-    def run(self):
+    def run(self, append_to_log: bool = False):
         """ Runs the runtime script """
         print(f"Protocol ID: {self.protocolID}\nProtocol Description: {self.description}\nRunning protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
         self.run_function()
-        Flag.dump(comment=f"Next rows generated at {datetime.datetime.now()} by protocolID: '{self.protocolID}' with config files: '{self.check_config_f}' '{self.sp_config_f}'")
+        comment = f"Next rows generated at {datetime.datetime.now()} by protocolID: '{self.protocolID}' with config files: '{self.check_config_f}' '{self.sp_config_f}'"
+        if append_to_log:
+            out_f = Flag.dump(comment=comment, append=append_to_log, purge_flags=True)
+        else:
+            out_f = Flag.dump(comment=comment, purge_flags=True)
+        print(f"Wrote results to {out_f}")
 
     def describe(self) -> str:
         """ Prints all the V&V checks that will be performed """

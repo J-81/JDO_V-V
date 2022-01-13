@@ -10,7 +10,7 @@ except KeyError as e:
 import pytest
 
 from VV.protocol import list_check_configs, list_sp_configs
-from VV.test_protocol import TProtocol
+from VV.test_protocol import TProtocol, TProtocol2
 
 def test_list_check_configs():
     check_confs = list_check_configs()
@@ -79,7 +79,24 @@ def test_test_protocol_to_log():
     assert Path(expected_output_f).is_file()
     with open(expected_output_f, "r") as f:
         lines = f.readlines()
-    assert len(lines) == 26
+    assert len(lines) == 14
     assert lines[0].startswith("# Next rows")
     
    
+def test_test_protocol_append_to_log():
+    """ Test a full dummy protocol with included test data from a truncated RNASeq processing run """
+    check_confs = list_check_configs()
+    sp_confs = list_sp_configs()
+    print(TEST_ASSETS_DIR)
+    proto = TProtocol2(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+
+    proto.extract_data()
+    proto.run(append_to_log=True)
+    expected_output_f = proto.check_config['Flagging']['output_tsv']
+    # a log should be created in the pwd
+    assert Path(expected_output_f).is_file()
+    with open(expected_output_f, "r") as f:
+        lines = f.readlines()
+    assert len(lines) == 20
+    assert lines[0].startswith("# Next rows")
+    assert lines[14].startswith("# Next rows")
