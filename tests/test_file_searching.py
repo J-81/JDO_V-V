@@ -36,3 +36,9 @@ def test_finds_trimmed_files():
     files = [f['fn'] for f in fs.files["trimmed_fastq"]]
     assert set(files) == set(['Mmus_BAL-TAL_LRTN_GC_Rep3_G9_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep2_F7_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep3_F8_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_GC_Rep2_G8_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep5_F10_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_GC_Rep1_G6_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_GC_Rep2_G8_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep1_F6_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_GC_Rep4_G10_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_GC_Rep1_G6_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_GC_Rep4_G10_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep4_F9_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep3_B9_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep4_B10_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep3_B9_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep3_F8_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep1_F6_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep2_F7_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_FLT_Rep4_F9_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep2_B8_R1_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep4_B10_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_RRTN_BSL_Rep2_B8_R2_trimmed.fastq.gz', 'Mmus_BAL-TAL_LRTN_GC_Rep3_G9_R2_trimmed.fastq.gz'])
 
+def test_simple_files():
+    fs = FileSearcher(sp_config=sp_config, analysis_dir=[f"{TEST_ASSETS_DIR}/GLDS-194"])
+    fs.get_files(["trimmed_fastq"])
+
+    assert len(fs.simple_files['raw_fastq']) == 26
+    assert len(fs.simple_files['trimmed_fastq']) == 26
