@@ -9,15 +9,16 @@ except KeyError as e:
 
 import pytest
 
-from VV.protocol import list_check_configs, list_sp_configs
+from VV.protocol import get_configs 
 from VV.test_protocol import TProtocol, TProtocol2
 
+confs = get_configs()
+test_check_conf = confs['checks']['Test_checks.yml'] 
+test_sp_conf = confs['sp']['RNASeq_sp.yml']
 def test_list_check_configs():
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
 
-    assert check_confs[0].name == "Test_checks.yml"
-    assert sp_confs[0].name  == "RNASeq_sp.yml"
+    assert confs['checks']['Test_checks.yml'].name == "Test_checks.yml"
+    assert confs['sp']['RNASeq_sp.yml'].name  == "RNASeq_sp.yml"
 
 def test_test_protocol_with_bad_config():
     """ Print list of protocols found packaged with the codebase """
@@ -26,20 +27,17 @@ def test_test_protocol_with_bad_config():
 
 def test_test_protocol_with_good_config():
     """ Print list of protocols found packaged with the codebase """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
 
     desc = proto.describe()
-    print(desc)
-    assert len(desc) == 764
-    proto.run()
+
+    # check start and end of the description, skip middle config info as that will have install dependent paths
+    assert desc.startswith("Protocol:\n\tID: TestProtocol\n\tDescription: This protocol is used solely for testing this package and serves a template for writing production protocols\nConfiguration: \n\tchecks:")
+    assert desc.endswith("Protocol runs the following: \n     def run_function(self):\n        # Perform checks with appropriate arguments for the perform function (defined within the check)\n        print(self.checks)\n        for sample, metrics in DATA.items():\n            self.checks['TCheck1'].perform(sample=sample, max=metrics['max'])\n            self.checks['TCheck2'].perform(sample=sample)\n            self.checks['TCheck3'].perform(sample=sample)\n")
 
 def test_test_protocol_filesearching_bad_analysis_dir():
     """ Print list of protocols found packaged with the codebase """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-19fds")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-19fds")
     
     proto.extract_data()
     for file_type, files in proto.files.items():
@@ -48,10 +46,7 @@ def test_test_protocol_filesearching_bad_analysis_dir():
 
 def test_test_protocol_filesearching():
     """ Print list of protocols found packaged with the codebase """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    print(TEST_ASSETS_DIR)
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
     
 
     proto.extract_data()
@@ -60,17 +55,11 @@ def test_test_protocol_filesearching():
 
 def test_test_protocol_filesearching():
     """ Print list of protocols found packaged with the codebase """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    print(TEST_ASSETS_DIR)
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
 
 def test_test_protocol_to_log():
     """ Test a full dummy protocol with included test data from a truncated RNASeq processing run """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    print(TEST_ASSETS_DIR)
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
 
     proto.extract_data()
     proto.run()
@@ -85,10 +74,7 @@ def test_test_protocol_to_log():
    
 def test_test_protocol_append_to_log():
     """ Test a full dummy protocol with included test data from a truncated RNASeq processing run """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    print(TEST_ASSETS_DIR)
-    proto = TProtocol2(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol2(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
 
     proto.extract_data()
     proto.run(append_to_log=True)
@@ -103,9 +89,7 @@ def test_test_protocol_append_to_log():
 
 def test_autodoc_generation():
     """ Without running, a protocol should be able to generate a summary of what it will run, i.e. what it will do to V&V """
-    check_confs = list_check_configs()
-    sp_confs = list_sp_configs()
-    proto = TProtocol(check_config=check_confs[0], sp_config=sp_confs[0], vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
 
     out_f = proto.document()
     assert str(out_f) == f"TestProtocol_Conf-{Path(proto.check_config_f).name.replace('.yml','')}_Documentation.txt"
