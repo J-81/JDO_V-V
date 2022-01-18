@@ -15,11 +15,10 @@ setup(
    description='VV for raw and processed data. Includes RNASeq and Microarray',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
-   packages=['VV','VV.config'],  #same as name
+   packages=['VV','VV.config','VV.packaged_protocols'],  #same as name
    include_package_data=True,
    package_data={
-       "": ['config/Test_defaults.yaml',
-            'config/RNASeq_sp.yaml']
+       "VV": ['config/*.yml'],
        },
    scripts=[
             'scripts/V-V_Program',
