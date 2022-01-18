@@ -164,6 +164,12 @@ class Flag():
             cls.allFlags = list()
         return cls.config["output_tsv"]
 
+    @classmethod
+    def clear_flags(cls):
+        """ Removes all flags currently logged """
+        cls.allFlags = list()
+
+
 
 class VVError(Exception):
     pass
