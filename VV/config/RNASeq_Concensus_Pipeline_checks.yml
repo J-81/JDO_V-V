@@ -1,0 +1,8 @@
+Flagging:
+        output_tsv: "RNASeq_Consensus_Pipeline_VV_Log.tsv"
+
+R_0001:
+        expected_number_read_files: 2
+        match_num_fcode: 30
+        bad_num_fcode: 90
+
