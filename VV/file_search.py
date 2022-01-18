@@ -70,3 +70,8 @@ class FileSearcher():
         print(self.report.searchfiles)
         self.report.get_filelist(modules)
         self.files = self.report.files.copy()
+
+        # also create a simplifed listing of file hits (full paths) per search patterns
+        self.simple_files = dict()
+        for sp in self.files.keys():
+            self.simple_files[sp] = [Path(hit['root']) / Path(hit['fn']) for hit in self.files[sp]]
