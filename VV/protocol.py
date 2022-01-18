@@ -18,8 +18,10 @@ from pathlib import Path
 import inspect
 import re
 import datetime
+from typing import Tuple
 
 import yaml
+from pandas import DataFrame
 
 from VV.flagging import Flag
 from VV.checks import BaseCheck
@@ -39,6 +41,11 @@ class BaseProtocol(abc.ABC):
         self.check_config_f = str(check_config)
         self.sp_config_f = str(sp_config)
         self.check_config = yaml.safe_load(Path(check_config).open().read())
+        # clear prior logged flags, because a single protocol should be run at any given time, there should be no prior logged flags
+        if Flag.allFlags:
+            print(f"Warning! Clearing {len(Flag.allFlags)} flags from prior Flag class loading, this message shouldn't appear in one protocol mode")
+        Flag.clear_flags()
+
         Flag.config = self.check_config["Flagging"]
         self.sp_config = yaml.safe_load(Path(sp_config).open().read())
         self.vv_dir = vv_dir
@@ -71,16 +78,19 @@ class BaseProtocol(abc.ABC):
         """ The description """
         return
 
-    def run(self, append_to_log: bool = False):
+    def run(self, append_to_log: bool = False) -> Tuple[Path,DataFrame]:
         """ Runs the runtime script """
         print(f"Protocol ID: {self.protocolID}\nProtocol Description: {self.description}\nRunning protocol with check config '{self.check_config_f}' and search pattern config'{self.sp_config_f}'")
         self.run_function()
         comment = f"Next rows generated at {datetime.datetime.now()} by protocolID: '{self.protocolID}' with config files: '{self.check_config_f}' '{self.sp_config_f}'"
+        # get flags as dataframe for returning before writing to output log (and likely purging said flags)
+        flag_df = Flag.to_df()
         if append_to_log:
             out_f = Flag.dump(comment=comment, append=append_to_log, purge_flags=True)
         else:
             out_f = Flag.dump(comment=comment, purge_flags=True)
         print(f"Wrote results to {out_f}")
+        return out_f, flag_df
 
     def describe(self) -> str:
         """ Prints all the V&V checks that will be performed """
@@ -116,3 +126,14 @@ def list_check_configs(search_paths: list = []):
 def list_sp_configs(search_paths: list = []):
     """ Returns a list of all protocols that are findable """
     return _list_configs(pattern = "_sp.yml", search_paths=search_paths)
+
+def get_configs(search_paths: list = []) -> dict:
+    check_found = list_check_configs(search_paths = search_paths)
+    sp_found = list_sp_configs(search_paths = search_paths)
+    # reformat as nested dict
+    result = {"checks":{}, "sp":{}}
+    for f in check_found:
+        result['checks'][f.name] = f
+    for f in sp_found:
+        result['sp'][f.name] = f
+    return result
