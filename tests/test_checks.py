@@ -4,9 +4,9 @@ import yaml
 import VV
 from VV.checks import BaseCheck
 from VV.flagging import Flag
-from VV.protocol import list_check_configs
+from VV.protocol import get_configs
 
-check_config_f = list_check_configs()[0]
+check_config_f = get_configs()['checks']['Test_checks.yml']
 with open(check_config_f, "r") as f:
     check_config = yaml.safe_load(f)
 
