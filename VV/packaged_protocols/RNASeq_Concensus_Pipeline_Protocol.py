@@ -130,7 +130,7 @@ def start_protocol(vv_dir: str, samples: List[str]) -> str:
                 vv_dir = vv_dir)
 
     proto.extract_data(samples = samples)
-
+    proto.document()
     return proto.run()
 
 if __name__ == "__main__":
