@@ -1,0 +1,10 @@
+software_versions:
+        fn: "software_versions.md"
+
+raw_fastq:
+        dir_fn_re: '.*/00-RawData/Fastq/.*R._raw\.fastq\.gz'
+
+
+trimmed_fastq:
+        dir_fn_re: '.*/01-TG_Preproc/Fastq/.*R._trimmed\.fastq\.gz'
+

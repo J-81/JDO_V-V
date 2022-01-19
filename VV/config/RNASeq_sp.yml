@@ -1,8 +1,14 @@
 software_versions:
         fn: "software_versions.md"
 
-raw_fastq:
-        dir_fn_re: '.*/00-RawData/Fastq/.*R._raw\.fastq\.gz'
+forward_raw_fastq:
+        dir_fn_re: '.*/00-RawData/Fastq/.*R1_raw\.fastq\.gz'
         
-trimmed_fastq:
-        dir_fn_re: '.*/01-TG_Preproc/Fastq/.*R._trimmed\.fastq\.gz'
+reverse_raw_fastq:
+        dir_fn_re: '.*/00-RawData/Fastq/.*R2_raw\.fastq\.gz'
+
+forward_trimmed_fastq:
+        dir_fn_re: '.*/01-TG_Preproc/Fastq/.*R1_trimmed\.fastq\.gz'
+        
+reverse_trimmed_fastq:
+        dir_fn_re: '.*/01-TG_Preproc/Fastq/.*R2_trimmed\.fastq\.gz'
