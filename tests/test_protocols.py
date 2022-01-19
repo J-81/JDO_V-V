@@ -1,3 +1,7 @@
+# TESTING NOTE: These tests run in a way that violates the one protocol run per runtime which can  result in odd errors, mostly related to global style variables in multiqc
+# As such, the 'bad' config tests should come first to avoid pollution from 'good' config tests
+
+
 import os
 from pathlib import Path
 
@@ -25,6 +29,17 @@ def test_test_protocol_with_bad_config():
     with pytest.raises(AssertionError):
         proto = TProtocol(check_config="s", sp_config="s", vv_dir="s")
 
+''' Test disabled and likely not needed and can have coupled evaluation with other file searching tests
+def test_test_protocol_filesearching_bad_analysis_dir():
+    """ Print list of protocols found packaged with the codebase """
+    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-19fds")
+    
+    proto.extract_data()
+    for file_type, files in proto.files.items():
+        assert len(files) == 0
+        assert file_type
+'''
+
 def test_test_protocol_with_good_config():
     """ Print list of protocols found packaged with the codebase """
     proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-194")
@@ -35,14 +50,6 @@ def test_test_protocol_with_good_config():
     assert desc.startswith("Protocol:\n\tID: TestProtocol\n\tDescription: This protocol is used solely for testing this package and serves a template for writing production protocols\nConfiguration: \n\tchecks:")
     assert desc.endswith("Protocol runs the following: \n     def run_function(self):\n        # Perform checks with appropriate arguments for the perform function (defined within the check)\n        print(self.checks)\n        for sample, metrics in DATA.items():\n            self.checks['TCheck1'].perform(sample=sample, max=metrics['max'])\n            self.checks['TCheck2'].perform(sample=sample)\n            self.checks['TCheck3'].perform(sample=sample)\n")
 
-def test_test_protocol_filesearching_bad_analysis_dir():
-    """ Print list of protocols found packaged with the codebase """
-    proto = TProtocol(check_config=test_check_conf, sp_config=test_sp_conf, vv_dir=f"{TEST_ASSETS_DIR}/GLDS-19fds")
-    
-    proto.extract_data()
-    for file_type, files in proto.files.items():
-        assert len(files) == 0
-        assert file_type
 
 def test_test_protocol_filesearching():
     """ Print list of protocols found packaged with the codebase """
