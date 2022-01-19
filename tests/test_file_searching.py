@@ -8,10 +8,11 @@ except KeyError as e:
     print("PTW user needs to set env variable: 'PTW_TEST_ASSETS' to indicate where test assets are stored")
     raise e
 
+from VV.protocol import get_configs
 from VV.file_search import FileSearcher
 
-with importlib.resources.path("VV.config","RNASeq_sp.yml") as p:
-    sp_config = str(p)
+confs = get_configs()
+sp_config = confs['sp']['Test_sp.yml']
 
 def test_init_FileSearcher():
     """ init a FileSearcher object """
