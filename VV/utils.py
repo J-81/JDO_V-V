@@ -278,13 +278,31 @@ def general_mqc_based_check(flagger: Flagger,
                 all_values = mqc.compile_subset(samples_subset = samples, key = full_key, aggregator = aggregation_function)
                 check_args["entity_value"] = value
                 check_args["entity_value_units"] = f"{cutoffs_subkey}-{mqc_base_key}" if cutoffs_subkey else mqc_base_key
-                value_check_direct(value = value,
-                                   all_values = all_values,
-                                   check_cutoffs = check_cutoffs,
-                                   flagger = flagger,
-                                   partial_check_args = check_args,
-                                   value_alias = mqc_base_key,
-                                   middlepoint = cutoffs["middlepoint"])
+
+                # all_values may be empty if every sample has no value assigned
+                # catch this before sending it to the value_check_direct call and flag as passing
+                ALLOWED_ALL_VALUES_EMPTY_BASE_KEYS = ["fastqc_overrepresented_sequences_plot-Top over-represented sequence","fastqc_overrepresented_sequences_plot-Sum of remaining over-represented sequences"]
+                if not all_values:
+                    print(f"all_values empty, checking if valid for key {full_key}")
+                    # using mqc_base_key, catch all known conditionally present values, those with potential to be all_values empty
+                    if any([full_key.endswith(base_key) for base_key in ALLOWED_ALL_VALUES_EMPTY_BASE_KEYS]):
+                        # flag as passing
+                        check_args["debug_message"] = f"For key: {full_key}, found no conditional values, this indicates the message '<total number of read files> samples had less than 1% of reads made up of overrepresented sequences MUST BE PRESENT and this check should pass."
+                        check_args["severity"] = 30 # passing
+                        flagger.flag(**check_args)
+
+                    else:
+                        raise ValueError(f"Error in parsing multiQC json, unexpected 'all_values' empty for key: {full_key}")
+                        
+
+                else:
+                    value_check_direct(value = value,
+                                       all_values = all_values,
+                                       check_cutoffs = check_cutoffs,
+                                       flagger = flagger,
+                                       partial_check_args = check_args,
+                                       value_alias = mqc_base_key,
+                                       middlepoint = cutoffs["middlepoint"])
             elif by_indice:
                 flagged = False
                 bin_units = mqc.data[sample][full_key].bin_units
