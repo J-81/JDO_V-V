@@ -6,3 +6,8 @@ R_0001:
         match_num_fcode: 30
         bad_num_fcode: 90
 
+R_0002:
+        issues_fcode: 90
+        no_issues_fcode: 30
+        corrupt_fcode: 90
+        lines_to_check: 10_000_000 
