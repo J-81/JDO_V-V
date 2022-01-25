@@ -1,0 +1,23 @@
+# platform:
+#   channels:
+#       file_type:
+#           file_pattern_variation_1: "00-RawData/{sample}.CEL"
+#           file_pattern_variation_2: "00-RawData/{sample}.gpr
+
+# keywords:
+#    substrings that are replaced during runtime by values from the runsheet
+#    examples:
+#       meta["sample"]
+#       meta["hydrization_assay"]
+affymetrix:
+    one_channel:
+        raw_array_data:
+            raw_cel: "00-RawData/{sample_name}_{source_name}.CEL"
+
+agilent:
+    one_channel:
+        raw_array_data:
+        
+    two_channel:
+        raw_array_data:
+            raw_gpr_files: "00-RawData/{hybridization_assay}.gpr"
