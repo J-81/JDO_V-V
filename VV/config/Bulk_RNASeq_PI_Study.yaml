@@ -16,8 +16,10 @@ affymetrix:
 
 agilent:
     one_channel:
+        # start of file annotations
         raw_array_data:
         
     two_channel:
+        # start of file annotations
         raw_array_data:
             raw_gpr_files: "00-RawData/{hybridization_assay}.gpr"
