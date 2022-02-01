@@ -1,0 +1,22 @@
+# platform:
+#   sub_platform:
+#       file_type:
+#           annotations:  {"PI_sheet":"Raw_Data_Files"}
+#           pattern: "{sample}.gpr"
+
+Bulk_RNASeq:
+    PairedEnd:
+        DEFAULT:
+            optional: yes
+            pattern: "NEVERMATCHTHIS"
+            annotations: 
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+        raw_reads:
+            optional: no
+            pattern: "00-RawData/Fastq/{sample}_R(1|2)_raw.fastq.gz"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Data_Files
+                Excel Column: Fastq Files - same as original submitted files with 'raw' added to the file name
