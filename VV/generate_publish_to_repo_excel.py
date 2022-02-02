@@ -42,6 +42,8 @@ def main(root_path, runsheet_path, template, config_fs_f: Path, outputDir: Path 
     
     # setting a filename column
     df_assigned["FileName"] = df_assigned['pathObj'].apply(lambda Path: Path.name)
+    # Add '/' to start of directories to specify in the excel files
+    df_assigned["FileName"] = df_assigned.apply(lambda row: f"/{row['FileName']}" if row['isDir'] else row['FileName'], axis="columns" )
     
     # write to excel file
     SPACES_BETWEEN_SAMPLES = 1
@@ -90,9 +92,10 @@ def main(root_path, runsheet_path, template, config_fs_f: Path, outputDir: Path 
             worksheet = writer.sheets[SHEETNAME]
             for idx, col in enumerate(dataset_df.columns):
                 max_len = max((dataset_df[col].astype(str).map(len).max()), len(str(col))) + COLUMN_LENGTH_BUFFER # max of either longest column value or column header plus a buffer character
+                print(max_len, SHEETNAME)
                 worksheet.column_dimensions[get_column_letter(idx+1)].width = max_len
             writer.save()
-    return 
+    return df_assigned 
 
 if __name__ == '__main__':
-    main(root_path = Path(sys.argv[1]), runsheet_path = Path(sys.argv[2]), template = "RNASeq")
+    main(root_path = Path(sys.argv[1]), runsheet_path = Path(sys.argv[2]), template = "Bulk_RNASeq:PairedEnd", config_fs_f=sys.argv[3])
