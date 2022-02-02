@@ -20,3 +20,185 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Data_Files
                 Excel Column: Fastq Files - same as original submitted files with 'raw' added to the file name
+        raw_reads_FastQC:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/{sample}_R(1|2)_raw_fastqc.(html|zip)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Data_Files
+                Excel Column: FastQC Files
+        raw_read_MultiQC:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/raw_multiqc_report/raw_multiqc(.html|_data$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Data_Files
+                Excel Column: MultiQC Files (all samples)
+        trimmed_reads:
+            optional: no
+            pattern: "01-TG_Preproc/Fastq/{sample}_R(1|2)_trimmed.fastq.gz"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Fastq Files
+        trimmed_reads_FastQC:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/{sample}_R(1|2)_trimmed_fastqc.(html|zip)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: FastQC Files
+        trimming_reports:
+            optional: no
+            pattern: "01-TG_Preproc/Trimming_Reports/{sample}_R(1|2)_raw.fastq.gz_trimming_report.txt"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Trimming Reports 
+        trimmed_read_MultiQC:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/trimmed_multiqc(.html|_data$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: MultiQC Files (all samples)
+        alignment_data:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_Aligned.(sortedByCoord|toTranscriptome).out.(bam$|bam.bai$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Data
+        spliceJunctionFile:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_SJ.out.tab$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Splice Junction File
+        AlignmentLogs:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_Log.*.out$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Logs
+        STAR1PassFiles:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}__STAR(genome$|pass1$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: STAR 1-pass Files
+        align_read_MultiQC:
+            optional: no
+            pattern: "02-STAR_Alignment/align_multiqc_report/align_multiqc(.html|_data$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: MultiQC Files (all samples)
+        rseqc_MultiQC:
+            optional: no
+            pattern: "RSeQC_analyses/(02_geneBody_coverage|03_infer_experiment|04_inner_distance|05_read_distribution)/(geneBody_cov|infer_exp|inner_dist|read_dist)_multiqc_report/(genebody_cov|infer_exp|inner_dist|read_dist)_multiqc(.html|_data$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: MultiQC Files (all samples)
+        rseqc_genebody:
+            optional: no
+            pattern: "RSeQC_analyses/02_geneBody_coverage/{sample}/{sample}.geneBodyCoverage.(r|curves.pdf|txt)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: GeneBody Coverage Data 
+        rseqc_inferExpt:
+            optional: no
+            pattern: "RSeQC_analyses/03_infer_experiment/{sample}.infer_expt.out"
+            annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Infer Experiment Data
+        rseqc_inner_distance:
+            optional: no
+            pattern: "RSeQC_analyses/04_inner_distance/{sample}/{sample}.inner_distance(.txt|_freq.txt|_plot(.pdf|.r))"
+            annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Inner Distance Data
+        rseqc_readDist:
+            optional: no
+            pattern: "RSeQC_analyses/05_read_distribution/{sample}_read_dist.out"
+            annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Read Distribution Data
+        rawCountsData:
+            optional: no
+            pattern: "03-RSEM_Counts/{sample}.(genes|isoforms).results"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Raw Counts Data
+        rawCountsStats:
+            optional: no
+            pattern: "03-RSEM_Counts/{sample}.stat$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Raw Counts Stats Directories
+        rawCountsNumGenes:
+            optional: no
+            pattern: "03-RSEM_Counts/NumNonZeroGenes.csv"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Number of Genes Expressed in Each Sample
+        rawNormCountsFiles:
+            optional: no
+            pattern: "04-DESeq2_NormCounts/(ERCC_Normalized_Counts|Normalized_Counts|Unnormalized_Counts).csv$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Norm_Counts_Files
+                Excel Column: Counts Tables
+        rawNormCountsPCA:
+            optional: no
+            pattern: "04-DESeq2_NormCounts/PCA_plots/(ERCC_Normalized_counts|Normalized_counts|Unnormalized_counts)_PCA_(nolabels|wlabels|table).(png$|csv$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Norm_Counts_Files
+                Excel Column: PCA Data
+        dge_tables:
+            optional: no
+            pattern: "05-DESeq2_DGE/(differential_expression.csv$|contrasts.csv$|SampleTable.csv$|ERCC_NormDGE/ERCCnorm_contrasts.csv$|ERCC_NormDGE/ERCCnorm_differential_expression.csv$)"
+            annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files
+                Excel Column: DGE Tables
+        dge_heatmaps:
+            optional: no
+            pattern: "05-DESeq2_DGE/heatmaps/.*_heatmap_DGE.pdf$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files
+                Excel Column: DGE Heatmaps
+        dge_volcano:
+            optional: no
+            pattern: "05-DESeq2_DGE/volcano_plots/.*_volcano_DGE.png$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files
+                Excel Column: DGE Volcano Plots
+        dge_ERCC_heatmaps:
+            optional: no
+            pattern: "05-DESeq2_DGE/ERCC_NormDGE/heatmaps/ERCCnorm_.*_heatmap_DGE.pdf$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files
+                Excel Column: DGE Heatmaps
+        dge_ERCC_volcano:
+            optional: no
+            pattern: "05-DESeq2_DGE/ERCC_NormDGE/volcano_plots/ERCCnorm_.*_volcano_DGE.png$"
+            annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files
+                Excel Column: ERCCnorm DGE Volcano Plots
