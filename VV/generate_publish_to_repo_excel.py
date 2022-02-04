@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 from openpyxl.utils import get_column_letter
 
-from VV.microarray.file_search import path_annotate
+from VV.file_search import path_annotate
 
 def infer_sample(path: Path, sample_list: list) -> str:
     """ Infers the sample based on the file path
@@ -37,7 +37,7 @@ def get_samples(runsheet_path: Path) -> list:
 def main(root_path, runsheet_path, template, config_fs_f: Path, outputDir: Path = None):
     samples = get_samples(runsheet_path)
     # create table
-    df_assigned = path_annotate(config_fs_f = config_fs_f, runsheet = runsheet_path, platform = template, root_dir = root_path, expand_annotations=True)
+    df_assigned = path_annotate(config_fs_f = config_fs_f, runsheet = runsheet_path, template = template, root_dir = root_path, expand_annotations=True)
     df_assigned["Sample Name"] = df_assigned["fullPath"].apply(infer_sample, args=([samples]))
     
     # setting a filename column

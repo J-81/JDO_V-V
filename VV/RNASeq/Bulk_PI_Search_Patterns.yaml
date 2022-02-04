@@ -20,6 +20,15 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Data_Files
                 Excel Column: Fastq Files - same as original submitted files with 'raw' added to the file name
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_reads_rename:
+            optional: no
+            pattern: "00-RawData/Fastq/rename.sh"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Raw_Data_Files
         raw_reads_FastQC:
             optional: no
             pattern: "00-RawData/FastQC_Reports/{sample}_R(1|2)_raw_fastqc.(html|zip)"
@@ -27,6 +36,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Data_Files
                 Excel Column: FastQC Files
+                md5sum Excel Sheet: Raw_Data_Files
         raw_read_MultiQC:
             optional: no
             pattern: "00-RawData/FastQC_Reports/raw_multiqc_report/raw_multiqc(.html|_data$)"
@@ -34,6 +44,45 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Data_Files
                 Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_reads_MultiQC_data:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/raw_multiqc_report/raw_multiqc_data/multiqc(.log|_data.json|_fastqc.txt|_general_stats.txt|_sources.txt)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_reads_out:
+            optional: no
+            pattern: "processing_scripts/00-RawData/(raw_fastqc_out_logs/|).*_raw_.*.out"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+        raw_reads_scripts:
+            optional: no
+            pattern: "processing_scripts/00-RawData/(raw_fastqc_PI.slurm|raw_multiqc_PI.slurm)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+        raw_reads_noPath_out:
+            optional: no
+            pattern: "processing_scripts_NOpaths/00-RawData/(raw_fastqc_out_logs/|).*_raw_.*.out"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_reads_noPath_scripts:
+            optional: no
+            pattern: "processing_scripts_NOpaths/00-RawData/(raw_fastqc_PI.slurm|raw_multiqc_PI.slurm)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Raw_Data_Files
         trimmed_reads:
             optional: no
             pattern: "01-TG_Preproc/Fastq/{sample}_R(1|2)_trimmed.fastq.gz"
@@ -41,6 +90,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Trimmed_Files
                 Excel Column: Fastq Files
+                md5sum Excel Sheet: Trimmed_Files
         trimmed_reads_FastQC:
             optional: no
             pattern: "01-TG_Preproc/FastQC_Reports/{sample}_R(1|2)_trimmed_fastqc.(html|zip)"
@@ -48,6 +98,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Trimmed_Files
                 Excel Column: FastQC Files
+                md5sum Excel Sheet: Trimmed_Files
         trimming_reports:
             optional: no
             pattern: "01-TG_Preproc/Trimming_Reports/{sample}_R(1|2)_raw.fastq.gz_trimming_report.txt"
@@ -55,6 +106,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Trimmed_Files
                 Excel Column: Trimming Reports 
+                md5sum Excel Sheet: Trimmed_Files
         trimmed_read_MultiQC:
             optional: no
             pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/trimmed_multiqc(.html|_data$)"
@@ -62,6 +114,45 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Trimmed_Files
                 Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Trimmed_Files
+        trimmed_reads_MultiQC_data:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/trimmed_multiqc_data/multiqc(.log|_data.json|_fastqc.txt|_general_stats.txt|_sources.txt)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Trimmed_Files
+        trimmed_reads_out:
+            optional: no
+            pattern: "processing_scripts/01-TG_Preproc/(trimmed_fastqc_out|TG_out_logs)/.*_(trimmed|trimgalore)_.*.out"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+        trimmed_reads_scripts:
+            optional: no
+            pattern: "processing_scripts/01-TG_Preproc/(trimmed_fastqc_PI.slurm|trimmed_multiqc_PI.slurm|trim-galore.slurm)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+        trimmed_reads_out_noPath:
+            optional: no
+            pattern: "processing_scripts_NOpaths/01-TG_Preproc/(trimmed_fastqc_out|TG_out_logs)/.*_(trimmed|trimgalore)_.*.out"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Trimmed_Files
+        trimmed_reads_scripts_noPath:
+            optional: no
+            pattern: "processing_scripts_NOpaths/01-TG_Preproc/(trimmed_fastqc_PI.slurm|trimmed_multiqc_PI.slurm|trim-galore.slurm)"
+            annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Trimmed_Files
         alignment_data:
             optional: no
             pattern: "02-STAR_Alignment/{sample}/{sample}_Aligned.(sortedByCoord|toTranscriptome).out.(bam$|bam.bai$)"
@@ -69,6 +160,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Alignment_Files
                 Excel Column: Alignment Data
+                md5sum Excel Sheet: Alignment_Files
         spliceJunctionFile:
             optional: no
             pattern: "02-STAR_Alignment/{sample}/{sample}_SJ.out.tab$"
@@ -76,6 +168,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Alignment_Files
                 Excel Column: Splice Junction File
+                md5sum Excel Sheet: Alignment_Files
         AlignmentLogs:
             optional: no
             pattern: "02-STAR_Alignment/{sample}/{sample}_Log.*.out$"
@@ -83,6 +176,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Alignment_Files
                 Excel Column: Alignment Logs
+                md5sum Excel Sheet: Alignment_Files
         STAR1PassFiles:
             optional: no
             pattern: "02-STAR_Alignment/{sample}/{sample}__STAR(genome$|pass1$)"
@@ -97,6 +191,12 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Alignment_Files
                 Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Alignment_Files
+        align_scripts_out:
+            optional: no
+            pattern: "processing_scripts_NOpaths/02-STAR_Alignment/.*(.out|.slurm)$"
+            annotations:
+                md5sum Excel Sheet: Alignment_Files
         rseqc_MultiQC:
             optional: no
             pattern: "RSeQC_analyses/(02_geneBody_coverage|03_infer_experiment|04_inner_distance|05_read_distribution)/(geneBody_cov|infer_exp|inner_dist|read_dist)_multiqc_report/(genebody_cov|infer_exp|inner_dist|read_dist)_multiqc(.html|_data$)"
@@ -104,6 +204,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: RSeQC_Analysis 
                 Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: RSeQC_Files
         rseqc_genebody:
             optional: no
             pattern: "RSeQC_analyses/02_geneBody_coverage/{sample}/{sample}.geneBodyCoverage.(r|curves.pdf|txt)"
@@ -111,6 +212,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: RSeQC_Analysis 
                 Excel Column: GeneBody Coverage Data 
+                md5sum Excel Sheet: RSeQC_Files
         rseqc_inferExpt:
             optional: no
             pattern: "RSeQC_analyses/03_infer_experiment/{sample}.infer_expt.out"
@@ -118,6 +220,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: RSeQC_Analysis 
                 Excel Column: Infer Experiment Data
+                md5sum Excel Sheet: RSeQC_Files
         rseqc_inner_distance:
             optional: no
             pattern: "RSeQC_analyses/04_inner_distance/{sample}/{sample}.inner_distance(.txt|_freq.txt|_plot(.pdf|.r))"
@@ -125,6 +228,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: RSeQC_Analysis 
                 Excel Column: Inner Distance Data
+                md5sum Excel Sheet: RSeQC_Files
         rseqc_readDist:
             optional: no
             pattern: "RSeQC_analyses/05_read_distribution/{sample}_read_dist.out"
@@ -132,6 +236,12 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: RSeQC_Analysis 
                 Excel Column: Read Distribution Data
+                md5sum Excel Sheet: RSeQC_Files
+        rseqc_scripts_out:
+            optional: no
+            pattern: "processing_scripts_NOpaths/RSeQC_analyses/.*(.out|.slurm)$"
+            annotations:
+                md5sum Excel Sheet: RSeQC_Files
         rawCountsData:
             optional: no
             pattern: "03-RSEM_Counts/{sample}.(genes|isoforms).results"
@@ -139,6 +249,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Counts_Files
                 Excel Column: Raw Counts Data
+                md5sum Excel Sheet: Raw_Counts_Files
         rawCountsStats:
             optional: no
             pattern: "03-RSEM_Counts/{sample}.stat$"
@@ -146,6 +257,17 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Counts_Files
                 Excel Column: Raw Counts Stats Directories
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsStatsContents:
+            optional: no
+            pattern: "03-RSEM_Counts/{sample}.stat/.*"
+            annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCounts_scripts_out:
+            optional: no
+            pattern: "processing_scripts_NOpaths/03-RSEM_Counts/.*(.out|.slurm)$"
+            annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
         rawCountsNumGenes:
             optional: no
             pattern: "03-RSEM_Counts/NumNonZeroGenes.csv"
@@ -153,6 +275,17 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Counts_Files
                 Excel Column: Number of Genes Expressed in Each Sample
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsRSEM:
+            optional: no
+            pattern: "03-RSEM_Counts/RSEM_Unnormalized_Counts.csv"
+            annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsRSEM_scripts_out:
+            optional: no
+            pattern: "processing_scripts_NOpaths/03-RSEM_Counts/.*(.out|.slurm|.R)$"
+            annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
         rawNormCountsFiles:
             optional: no
             pattern: "04-DESeq2_NormCounts/(ERCC_Normalized_Counts|Normalized_Counts|Unnormalized_Counts).csv$"
@@ -160,6 +293,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Norm_Counts_Files
                 Excel Column: Counts Tables
+                md5sum Excel Sheet: Comb_Raw_Norm_Counts_Files
         rawNormCountsPCA:
             optional: no
             pattern: "04-DESeq2_NormCounts/PCA_plots/(ERCC_Normalized_counts|Normalized_counts|Unnormalized_counts)_PCA_(nolabels|wlabels|table).(png$|csv$)"
@@ -167,6 +301,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: Raw_Norm_Counts_Files
                 Excel Column: PCA Data
+                md5sum Excel Sheet: Comb_Raw_Norm_Counts_Files
         dge_tables:
             optional: no
             pattern: "05-DESeq2_DGE/(differential_expression.csv$|contrasts.csv$|SampleTable.csv$|ERCC_NormDGE/ERCCnorm_contrasts.csv$|ERCC_NormDGE/ERCCnorm_differential_expression.csv$)"
@@ -174,6 +309,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: DGE_Files
                 Excel Column: DGE Tables
+                md5sum Excel Sheet: DGE_Files 
         dge_heatmaps:
             optional: no
             pattern: "05-DESeq2_DGE/heatmaps/.*_heatmap_DGE.pdf$"
@@ -181,6 +317,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: DGE_Files
                 Excel Column: DGE Heatmaps
+                md5sum Excel Sheet: DGE_Files 
         dge_volcano:
             optional: no
             pattern: "05-DESeq2_DGE/volcano_plots/.*_volcano_DGE.png$"
@@ -188,6 +325,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: DGE_Files
                 Excel Column: DGE Volcano Plots
+                md5sum Excel Sheet: DGE_Files 
         dge_ERCC_heatmaps:
             optional: no
             pattern: "05-DESeq2_DGE/ERCC_NormDGE/heatmaps/ERCCnorm_.*_heatmap_DGE.pdf$"
@@ -195,6 +333,7 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: DGE_Files
                 Excel Column: DGE Heatmaps
+                md5sum Excel Sheet: DGE_Files 
         dge_ERCC_volcano:
             optional: no
             pattern: "05-DESeq2_DGE/ERCC_NormDGE/volcano_plots/ERCCnorm_.*_volcano_DGE.png$"
@@ -202,3 +341,20 @@ Bulk_RNASeq:
                 Excel File: processed
                 Excel Sheet: DGE_Files
                 Excel Column: ERCCnorm DGE Volcano Plots
+                md5sum Excel Sheet: DGE_Files 
+        ERCC_Analyses_scriptsnb:
+            optional: no
+            pattern: "ERCC_QC_Analysis/.*_(assay_table.csv|ERCC_analysis.(html|ipynb))"
+            annotations:
+                Excel File: processed
+                Excel Sheet: ERCC_QC_Analysis
+                Excel Column: ERCC QC Analysis Scripts and Metadata 
+                md5sum Excel Sheet: ERCC_QC_Analysis 
+        ERCC_Analyses_output:
+            optional: no
+            pattern: "ERCC_QC_Analysis/ERCC_analysis_output/.*"
+            annotations:
+                Excel File: processed
+                Excel Sheet: ERCC_QC_Analysis
+                Excel Column: ERCC QC Analysis Output Files
+                md5sum Excel Sheet: ERCC_QC_Analysis 
