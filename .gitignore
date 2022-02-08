@@ -2,6 +2,7 @@
 scratch.py
 .eggs
 build
-VV.egg-info
+gl4gl.egg-info
 *.swp
 .env
+.vscode
