@@ -1,0 +1,301 @@
+# platform:
+#   sub_platform:
+#       file_type:
+#           PI_annotations:  {"PI_sheet":"Raw_Data_Files"}
+#           pattern: "{sample}.gpr"
+# TODO: use https://yaml.org/spec/1.2.2/#anchors-and-aliases to simplify and refactor
+Bulk_RNASeq:
+    PairedEnd:
+        DEFAULT:
+            optional: yes
+            pattern: "NEVERMATCHTHIS"
+            PI_annotations: 
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+            GLDS_annotations: 
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+            dummy_test_annotations:
+                Happy: Birthday
+        raw_reads:
+            optional: no
+            pattern: "00-RawData/Fastq/{sample}_R(1|2)_raw.fastq.gz"
+            PI_annotations:
+                Excel Sheet: Raw_Data_Files
+                Excel Column: Fastq Files
+                md5sum Excel Sheet: Raw_Data_Files
+            GLDS_annotations: 
+                Excel File: raw
+                Excel Sheet: "RENAME_dataset"
+                Excel Column: Fastq Files
+        raw_reads_FastQC:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/{sample}_R(1|2)_raw_fastqc.(html|zip)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Data_Files
+                Excel Column: FastQC Files
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_read_MultiQC:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/raw_multiqc_report/raw_multiqc(.html|_data$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: "RENAME_dataset"
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Raw_Data_Files
+        raw_read_MultiQC_Zip:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/raw_multiqc_report.zip"
+            GLDS_annotations: 
+                Excel File: raw
+                Excel Sheet: "RENAME_dataset"
+                Excel Column: MultiQC Files
+        raw_reads_MultiQC_data:
+            optional: no
+            pattern: "00-RawData/FastQC_Reports/raw_multiqc_report/raw_multiqc_data/multiqc(.log|_data.json|_fastqc.txt|_general_stats.txt|_sources.txt)"
+            PI_annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Raw_Data_Files
+        trimmed_reads:
+            optional: no
+            pattern: "01-TG_Preproc/Fastq/{sample}_R(1|2)_trimmed.fastq.gz"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Fastq Files
+                md5sum Excel Sheet: Trimmed_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Fastq Files
+        trimmed_reads_FastQC:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/{sample}_R(1|2)_trimmed_fastqc.(html|zip)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: FastQC Files
+                md5sum Excel Sheet: Trimmed_Files
+        trimming_reports:
+            optional: no
+            pattern: "01-TG_Preproc/Trimming_Reports/{sample}_R(1|2)_raw.fastq.gz_trimming_report.txt"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Trimming Reports 
+                md5sum Excel Sheet: Trimmed_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: Trimming Reports
+        trimmed_read_MultiQC:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/trimmed_multiqc(.html|_data$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Trimmed_Files
+        trimmed_reads_MultiQC_data:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/trimmed_multiqc_data/multiqc(.log|_data.json|_fastqc.txt|_general_stats.txt|_sources.txt)"
+            PI_annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Trimmed_Files
+        trimmed_reads_MultiQC_zip:
+            optional: no
+            pattern: "01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report.zip"
+            PI_annotations:
+                Excel File: unpublished
+                Excel Sheet: no sheet assigned
+                Excel Column: no column assigned
+                md5sum Excel Sheet: Trimmed_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Trimmed_Files
+                Excel Column: MultiQC Files
+        alignment_data:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_Aligned.(sortedByCoord|toTranscriptome).out.(bam$|bam.bai$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Data
+                md5sum Excel Sheet: Alignment_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Data
+        spliceJunctionFile:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_SJ.out.tab$"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Splice Junction File
+                md5sum Excel Sheet: Alignment_Files
+        AlignmentLogs:
+            optional: no
+            pattern: "02-STAR_Alignment/{sample}/{sample}_Log.*.out$"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Logs
+                md5sum Excel Sheet: Alignment_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: Alignment Logs
+        align_read_MultiQC:
+            optional: no
+            pattern: "02-STAR_Alignment/align_multiqc_report/align_multiqc(.html|_data$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Alignment_Files
+        align_read_MultiQC_zip:
+            optional: no
+            pattern: "02-STAR_Alignment/align_multiqc_report.zip"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: Alignment_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: Alignment_Files
+                Excel Column: MultiQC Files
+        rseqc_MultiQC: # TODO: replace with updated names
+            optional: no
+            pattern: "RSeQC_Analyses/.*/.*_multiqc_report/.*_multiqc(.html|_data$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: RSeQC_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis
+                Excel Column: MultiQC Files
+        rseqc_MultiQC_zip: # TODO: replace with updated names
+            optional: no
+            pattern: "RSeQC_Analyses/.*/.*_multiqc_report/.*_multiqc(.html|_data$)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: MultiQC Files (all samples)
+                md5sum Excel Sheet: RSeQC_Files
+            GLDS_annotations: 
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis
+                Excel Column: MultiQC Files
+        rseqc_genebody:
+            optional: no
+            pattern: "RSeQC_Analyses/02_geneBody_coverage/{sample}/{sample}.geneBodyCoverage.(r|curves.pdf|txt)"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: GeneBody Coverage Data 
+                md5sum Excel Sheet: RSeQC_Files
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: GeneBody Coverage Data 
+                md5sum Excel Sheet: RSeQC_Files
+        rseqc_inferExpt:
+            optional: no
+            pattern: "RSeQC_Analyses/03_infer_experiment/{sample}_infer_expt.out"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Infer Experiment Data
+                md5sum Excel Sheet: RSeQC_Files
+        rseqc_inner_distance:
+            optional: yes
+            pattern: "RSeQC_Analyses/04_inner_distance/{sample}/{sample}.inner_distance(.txt|_freq.txt|_plot(.pdf|.r))"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Inner Distance Data
+                md5sum Excel Sheet: RSeQC_Files
+        rseqc_readDist:
+            optional: no
+            pattern: "RSeQC_Analyses/05_read_distribution/{sample}_read_dist.out"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: RSeQC_Analysis 
+                Excel Column: Read Distribution Data
+                md5sum Excel Sheet: RSeQC_Files
+        rawCountsData:
+            optional: no
+            pattern: "03-RSEM_Counts/{sample}/{sample}.(genes|isoforms).results"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Raw Counts Data
+                md5sum Excel Sheet: Raw_Counts_Files
+            GLDS_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files 
+                Excel Column: Raw Counts Data 
+        rawCountsStats:
+            optional: no
+            pattern: "03-RSEM_Counts/{sample}/{sample}.stat$"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Raw Counts Stats Directories
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsStatsContents:
+            optional: no
+            #pattern: "03-RSEM_Counts/{sample}.stat/.*"
+            pattern: "03-RSEM_Counts/{sample}/{sample}.stat/.*"
+            PI_annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsNumGenes:
+            optional: no
+            pattern: "03-RSEM_Counts/NumNonZeroGenes.csv"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files
+                Excel Column: Number of Genes Expressed in Each Sample
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawCountsRSEM:
+            optional: no
+            pattern: "03-RSEM_Counts/RSEM_Unnormalized_Counts.csv"
+            PI_annotations:
+                md5sum Excel Sheet: Raw_Counts_Files
+        rawNormCountsFiles:
+            optional: no
+            pattern: "04-DESeq2_NormCounts/(ERCC_Normalized_Counts|Normalized_Counts|Unnormalized_Counts).csv$"
+            PI_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Norm_Counts_Files
+                Excel Column: Counts Tables
+                md5sum Excel Sheet: Comb_Raw_Norm_Counts_Files
+            GLDS_annotations:
+                Excel File: processed
+                Excel Sheet: Normalized_Counts_Files 
+                Excel Column: Normalized Counts Data         
+        rawCountsCSV:
+            optional: no
+            pattern: "04-DESeq2_NormCounts/Unnormalized_Counts.csv$"
+            GLDS_annotations:
+                Excel File: processed
+                Excel Sheet: Raw_Counts_Files 
+                Excel Column: Raw Counts Data 
+        dge_tables:
+            optional: no
+            pattern: "05-DESeq2_DGE/(differential_expression.csv$|contrasts.csv$|SampleTable.csv$|ERCC_NormDGE/ERCCnorm_contrasts.csv$|ERCC_NormDGE/ERCCnorm_differential_expression.csv$)"
+            GLDS_annotations:
+                Excel File: processed
+                Excel Sheet: DGE_Files 
+                Excel Column: DGE Data 
