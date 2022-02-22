@@ -9,6 +9,11 @@ This repository holds a number of GeneLab associated tools.
   - Used to pull GeneLab data for downstream applications
   - Includes runsheet generation for processing
   - Includes dvc integration to track data from GeneLab
+- PostProcessing: Tools to generate post processing related files 
+  - Including file listing report excels and md5sum excels
+- PathAnnotate: A utility kit that focuses on generating annotated path dataframes
+  - Such annotated dataframes can be used in downstream applications
+  - E.g. VnV uses this to assign check targets
 
 ### How do I get set up? ###
 

@@ -10,9 +10,9 @@ long_description = (
 )
 
 setup(
-   name='VV',
+   name='gl4gl',
    version='0.6.0',
-   description='VV for raw and processed data. Includes RNASeq and Microarray',
+   description='Tools for GeneLab supporting data processing',
    author='Jonathan Oribello',
    author_email='jonathan.d.oribello@gmail.com',
    packages=find_packages(),  #same as name
