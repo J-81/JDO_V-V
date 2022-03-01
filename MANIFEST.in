@@ -1,1 +1,2 @@
 include gl4gl/PathAnnotate/configs/**.yaml
+include gl4gl/VnV/configs/**.yaml
