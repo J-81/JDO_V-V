@@ -2,6 +2,8 @@
 from pathlib import Path
 import logging
 from typing import List
+# load module specific logger
+log = logging.getLogger(__name__)
 
 import yaml
 
@@ -18,7 +20,7 @@ def get_configs(configs_path: Path = __PACKAGED_CONFIG_DIR) -> [Path]:
     :return: The full path to the found config file
     :rtype: Path
     """
-    logging.info(f"Recursively searching {configs_path} for *.yaml files.")
+    log.info(f"Recursively searching {configs_path} for *.yaml files.")
 
     return list(configs_path.rglob("*.yaml"))
 
@@ -48,5 +50,5 @@ def describe_config(config_fs_f: Path):
     :param config_fs_f: The full path to the config file to describe
     :type config_fs_f: Path
     """
-    logging.info(f"Generating summary description for: {config_fs_f}")
-    logging.warning(f"NOT IMPLEMENTED")
+    log.info(f"Generating summary description for: {config_fs_f}")
+    log.warning(f"NOT IMPLEMENTED")
