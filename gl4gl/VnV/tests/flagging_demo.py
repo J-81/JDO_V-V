@@ -85,3 +85,22 @@ def run_with_error():
     flag.reset()
 
     flag.info("This should fail due to missing requirements", extra={"flag_code": 30})
+
+
+
+
+
+from pathlib import Path
+import logging
+
+from gl4gl.VnV.custom_logging import Flag, flag_exceptions
+
+# load module specific logger
+log = logging.getLogger(__name__)
+# load in module specific data with an adaptor that also handles kwargs and default
+flag = Flag(log, {"module_info": "TestDemo"})
+
+@flag_exceptions(flag)
+def check_file_exists(input_f: Path) -> bool:
+    """Returns passing if the file '{input_f.name}' exists. """
+    return input_f.exists()
