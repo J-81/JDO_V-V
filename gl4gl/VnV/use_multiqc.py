@@ -17,10 +17,7 @@ SUBSOURCES = [
 ]
 
 # iterable to remove suffixes that does NOT add them as subsource descriptors (often due to the name being redundantly associated with columns)
-SCRUB_SAMPLES = [
-    "_read_dist",
-    "_infer_expt"
-]
+SCRUB_SAMPLES = ["_read_dist", "_infer_expt"]
 
 
 def clean_messy_sample(messy_sample: str):
@@ -50,13 +47,17 @@ def clean_messy_sample(messy_sample: str):
     # remove any substrings that don't indicate sub sources
     for scrub_s in SCRUB_SAMPLES:
         if current_sample.endswith(scrub_s):
-            logging.debug(f"Removing {scrub_s} suffix to clean sample name, removing completely (redudant)")
+            logging.debug(
+                f"Removing {scrub_s} suffix to clean sample name, removing completely (redudant)"
+            )
             current_sample = current_sample[: -len(scrub_s)]
 
     # split any true sub sources (e.g. _R1, _R2, _STARpass1)
     for subsource in SUBSOURCES:
         if current_sample.endswith(subsource):
-            logging.debug(f"Removing {subsource} suffix to clean sample name, using to indicate sub source")
+            logging.debug(
+                f"Removing {subsource} suffix to clean sample name, using to indicate sub source"
+            )
             current_sample = current_sample[: -len(subsource)]
             sub_source += subsource
     # add adaptor suffix, no longer performed as the adapter string is added to the column multi-index
@@ -88,6 +89,9 @@ def get_parsed_data(
 ):
     logging.info(f"Using MQC to parse: {input_f}")
     try:
+        # a workaround for flushing handlers in MQC version 1.11
+        logger = logging.getLogger("multiqc")
+        [logger.removeHandler(h) for h in logger.handlers]
         mqc_ret = multiqc.run(
             input_f, no_data_dir=True, module=modules
         )  # note: empty list for modules falls back on all modules
