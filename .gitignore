@@ -6,3 +6,5 @@ gl4gl.egg-info
 *.swp
 .env
 .vscode
+*.tsv
+*.log
