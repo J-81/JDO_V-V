@@ -1,4 +1,6 @@
 import logging
+from pathlib import Path
+
 from gl4gl import VnV
 
 LOGGER_NAME = "Flagging.gl4gl.VnV.tests.flagging_demo"
@@ -12,7 +14,7 @@ def test_decorated_func_with_flagged_pass(tmp_path, caplog):
     EXAMPLE_ENTITY = ("TestSample1", "Forward_Reads", "")
 
     flag.entity = EXAMPLE_ENTITY
-    flag.filenames = {"Some/Path/1"}
+    flag.filepaths = {Path("Some/Path/1")}
     with caplog.at_level(10, logger=LOGGER_NAME):
         if VnV.tests.flagging_demo.check_file_exists(input_f=existing):
             flag.info("File exists", extra={"flag_code": 30})
@@ -38,7 +40,7 @@ def test_decorated_func_with_flagged_fail(tmp_path, caplog):
     EXAMPLE_ENTITY = ("TestSample1", "Forward_Reads", "")
 
     flag.entity = EXAMPLE_ENTITY
-    flag.filenames = {"Some/Path/1"}
+    flag.filepaths = {Path("Some/Path/1")}
     with caplog.at_level(10, logger=LOGGER_NAME):
         if VnV.tests.flagging_demo.check_file_exists(input_f=existing):
             flag.info("File exists", extra={"flag_code": 30})
@@ -60,12 +62,12 @@ def test_decorated_func_with_flagged_fail(tmp_path, caplog):
 def test_decorated_func_raises_unhandled_exception(tmp_path, caplog):
     existing = tmp_path / "tmp.txt"
     # existing.write_text("Test")
-    from gl4gl.VnV.fastqc import flag  # get module level flag object
+    from gl4gl.VnV.tests.flagging_demo import flag  # get module level flag object
 
     EXAMPLE_ENTITY = ("TestSample1", "Forward_Reads", "")
 
     flag.entity = EXAMPLE_ENTITY
-    flag.filenames = {"Some/Path/1"}
+    flag.filepaths = {Path("Some/Path/1")}
     with caplog.at_level(10, logger=LOGGER_NAME):
         VnV.tests.flagging_demo.check_file_exists(
             input_f=str(existing)

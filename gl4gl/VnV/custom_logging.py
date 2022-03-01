@@ -68,19 +68,19 @@ log_config = {
             "filename": "VnV_user.log",
         },
         "flagsDebug": {
-            "formatter": "flag_tab",
+            "formatter": "flag_tab_internal",
             "class": "logging.FileHandler",
             "level": "DEBUG",
             "filename": "all_flags_user_DEBUG.tsv",
         },
         "flagsIssues": {
-            "formatter": "flag_tab",
+            "formatter": "flag_tab_publish",
             "class": "logging.FileHandler",
             "level": "WARNING",
             "filename": "issue_flags_user.tsv",
         },
         "flagsInfo": {
-            "formatter": "flag_tab",
+            "formatter": "flag_tab_publish",
             "class": "logging.FileHandler",
             "level": "INFO",
             "filename": "all_flags_user.tsv",
@@ -96,10 +96,16 @@ log_config = {
             "format": "%(asctime)s : %(levelname)s : %(module)s : %(funcName)s : %(lineno)d : Log : %(message)s ",
             # "datefmt": "%d-%m-%Y %I:%M:%S",
         },
-        "flag_tab": {
+        "flag_tab_internal": {
             # This formatter REQUIRES args as required by the final flag table output
             # these are ['flag_code':int]
-            "format": "%(entity)s\t%(checkID)s\t%(checkDescription)s\t%(message)s\t%(flag_code)d\t%(filenames)s\t%(levelname)s\t%(module)s\t%(funcName)s:%(lineno)d",
+            "format": "%(entity)s\t%(checkID)s\t%(checkDescription)s\t%(message)s\t%(flag_code)d\t%(filenames)s\t%(filepaths)s\t%(levelname)s\t%(module)s\t%(funcName)s:%(lineno)d",
+            # "datefmt": "%d-%m-%Y %I:%M:%S",
+        },
+        "flag_tab_publish": {
+            # This formatter REQUIRES args as required by the final flag table output
+            # these are ['flag_code':int]
+            "format": "%(entity)s\t%(checkID)s\t%(checkDescription)s\t%(message)s\t%(flag_code)d\t%(filenames)s",
             # "datefmt": "%d-%m-%Y %I:%M:%S",
         },
     },
@@ -118,14 +124,14 @@ class FlagAdapter(logging.LoggerAdapter):
         super().__init__(*args, **kwargs)
         log.debug("Instancing flag adaptor")
         self.__entity = None
-        self.__filenames = None
+        self.__filepaths = None
         self.__check = None
         self.__checks = list()  # this will store checks run
 
     def reset(self):
         log.debug("Resetting attributes: 'entity,filesnames,check' to None")
         self.__entity = None
-        self.__filenames = None
+        self.__filepaths = None
         self.__check = None
 
     @property
@@ -138,13 +144,13 @@ class FlagAdapter(logging.LoggerAdapter):
         self.__entity = value
 
     @property
-    def filenames(self):
-        return self.__filenames
+    def filepaths(self):
+        return self.__filepaths
 
-    @filenames.setter
-    def filenames(self, value):
-        assert isinstance(value, set), "filenames must be a set"
-        self.__filenames = value
+    @filepaths.setter
+    def filepaths(self, value):
+        assert isinstance(value, set), "filepaths must be a set"
+        self.__filepaths = value
 
     @property
     def check(self):
@@ -176,11 +182,11 @@ class FlagAdapter(logging.LoggerAdapter):
         )  # default to empty dict if none supplied
 
         # these must be supplied during flag call or set be the flag beforehand
-        REQUIRED = ["flag_code", "entity", "filenames"]
+        REQUIRED = ["flag_code", "entity", "filepaths"]
         # these should be supplied but a default is assigned if otherwise
         # a check denotes a tuple of (checkID: str, checkDescription: str)
         SOFT_REQUIRED = ["check"]
-        CAN_BE_SET = ["entity", "filenames", "check"]
+        CAN_BE_SET = ["entity", "filepaths", "check"]
 
         # add in current flag attributes if existing, raise errors if clashing
         for required in CAN_BE_SET:
@@ -230,14 +236,15 @@ class FlagAdapter(logging.LoggerAdapter):
         supplied_kwargs["checkID"] = supplied_kwargs["check"][0]
         supplied_kwargs["checkDescription"] = supplied_kwargs["check"][1]
         supplied_kwargs.pop("check")  # not used in final flag message
+        supplied_kwargs["filenames"] = {
+            path.name for path in supplied_kwargs["filepaths"]
+        }
 
         return f"{msg}", kwargs
 
 
-# define a filter to add flag codes to record attributes
-
-# TODO: Make expected setables work with slots to raises exceptions on typos (e.g. flag.filenams should raise an exception when trying to set)
-def Flag(log: Logger, module_args: dict) -> Logger:
+# TODO: Make expected set-ables work with slots to raises exceptions on typos (e.g. flag.filenams should raise an exception when trying to set)
+def Flag(log: Logger, module_args: dict) -> FlagAdapter:
     """Generates a derived logger for the module for use in VnV flagging 
 
     :param log: The module level log, recommend creation with 'log = logging.getLogger(__name__)'
