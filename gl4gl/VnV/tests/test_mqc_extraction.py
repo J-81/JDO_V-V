@@ -4,6 +4,11 @@ import logging
 
 from gl4gl import VnV
 
+#############################  TEST NOTE ###################################################################################
+# These tests currently fail when run in parallel due to limitations in running multiqc multiple times for version 1.11
+# These tests should pass when run in sequence (e.g. one by one, rather than all under one runtime)
+############################################################################################################################
+
 try:
     TEST_ASSETS_DIR = os.environ["PYTEST_ASSETS"]
 except KeyError as e:
@@ -11,6 +16,8 @@ except KeyError as e:
         "Pytest user needs to set env variable: 'PYTEST_ASSETS' to indicate where test assets are stored"
     )
     raise e
+
+from multiqc.utils import log
 
 
 def test_00_mqc_to_dataframe(caplog):
@@ -119,12 +126,21 @@ def test_RSEQC_mqc_to_dataframe(caplog):
     caplog.set_level(logging.DEBUG)
 
     test_dataset = [f"{TEST_ASSETS_DIR}/GLDS-251/RSeQC_Analyses"]
-
-    mqc_ret = VnV.use_multiqc.get_parsed_data(test_dataset, as_dataframe=True)
+    modules = ["rseqc"]
+    mqc_ret = VnV.use_multiqc.get_parsed_data(
+        test_dataset, modules=modules, as_dataframe=True
+    )
 
     assert len(mqc_ret) == 20  # 20 samples
     unique_top_two_level_cols = set(
         c[0:2] for c in mqc_ret.loc[:, (slice(None), slice(None))].columns
     )
-    assert len(unique_top_two_level_cols) == 6
+    assert set(unique_top_two_level_cols) == {
+        ("multiqc_rseqc_read_distribution", "general_stats"),
+        ("multiqc_rseqc_infer_experiment", "general_stats"),
+        ("rseqc_infer_experiment_plot", "rseqc_infer_experiment_plot"),
+        ("rseqc_read_distribution_plot", "rseqc_read_distribution_plot"),
+        ("rseqc_inner_distance_plot", "rseqc_inner_distance_plot"),
+        ("rseqc_gene_body_coverage_plot", "rseqc_gene_body_coverage_plot"),
+    }
 
