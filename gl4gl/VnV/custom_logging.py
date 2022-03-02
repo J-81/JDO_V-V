@@ -3,6 +3,7 @@
 from functools import wraps
 from logging import Logger, config
 from collections import Counter
+from pathlib import Path
 
 import logging
 from typing import Callable
@@ -150,6 +151,12 @@ class FlagAdapter(logging.LoggerAdapter):
     @filepaths.setter
     def filepaths(self, value):
         assert isinstance(value, set), "filepaths must be a set"
+        # handle empty sets
+        if len(value) == 0:
+            log.error(
+                "Attempted to supply an empty set of filepaths. Replacing with {Path('NONE_FOUND')} as a placeholder"
+            )
+            value = {Path("NONE_FOUND")}
         self.__filepaths = value
 
     @property
