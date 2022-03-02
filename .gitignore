@@ -4,3 +4,4 @@ scratch.py
 build
 VV.egg-info
 *.swp
+.env
