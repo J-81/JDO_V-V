@@ -5,3 +5,5 @@ build
 VV.egg-info
 *.swp
 .env
+.vscode
+*egg-info*
