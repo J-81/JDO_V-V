@@ -11,6 +11,7 @@ the Nextflow implementation of the RNASeq consensus pipeline.
 
 ### How do I get set up? ###
 
+
 * Summary of set up
 
 If on the LBL server, I've already installed the latest release of this program to a conda environment on the /data2 partition.
